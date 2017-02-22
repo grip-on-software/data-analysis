@@ -1,0 +1,19 @@
+path: sprint_events
+files:
+  - filename: sprint-start.sql
+    type: sprint_start
+  - filename: sprint-end.sql
+    type: sprint_end
+  - filename: rank-change.sql
+    type: rank_change
+  - filename: storypoint-change.sql
+    type: storypoint_change
+  - filename: red-metric.sql
+    type: red_metric
+  - filename: impediment.sql
+    type: impediment
+  - filename: story.sql
+    type: story
+  - filename: commits.sql
+    type: commits
+    split: Yes
