@@ -1,0 +1,23 @@
+files:
+  - filename: 00-sprint-num.sql
+    table: sprint_num
+    column: sprint_num
+  - filename: 01-number-of-vcs-committers.sql
+    table: sprint_vcs_dev_count
+    column: number_of_vcs_devs
+    default: 0
+  - filename: 01-number-of-jira-updaters.sql
+    table: sprint_jira_dev_count
+    column: number_of_jira_devs
+    default: 0
+  - filename: 02-team-spirit-metric.sql
+    table: team_spirit_metric
+    column: team_spirit
+  - filename: 03-story-watchers.sql
+    table: watchers
+    column: num_watchers
+    default: 0
+  - filename: 04-done-story-points.sql
+    table: story_points
+    column: num_story_points
+    default: 0
