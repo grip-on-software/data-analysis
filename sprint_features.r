@@ -6,18 +6,10 @@ source('database.r')
 
 conn <- connect()
 
-load_queries <- function(specification_file) {
-	data <- yaml.load_file(specification_file)
-	lapply(data$files, function(item) {
-		path <- paste(data$path, item$filename, sep="/")
-		item$query = readChar(path, file.size(path))
-		item
-	})
-}
-
 sprint_data <- dbGetQuery(conn,
 						  'SELECT sprint.project_id, sprint.sprint_id
-						  FROM gros.sprint'
+						  FROM gros.sprint
+						  ORDER BY sprint.project_id, sprint.start_date'
 						  )
 
 items <- load_queries('sprint_features.yml')
