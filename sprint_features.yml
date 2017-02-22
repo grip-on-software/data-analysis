@@ -1,7 +1,9 @@
+path: sprint_features
 files:
   - filename: 00-sprint-num.sql
     table: sprint_num
     column: sprint_num
+    optional: No
   - filename: 01-number-of-vcs-committers.sql
     table: sprint_vcs_dev_count
     column: number_of_vcs_devs
