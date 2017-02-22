@@ -1,6 +1,8 @@
 library(jsonlite)
+library(logging)
 library(plyr)
 source('database.r')
+source('log.r')
 
 dateFormat <- function(date) {
 	format(as.POSIXct(date), format="%Y-%m-%dT%H:%M:%S")
@@ -53,6 +55,7 @@ exportData <- function(data, item) {
 min_date <- list()
 max_date <- list()
 for (item in items) {
+	loginfo('Executing query for type %s', item$type)
 	result <- dbGetQuery(conn, item$query)
 	result$date = dateFormat(result$date)
 	result$type = item$type

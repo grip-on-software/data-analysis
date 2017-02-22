@@ -3,6 +3,7 @@
 library(foreign) # For write.arff
 library(yaml)
 source('database.r')
+source('log.r')
 
 conn <- connect()
 
@@ -16,6 +17,7 @@ items <- load_queries('sprint_features.yml')
 colnames <- c("project_id")
 join_cols <- c("project_id", "sprint_id")
 for (item in items) {
+	loginfo('Executing query for table %s', item$table)
 	result <- dbGetQuery(conn, item$query)
 	sprint_data <- merge(sprint_data, result, by=join_cols, all.x=T)
 	if (!is.null(item$default)) {
