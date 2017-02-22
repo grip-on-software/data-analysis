@@ -9,7 +9,7 @@ log_setup <- function() {
 		if (log_arg >= length(args)) {
 			stop('--log requires a parameter')
 		}
-		level <- args[log_arg + 1]
+		level <- toupper(args[log_arg + 1])
 	}
 	else {
 		level <- 'WARNING'
