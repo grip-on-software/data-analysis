@@ -31,7 +31,46 @@ files:
     table: watchers
     column: num_watchers
     default: 0
+  - filename: 03-number-of-issue-changers.sql
+    table: updaters
+    column: avg_updaters
+    default: 0
   - filename: 04-done-story-points.sql
     table: story_points
     column: num_story_points
     default: 0
+  - filename: 04-attachments.sql
+    table: attachments
+    column: num_attachments
+    default: 0
+  - filename: 04-labels.sql
+    table: labels
+    column: num_labels
+    default: 0
+  - filename: 04-impediments.sql
+    table: impediments
+    column: num_impediments
+    default: 0
+  - filename: 04-late-rank-changes.sql
+    table: rank_changes
+    column: num_late_rank_changes
+    default: 0
+  - filename: 04-not-done-status.sql
+    table: not_done
+    column: num_not_done
+    default: 0
+  - filename: 04-issue-links.sql
+    table: issue_links
+    column: num_links
+    default: 0
+  - filename: 05-number-of-comments.sql
+    table: issue_comments
+    column: num_comments
+    default: 0
+  - filename: 05-average-changes.sql
+    table: issue_changes
+    column: avg_changes
+    default: 0
+  - filename: 05-issue-change-pivot.sql
+    table: issue_change_pivot
+    column: avg_change_day
