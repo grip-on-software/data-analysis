@@ -21,7 +21,9 @@ for (item in items) {
 	result <- dbGetQuery(conn, item$query)
 	sprint_data <- merge(sprint_data, result, by=join_cols, all.x=T)
 	if (!is.null(item$default)) {
-		sprint_data[is.na(sprint_data[[item$column]]),item$column] = item$default
+		for (column in item$column) {
+			sprint_data[is.na(sprint_data[[column]]),column] = item$default
+		}
 	}
 	colnames <- c(colnames, item$column)
 }

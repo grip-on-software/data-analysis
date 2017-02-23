@@ -74,3 +74,36 @@ files:
   - filename: 05-issue-change-pivot.sql
     table: issue_change_pivot
     column: avg_change_day
+  - filename: 06-sprints-velocity.sql
+    table: sprint_velocitry
+    column: velocity
+    default: 0
+  - filename: 06-sprints-average-velocity.sql
+    table: sprint_three_velocity
+    column: avg_velocity
+    default: 0
+  - filename: 06-other-issues-done.sql
+    table: other_done_issues
+    column: other_done_issues
+    default: 0
+  - filename: 07-concurrent-in-progress-stories.sql
+    table: concurrent_in_progress_stories
+    column: avg_concurrent_progress
+    default: 0
+  - filename: 07-duration-in-progress-stories.sql
+    table: duration_in_progress_stories
+    column: avg_duration_progress
+    default: 0
+  - filename: 08-vcs-statistics.sql
+    table: vcs_statistics
+    column: [num_commits, avg_insertions, avg_deletions, avg_size, avg_files, avg_lines]
+    default: 0
+  - filename: 09-metric-count.sql
+    table: metric_count
+    column: num_metrics
+  - filename: 09-red-metric-count.sql
+    table: red_metric_count
+    column: num_red_metrics
+  - filename: 09-missing-metric-count.sql
+    table: missing_metric_count
+    column: num_missing_metrics
