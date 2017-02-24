@@ -107,3 +107,19 @@ files:
   - filename: 09-missing-metric-count.sql
     table: missing_metric_count
     column: num_missing_metrics
+  - filename: 10-metric-target-change.sql
+    table: metric_target_change
+    column: num_metric_target_changes
+    default: 0
+  - filename: 11-early-rank-changes.sql
+    table: early_rank_changes
+    column: num_early_rank_changes
+    default: 0
+  - filename: 11-early-storypoint-changes.sql
+    table: early_storypoint_changes
+    column: num_early_storypoint_changes
+    default: 0
+  - filename: 11-early-changes.sql
+    table: early_changes
+    column: num_early_changes
+    default: 0
