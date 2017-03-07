@@ -54,6 +54,7 @@ exportData <- function(data, item) {
 # Perform all queries and extract the extrema data.
 min_date <- list()
 max_date <- list()
+types <- list()
 for (item in items) {
 	loginfo('Executing query for type %s', item$type)
 	result <- dbGetQuery(conn, item$query)
@@ -68,11 +69,21 @@ for (item in items) {
 	maxDate = max(result$date, result$end_date)
 	min_date[[item$type]] <- minDate
 	max_date[[item$type]] <- maxDate
+
+	type <- list(name=unbox(item$type))
+	if (!is.null(item$display)) {
+		type$enabled = unbox(item$display)
+	}
+	if (!is.null(item$split)) {
+		type$subchart = unbox(item$split)
+	}
+	types <- c(types, list(type))
 }
 
-total_data = list(min_date=min(unlist(min_date)),
-				  max_date=max(unlist(max_date)),
-				  update_date=dateFormat(Sys.time()),
+total_data = list(min_date=unbox(min(unlist(min_date))),
+				  max_date=unbox(max(unlist(max_date))),
+				  update_date=unbox(dateFormat(Sys.time())),
 				  projects=projects$name)
 
 write(toJSON(total_data), file="output/data.json")
+write(toJSON(types), file="output/types.json")
