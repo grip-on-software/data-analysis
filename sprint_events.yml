@@ -3,9 +3,6 @@ files:
   - filename: sprint-start.sql
     type: sprint_start
     display: Yes
-  - filename: sprint-end.sql
-    type: sprint_end
-    display: No
   - filename: rank-change.sql
     type: rank_change
     display: No
@@ -20,6 +17,9 @@ files:
     display: Yes
   - filename: story.sql
     type: story
+    display: No
+  - filename: sprint-end.sql
+    type: sprint_end
     display: No
   - filename: commits.sql
     type: commits
