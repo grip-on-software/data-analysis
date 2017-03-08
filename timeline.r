@@ -3,6 +3,7 @@ library(logging)
 library(plyr)
 source('database.r')
 source('log.r')
+source('sprint_features.r')
 
 dateFormat <- function(date) {
 	format(as.POSIXct(date), format="%Y-%m-%dT%H:%M:%S")
@@ -13,6 +14,18 @@ conn <- connect()
 items <- load_queries('sprint_events.yml')
 
 projects <- dbGetQuery(conn, 'SELECT project.project_id, project."name" FROM gros.project ORDER BY project.project_id')
+
+exportFeatures <- function() {
+	result <- get_sprint_features(conn)
+	data <- result$data
+	colnames <- c('sprint_id', result$colnames)
+	project_data <- lapply(as.list(projects$project_id), function(project) {
+		project_id <- projects[project,'project_id']
+		data[data$project_id == project,colnames]
+	})
+	names(project_data) <- projects$name
+	write(toJSON(project_data), file="output/features.json")
+}
 
 # Export data to separate per-sprint files.
 exportSplitData <- function(data, item) {
@@ -87,3 +100,4 @@ total_data = list(min_date=unbox(min(unlist(min_date))),
 
 write(toJSON(total_data), file="output/data.json")
 write(toJSON(types), file="output/types.json")
+exportFeatures()
