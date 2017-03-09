@@ -75,7 +75,7 @@ files:
     table: issue_change_pivot
     column: avg_change_day
   - filename: 06-sprints-velocity.sql
-    table: sprint_velocitry
+    table: sprint_velocity
     column: velocity
     default: 0
   - filename: 06-sprints-average-velocity.sql

@@ -18,10 +18,15 @@ projects <- dbGetQuery(conn, 'SELECT project.project_id, project."name" FROM gro
 exportFeatures <- function() {
 	result <- get_sprint_features(conn)
 	data <- result$data
-	colnames <- c('sprint_id', result$colnames)
+	colnames <- result$colnames
 	project_data <- lapply(as.list(projects$project_id), function(project) {
 		project_id <- projects[project,'project_id']
-		data[data$project_id == project,colnames]
+		sprint_data <- data[data$project_id == project,c('sprint_id', colnames)]
+		result <- lapply(as.list(1:dim(sprint_data)[1]), function(i) {
+			unbox(sprint_data[i,colnames])
+		})
+		names(result) <- sprint_data$sprint_id
+		return(result)
 	})
 	names(project_data) <- projects$name
 	write(toJSON(project_data), file="output/features.json")
