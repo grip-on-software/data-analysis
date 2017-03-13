@@ -6,6 +6,7 @@ if (!exists('INC_DATABASE_R')) {
 	library(MonetDB.R)
 	library(DBI)
 	library(digest)
+	library(stringr)
 	library(yaml)
 
 	connect <- function() {
@@ -16,9 +17,9 @@ if (!exists('INC_DATABASE_R')) {
 
 	load_queries <- function(specification_file, definition_file) {
 		data <- yaml.load_file(specification_file)
-		if (!is.null(definition_file)) {
-			definitions <- yaml.load_file(definition_file)
-		}
+		definitions <- yaml.load_file(definition_file)
+		patterns <- c(lapply(definitions$fields, function(define) { define$field }),
+					  lapply(definitions$conditions, function(define) { define$condition }))
 
 		lapply(data$files, function(item) {
 			if (!is.null(item$definition)) {
@@ -26,7 +27,7 @@ if (!exists('INC_DATABASE_R')) {
 				for (field in c("project_id", "sprint_id")) {
 					fields <- c(fields, paste(item$table, field, sep="."))
 				}
-				define <- definitions$defines[[item$definition]]
+				define <- definitions$fields[[item$definition]]
 				fields <- c(fields,
 							paste(define$field, "AS", item$column, sep=" "))
 				item$query <- paste('SELECT', paste(fields, collapse=", "),
@@ -34,7 +35,8 @@ if (!exists('INC_DATABASE_R')) {
 			}
 			else {
 				path <- paste(data$path, item$filename, sep="/")
-				item$query = paste(readLines(path, encoding="UTF-8"), collapse="\n")
+				query <- paste(readLines(path, encoding="UTF-8"), collapse="\n")
+				item$query <- str_interp(query, patterns)
 			}
 			return(item)
 		})

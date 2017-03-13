@@ -1,4 +1,26 @@
-defines:
+fields:
     sprint_days:
+        description: "Number of days in a sprint"
         table: sprint
         field: EXTRACT(day FROM sprint.end_date - sprint.start_date)
+    velocity:
+        description: "Velocity of a sprint (or average of multiple sprints in aggregate queries)"
+        table: issue
+        field: CAST(SUM(issue.story_points) AS float)/(sprint_days/7*5)
+conditions:
+    issue_done:
+        description: "Issues that are done according to the team's definition of done"
+        table: issue
+        condition: (issue.resolution = 1 OR issue.status = 6)
+    issue_not_done:
+        description: "Issues that are not (yet) done according to the team's definition of done"
+        table: issue
+        condition: issue.resolution <> 1 AND issue.status <> 6
+    issue_overdue:
+        description: "Issues that are in a certain state after the sprint ended (use in combination with other conditions)"
+        table: issue, sprint, max_issue
+        condition: (issue.updated > sprint.end_date OR (issue.changelog_id = max_issue.changelog_id AND sprint.end_date < CURRENT_TIMESTAMP())
+    issue_other:
+        description: "Issues that are not stories or subtasks"
+        table: issue
+        condition: issue."type" NOT IN (5,7)

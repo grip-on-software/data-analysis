@@ -11,7 +11,7 @@ dateFormat <- function(date) {
 
 conn <- connect()
 
-items <- load_queries('sprint_events.yml')
+items <- load_queries('sprint_events.yml', 'sprint_definitions.yml')
 
 projects <- dbGetQuery(conn, 'SELECT project.project_id, project."name" FROM gros.project ORDER BY project.project_id')
 
