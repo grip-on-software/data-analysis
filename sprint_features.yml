@@ -4,8 +4,8 @@ files:
     table: sprint_num
     column: sprint_num
     optional: No
-  - filename: 00-sprint-days.sql
-    table: sprint_days
+  - definition: sprint_days
+    table: sprint
     column: sprint_days
     optional: No
   - filename: 01-number-of-vcs-committers.sql

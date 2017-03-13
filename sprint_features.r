@@ -1,5 +1,6 @@
 # Utilities for retrieving sprint features.
 
+source('database.r')
 source('log.r')
 
 get_sprint_features <- function(conn) {
@@ -9,7 +10,7 @@ get_sprint_features <- function(conn) {
 						  	  ORDER BY sprint.project_id, sprint.start_date'
 						  	  )
 
-	items <- load_queries('sprint_features.yml')
+	items <- load_queries('sprint_features.yml', 'sprint_definitions.yml')
 	colnames <- c("project_id")
 	join_cols <- c("project_id", "sprint_id")
 	for (item in items) {

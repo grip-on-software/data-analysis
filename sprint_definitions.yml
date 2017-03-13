@@ -1,0 +1,4 @@
+defines:
+    sprint_days:
+        table: sprint
+        field: EXTRACT(day FROM sprint.end_date - sprint.start_date)
