@@ -19,7 +19,7 @@ conditions:
     issue_overdue:
         description: "Issues that are in a certain state after the sprint ended (use in combination with other conditions)"
         table: issue, sprint, max_issue
-        condition: (issue.updated > sprint.end_date OR (issue.changelog_id = max_issue.changelog_id AND sprint.end_date < CURRENT_TIMESTAMP())
+        condition: (issue.updated > sprint.end_date OR (issue.changelog_id = max_issue.changelog_id AND sprint.end_date < CURRENT_TIMESTAMP()))
     issue_other:
         description: "Issues that are not stories or subtasks"
         table: issue

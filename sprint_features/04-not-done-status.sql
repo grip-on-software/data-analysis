@@ -5,7 +5,7 @@ SELECT issue.project_id, issue.sprint_id, COUNT(*) AS num_not_done FROM gros.iss
 	AND issue.changelog_id = maxdata.max_changelog_id
 	AND issue.sprint_id = sprint.sprint_id
 	AND ${issue_not_done} AND ${issue_overdue}) AS issuedata
-AND issue.issue_id = issuedata.issue_id
+WHERE issue.issue_id = issuedata.issue_id
 AND issue.sprint_id <> 0
 AND issue.type = 7
 GROUP BY issue.project_id, issue.sprint_id
