@@ -15,11 +15,14 @@ if (!exists('INC_DATABASE_R')) {
 			  	  user=config$db$user, password=config$db$password)
 	}
 
-	load_queries <- function(specification_file, definition_file) {
+	load_queries <- function(specification_file, definition_file, variables) {
 		data <- yaml.load_file(specification_file)
 		definitions <- yaml.load_file(definition_file)
-		patterns <- c(lapply(definitions$fields, function(define) { define$field }),
-					  lapply(definitions$conditions, function(define) { define$condition }))
+		patterns <- c(lapply(definitions$fields,
+					  		 function(define) { define$field }),
+					  lapply(definitions$conditions,
+					  		 function(define) { define$condition }),
+					  variables)
 
 		lapply(data$files, function(item) {
 			if (!is.null(item$definition)) {
