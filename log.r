@@ -5,6 +5,12 @@ if (!exists('INC_LOG_R')) {
 
 	library(logging)
 
+	log_format <- function(obj) {
+		# Print objects with classes that can be printed but are not formatted
+		# correctly when using the object itself or other functions on it.
+		return(paste(capture.output(print(obj)), collapse="\n"))
+	}
+
 	log_setup <- function() {
 		args <- commandArgs(FALSE)
 		log_arg <- match("--log", args, nomatch=0)
