@@ -1,7 +1,7 @@
 SELECT COALESCE(COALESCE(not_done.num_points, done.num_points), 0) AS story_points, not_done.num_not_done, done.num_done, COALESCE(not_done.num_not_done,0)/CAST(COALESCE(not_done.num_not_done,0)+COALESCE(done.num_done,0) AS double)*100 AS ratio
 FROM
 (
-    SELECT CAST(${sprint_points_normalization}*exp(log(CAST(issue.story_points AS double))/log(CAST(CASE WHEN sprint_points.max_points IS NOT NULL AND sprint_points.max_points <> 0 THEN sprint_points.max_points ELSE ${sprint_points_normalization} END AS double))) AS DECIMAL(5,2)) AS num_points, COUNT(*) AS num_not_done FROM gros.issue,
+    SELECT CAST(${sprint_points_normalization}*log(CAST(issue.story_points AS double)/CAST(CASE WHEN sprint_points.max_points IS NOT NULL AND sprint_points.max_points <> 0 THEN sprint_points.max_points ELSE ${sprint_points_normalization} END AS double)) AS DECIMAL(5,2)) AS num_points, COUNT(*) AS num_not_done FROM gros.issue,
     (SELECT issue_id, MIN(changelog_id) AS first_changelog_id FROM gros.issue
         WHERE issue.type = 7
 		AND issue.story_points <> 0
@@ -29,7 +29,7 @@ FROM
 ) AS not_done
 FULL OUTER JOIN
 (
-    SELECT CAST(${sprint_points_normalization}*exp(log(CAST(issue.story_points AS double))/log(CAST(CASE WHEN sprint_points.max_points IS NOT NULL AND sprint_points.max_points <> 0 THEN sprint_points.max_points ELSE ${sprint_points_normalization} END AS double))) AS DECIMAL(5,2)) AS num_points, COUNT(*) AS num_done FROM gros.issue,
+    SELECT CAST(${sprint_points_normalization}*log(CAST(issue.story_points AS double)/CAST(CASE WHEN sprint_points.max_points IS NOT NULL AND sprint_points.max_points <> 0 THEN sprint_points.max_points ELSE ${sprint_points_normalization} END AS double)) AS DECIMAL(5,2)) AS num_points, COUNT(*) AS num_done FROM gros.issue,
     (SELECT issue_id, MIN(changelog_id) AS first_changelog_id FROM gros.issue
         WHERE type = 7
 		AND issue.story_points <> 0
