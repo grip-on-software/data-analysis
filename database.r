@@ -22,7 +22,7 @@ if (!exists('INC_DATABASE_R')) {
 					  		 function(define) { define$field }),
 					  lapply(definitions$conditions,
 					  		 function(define) { define$condition }),
-					  variables)
+					  if (missing(variables)) NULL else variables)
 
 		lapply(data$files, function(item) {
 			if (!is.null(item$definition)) {
