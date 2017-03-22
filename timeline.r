@@ -9,6 +9,13 @@ dateFormat <- function(date) {
 	format(as.POSIXct(date), format="%Y-%m-%dT%H:%M:%S")
 }
 
+safe_unbox <- function(x) {
+	if (is.data.frame(x) && nrow(x) == 0) {
+		return(NA);
+	}
+	return(unbox(x));
+}
+
 conn <- connect()
 
 items <- load_queries('sprint_events.yml', 'sprint_definitions.yml')
@@ -23,7 +30,7 @@ exportFeatures <- function() {
 		project_id <- projects[project,'project_id']
 		sprint_data <- data[data$project_id == project,c('sprint_id', colnames)]
 		result <- lapply(as.list(1:dim(sprint_data)[1]), function(i) {
-			unbox(sprint_data[i,colnames])
+			safe_unbox(sprint_data[i,colnames])
 		})
 		names(result) <- sprint_data$sprint_id
 		return(result)
@@ -88,19 +95,19 @@ for (item in items) {
 	min_date[[item$type]] <- minDate
 	max_date[[item$type]] <- maxDate
 
-	type <- list(name=unbox(item$type))
+	type <- list(name=safe_unbox(item$type))
 	if (!is.null(item$display)) {
-		type$enabled = unbox(item$display)
+		type$enabled = safe_unbox(item$display)
 	}
 	if (!is.null(item$split)) {
-		type$subchart = unbox(item$split)
+		type$subchart = safe_unbox(item$split)
 	}
 	types <- c(types, list(type))
 }
 
-total_data = list(min_date=unbox(min(unlist(min_date))),
-				  max_date=unbox(max(unlist(max_date))),
-				  update_date=unbox(dateFormat(Sys.time())),
+total_data = list(min_date=safe_unbox(min(unlist(min_date))),
+				  max_date=safe_unbox(max(unlist(max_date))),
+				  update_date=safe_unbox(dateFormat(Sys.time())),
 				  projects=projects$name)
 
 write(toJSON(total_data), file="output/data.json")
