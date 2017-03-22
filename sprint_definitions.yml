@@ -6,7 +6,7 @@ fields:
     velocity:
         description: "Velocity of a sprint (or average of multiple sprints in aggregate queries)"
         table: issue
-        field: CAST(SUM(issue.story_points) AS float)/(CASE WHEN sprint_days <> 0 THEN sprint_days/7*5 ELSE 1 END)
+        field: CAST(SUM(issue.story_points) AS float)/(CASE WHEN sprint_days <> 0 THEN CEIL(sprint_days/7.0*5) ELSE 1 END)
 conditions:
     issue_done:
         description: "Issues that are done according to the team's definition of done"
