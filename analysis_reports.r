@@ -21,9 +21,12 @@ not_done_ratio <- function(item, result) {
 	logdebug('Summed done:\n%s', log_format(num_done))
 	logdebug('Done/not-done ratio per story:\n%s', log_format(ratio))
 
+	output <- data.frame(story_points=row.names(ratio),
+						 num_not_done=num_not_done, num_done=num_done,
+						 ratio=ratio)
+
 	export_file <- paste("output", paste(item$table, "csv", sep="."), sep="/")
-	write.table(as.table(ratio), file=export_file, row.names=F, sep=",",
-				col.names=c('story points', 'not done ratio'))
+	write.table(output, file=export_file, row.names=F, sep=",")
 	loginfo("Wrote report to %s", item$table)
 }
 
