@@ -4,3 +4,5 @@ files:
     table: not_done_ratio
   - filename: not_done_ratio_log.sql
     table: not_done_ratio_log
+  - filename: sprint_burndown.sql
+    table: sprint_burndown
