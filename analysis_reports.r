@@ -52,7 +52,33 @@ sprint_burndown <- function(item, result) {
 				end_date <- as.Date(end_time, '%Y-%m-%d')
 				data <- cbind(as.data.frame(sprint_data$close_date),
 							  as.data.frame(points))
+
+				ideal_line = function(x) {
+					-start_points/(as.numeric(end_date) - as.numeric(date[1])) * (as.numeric(x) - as.numeric(date[1])) + start_points
+				}
+				line_points = ideal_line(date)
+				over_under = points > line_points
+				# Frequency of events that are above the ideal line
+				num_over = sum(over_under)/length(points)
+				changes = diff(over_under)
+				# Frequency of crossing the ideal line
+				num_changes = sum(abs(changes)/length(points))
+				# Events after which the progress line crosses ideal line
+				indexes = which(changes != 0)
+				# use for intersection detection and area calculation
+				low_indexes = which(over_under == F)
+				high_indexes = which(over_under == T)
+				low_distances = line_points[low_indexes] - points[low_indexes]
+				high_distances = points[high_indexes] - line_points[high_indexes]
+				print(sum(low_distances))
+				print(sum(high_distances))
+
+				# More details
+				print(line_points)
+				print(over_under)
+				print(sum(over_under))
 				print(data)
+				# Output plot
 				plot <- ggplot(data, aes(x=date, y=points, group=1)) +
 					geom_point() + geom_line() +
 					geom_segment(aes(x=date[1], y=start_points,
@@ -61,6 +87,7 @@ sprint_burndown <- function(item, result) {
 					coord_equal(ratio=aspect_ratio) +
 					theme(aspect.ratio=aspect_ratio)
 				ggsave(export_file)
+				loginfo("Wrote plot to %s", export_file)
 			}
 		}
 	}
