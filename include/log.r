@@ -4,7 +4,7 @@ if (!exists('INC_LOG_R')) {
 	INC_LOG_R <- T
 
 	library(logging)
-	source('include/log.r')
+	source('include/args.r')
 
 	log_format <- function(obj) {
 		# Print objects with classes that can be printed but are not formatted
