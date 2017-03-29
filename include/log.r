@@ -4,6 +4,7 @@ if (!exists('INC_LOG_R')) {
 	INC_LOG_R <- T
 
 	library(logging)
+	source('include/log.r')
 
 	log_format <- function(obj) {
 		# Print objects with classes that can be printed but are not formatted
@@ -12,17 +13,7 @@ if (!exists('INC_LOG_R')) {
 	}
 
 	log_setup <- function() {
-		args <- commandArgs(FALSE)
-		log_arg <- match("--log", args, nomatch=0)
-		if (log_arg > 0) {
-			if (log_arg >= length(args)) {
-				stop('--log requires a parameter')
-			}
-			level <- toupper(args[log_arg + 1])
-		}
-		else {
-			level <- 'WARNING'
-		}
+		level <- get_arg('--log', default='WARNING')
 
 		if (level %in% names(loglevels)) {
 			logging::basicConfig(level)

@@ -2,6 +2,7 @@
 
 library(yaml)
 library(ggplot2)
+source('include/args.r')
 source('include/database.r')
 source('include/log.r')
 
@@ -76,9 +77,13 @@ analysis_definitions <- lapply(definitions$fields,
 items <- load_queries('analysis_reports.yml', 'sprint_definitions.yml',
 					  analysis_definitions)
 
+report = get_arg('--report', default='.*')
+
 for (item in items) {
-	loginfo('Executing query for report %s', item$table)
-	loginfo('Query: %s', item$query)
-	result <- dbGetQuery(conn, item$query)
-	reports[[item$table]](item, result)
+	if (length(grep(report, item$table)) > 0) {
+		loginfo('Executing query for report %s', item$table)
+		loginfo('Query: %s', item$query)
+		result <- dbGetQuery(conn, item$query)
+		reports[[item$table]](item, result)
+	}
 }
