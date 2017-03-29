@@ -52,11 +52,10 @@ sprint_burndown <- function(item, result) {
 				data <- cbind(as.data.frame(sprint_data$close_date),
 							  as.data.frame(points))
 				print(data)
-				print(end_date)
 				plot <- ggplot(data, aes(x=date, y=points, group=1)) +
 					geom_point() + geom_line() +
 					geom_segment(aes(x=date[1], y=start_points,
-									 xend=end_time, yend=0), colour='blue') +
+									 xend=end_date, yend=0), colour='blue') +
 					geom_vline(colour='red', xintercept=as.numeric(end_date)) +
 					coord_equal(ratio=aspect_ratio) +
 					theme(aspect.ratio=aspect_ratio)
