@@ -2,8 +2,8 @@
 
 library(yaml)
 library(ggplot2)
-source('database.r')
-source('log.r')
+source('include/database.r')
+source('include/log.r')
 
 not_done_ratio <- function(item, result) {
 	bins <- c(0.0, 0.5, 1, 2, 3, 5, 8, 13, 20, 40, 100, Inf)
@@ -47,8 +47,8 @@ sprint_burndown <- function(item, result) {
 									 sep="/")
 
 				points <- cumsum(sprint_data$story_points)
-				date <- as.Date(sprint_data$close_date, '%Y-%m-%d %H:%M:%S')
-				end_date <- as.Date(end_time, '%Y-%m-%d %H:%M:%S')
+				date <- as.Date(sprint_data$close_date, '%Y-%m-%d')
+				end_date <- as.Date(end_time, '%Y-%m-%d')
 				data <- cbind(as.data.frame(sprint_data$close_date),
 							  as.data.frame(points))
 				print(data)
@@ -56,7 +56,7 @@ sprint_burndown <- function(item, result) {
 				plot <- ggplot(data, aes(x=date, y=points, group=1)) +
 					geom_point() + geom_line() +
 					geom_segment(aes(x=date[1], y=start_points,
-									 xend=end_date, yend=0), colour='blue') +
+									 xend=end_time, yend=0), colour='blue') +
 					geom_vline(colour='red', xintercept=as.numeric(end_date)) +
 					coord_equal(ratio=aspect_ratio) +
 					theme(aspect.ratio=aspect_ratio)

@@ -1,7 +1,7 @@
 #library(ggplot2)
 #library(reshape2)
 
-source('database.r')
+source('include/database.r')
 
 conn <- connect()
 

@@ -4,7 +4,7 @@ library(digest)
 library(AnomalyDetection)
 library(xts)
 
-source('database.r')
+source('include/database.r')
 conn <- connect()
 
 metrics <- dbGetQuery(conn, 'SELECT metric_id, name FROM gros.metric;')

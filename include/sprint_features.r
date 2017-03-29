@@ -1,7 +1,7 @@
 # Utilities for retrieving sprint features.
 
-source('database.r')
-source('log.r')
+source('include/database.r')
+source('include/log.r')
 
 get_sprint_features <- function(conn) {
 	sprint_data <- dbGetQuery(conn,

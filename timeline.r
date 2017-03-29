@@ -1,9 +1,9 @@
 library(jsonlite)
 library(logging)
 library(plyr)
-source('database.r')
-source('log.r')
-source('sprint_features.r')
+source('include/database.r')
+source('include/log.r')
+source('include/sprint_features.r')
 
 dateFormat <- function(date) {
 	format(as.POSIXct(date), format="%Y-%m-%dT%H:%M:%S")

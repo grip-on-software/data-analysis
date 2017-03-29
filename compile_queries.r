@@ -1,5 +1,5 @@
-source('database.r')
-source('log.r')
+source('include/database.r')
+source('include/log.r')
 
 export <- function(items, prefix, field) {
 	for (item in items) {
