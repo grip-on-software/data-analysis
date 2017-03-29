@@ -33,24 +33,33 @@ not_done_ratio <- function(item, result) {
 }
 
 sprint_burndown <- function(item, result) {
-	#dev.new()
+	aspect_ratio = 1/1.6
 	for (project in levels(factor(result$project_id))) {
 		for (sprint in levels(factor(result[result$project_id == project,'sprint_id']))) {
 			sprint_data = result[result$project_id == project & result$sprint_id == sprint,c('story_points', 'close_date')]
-			if (!is.na(sprint_data[1,'story_points'])) {
+			start_points <- sprint_data[1,'story_points']
+			end_time <- sprint_data[sprint_data$story_points == 0,'close_date']
+			if (!is.na(start_points) && !identical(end_time, character(0))) {
 				export_file <- paste("output",
 									 paste(paste(item$table, project, sprint,
 									 			 sep="-"),
 									 	   "pdf", sep="."),
 									 sep="/")
 
-				points = cumsum(sprint_data$story_points)
-				date <- as.Date(sprint_data$close_date, '%Y-%m-%d')
-				end_date <- sprint_data[sprint_data$story_points == 0,'close_date']
+				points <- cumsum(sprint_data$story_points)
+				date <- as.Date(sprint_data$close_date, '%Y-%m-%d %H:%M:%S')
+				end_date <- as.Date(end_time, '%Y-%m-%d %H:%M:%S')
 				data <- cbind(as.data.frame(sprint_data$close_date),
 							  as.data.frame(points))
 				print(data)
-				plot <- ggplot(data, aes(x=date, y=points, group=1)) + geom_line() + geom_vline(colour='red', xintercept=end_date)
+				print(end_date)
+				plot <- ggplot(data, aes(x=date, y=points, group=1)) +
+					geom_point() + geom_line() +
+					geom_segment(aes(x=date[1], y=start_points,
+									 xend=end_date, yend=0), colour='blue') +
+					geom_vline(colour='red', xintercept=as.numeric(end_date)) +
+					coord_equal(ratio=aspect_ratio) +
+					theme(aspect.ratio=aspect_ratio)
 				ggsave(export_file)
 			}
 		}
