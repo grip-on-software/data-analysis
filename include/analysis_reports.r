@@ -1,9 +1,7 @@
-# Analysis report of done/not done in-progress stories per (normalized) story point.
+# Analysis reports.
 
 library(yaml)
 library(ggplot2)
-source('include/args.r')
-source('include/database.r')
 source('include/log.r')
 
 not_done_ratio <- function(item, result) {
@@ -93,24 +91,14 @@ sprint_burndown <- function(item, result) {
 	}
 }
 
-reports <- list(not_done_ratio=not_done_ratio,
-				not_done_ratio_log=not_done_ratio,
-				sprint_burndown=sprint_burndown)
-
-conn <- connect()
-definitions <- yaml.load_file('analysis_definitions.yml')
-analysis_definitions <- lapply(definitions$fields,
-							   function(define) { define$field })
-items <- load_queries('analysis_reports.yml', 'sprint_definitions.yml',
-					  analysis_definitions)
-
-report = get_arg('--report', default='.*')
-
-for (item in items) {
-	if (length(grep(report, item$table)) > 0) {
-		loginfo('Executing query for report %s', item$table)
-		loginfo('Query: %s', item$query)
-		result <- dbGetQuery(conn, item$query)
-		reports[[item$table]](item, result)
-	}
+get_analysis_reports <- function(conn) {
+	reports <- list(not_done_ratio=not_done_ratio,
+					not_done_ratio_log=not_done_ratio,
+					sprint_burndown=sprint_burndown)
+	definitions <- yaml.load_file('analysis_definitions.yml')
+	analysis_definitions <- lapply(definitions$fields,
+							   	   function(define) { define$field })
+	items <- load_queries('analysis_reports.yml', 'sprint_definitions.yml',
+					  	  analysis_definitions)
+	return(items)
 }
