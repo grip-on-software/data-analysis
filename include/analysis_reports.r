@@ -91,14 +91,19 @@ sprint_burndown <- function(item, result) {
 	}
 }
 
-get_analysis_reports <- function(conn) {
+get_analysis_reports <- function(analysis_variables) {
 	reports <- list(not_done_ratio=not_done_ratio,
 					not_done_ratio_log=not_done_ratio,
 					sprint_burndown=sprint_burndown)
 	definitions <- yaml.load_file('analysis_definitions.yml')
-	analysis_definitions <- lapply(definitions$fields,
-							   	   function(define) { define$field })
+	analysis_definitions <- modifyList(lapply(definitions$fields,
+							   	              function(define) { define$field }),
+									   analysis_variables) 
+	print(analysis_definitions)
 	items <- load_queries('analysis_reports.yml', 'sprint_definitions.yml',
 					  	  analysis_definitions)
-	return(items)
+	lapply(items, function(item) {
+		item$report <- reports[[item$table]]
+		return(item)
+	})
 }

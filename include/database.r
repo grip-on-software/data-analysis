@@ -8,6 +8,7 @@ if (!exists('INC_DATABASE_R')) {
 	library(digest)
 	library(stringr)
 	library(yaml)
+	source('include/args.r')
 
 	connect <- function() {
 		config <- yaml.load_file("config.yml")
@@ -18,11 +19,21 @@ if (!exists('INC_DATABASE_R')) {
 	load_queries <- function(specification_file, definition_file, variables) {
 		data <- yaml.load_file(specification_file)
 		definitions <- yaml.load_file(definition_file)
+		if (missing(variables)) {
+			variables <- NULL
+		}
+		else {
+			for (name in names(variables)) {
+				arg <- get_arg(paste('--', gsub('_', '-', name), sep=''),
+							   default=variables[[name]])
+				variables[[name]] <- arg
+			}
+		}
 		patterns <- c(lapply(definitions$fields,
 					  		 function(define) { define$field }),
 					  lapply(definitions$conditions,
 					  		 function(define) { define$condition }),
-					  if (missing(variables)) NULL else variables)
+					  variables)
 
 		lapply(data$files, function(item) {
 			if (!is.null(item$definition)) {
@@ -40,6 +51,7 @@ if (!exists('INC_DATABASE_R')) {
 				path <- paste(data$path, item$filename, sep="/")
 				query <- paste(readLines(path, encoding="UTF-8"), collapse="\n")
 				item$query <- str_interp(query, patterns)
+				item$patterns <- patterns
 			}
 			return(item)
 		})
