@@ -12,11 +12,16 @@ not_done_ratio <- function(item, result) {
 	logdebug('Story points: %s', result$story_points)
 	logdebug('Bin codes: %s', codes)
 
-	num_not_done <- tapply(result$num_not_done, bins[codes],
+	all_not_done <- tapply(result$num_not_done, bins[codes],
 						   na.rm=T, FUN=sum)
-	num_done <- tapply(result$num_done, bins[codes],
+	all_done <- tapply(result$num_done, bins[codes],
 					   na.rm=T, FUN=sum)
+
+	num_not_done <- all_not_done[all_done + all_not_done > 1]
+	num_done <- all_done[all_done + all_not_done > 1]
+
 	ratio <- num_not_done/(num_not_done + num_done)*100
+	done_ratio <- num_done/(num_not_done + num_done)*100
 
 	logdebug('Summed not done:\n%s', log_format(num_not_done))
 	logdebug('Summed done:\n%s', log_format(num_done))
@@ -26,9 +31,32 @@ not_done_ratio <- function(item, result) {
 						 num_not_done=num_not_done, num_done=num_done,
 						 ratio=ratio)
 
-	export_file <- paste("output", paste(item$table, "csv", sep="."), sep="/")
+	filename <- paste(item$table, item$patterns[['id']], sep='-')
+	export_file <- paste("output", paste(filename, 'csv', sep='.'), sep="/")
 	write.table(output, file=export_file, row.names=F, sep=",")
-	loginfo("Wrote report to %s", item$table)
+	loginfo("Wrote report to %s", export_file)
+
+	num_points = length(output$story_points)
+
+	plot_data <- data.frame(x=output$story_points,
+							y=ratio,
+							group=rep("not done", num_points),
+							label=paste(num_not_done, num_done, sep='\n'))
+	scale <- log10(num_done + num_not_done) / log10(max(num_done + num_not_done))
+	ggplot(data = plot_data, aes(x=plot_data$x, y=plot_data$y,
+								 fill=plot_data$group,
+								 label=plot_data$label)) +
+		scale_x_discrete(limits=output$story_points) +
+		geom_bar(stat="identity", position="dodge", width=scale) +
+		geom_text(position=position_dodge(0.8)) +
+		labs(title=paste("Story points not done ratio (",
+						 item$patterns[['id']], ")", sep=''),
+			 x="Story points", y="Ratio (% not done)") +
+		theme(plot.title = element_text(hjust = 0.5), legend.position="none")
+
+	plot_file <- paste("output", paste(filename, 'png', sep='.'), sep='/')
+	ggsave(plot_file)
+	loginfo("Wrote plot to %s", plot_file)
 }
 
 sprint_burndown <- function(item, result) {

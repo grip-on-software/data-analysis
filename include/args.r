@@ -5,6 +5,9 @@ if (!exists('INC_ARGS_R')) {
 
 	args <- commandArgs(FALSE)
 
+	has_arg <- function(name) {
+		return(name %in% args)
+	}
 	get_arg <- function(name, default=NA) {
 		arg <- match(name, args, nomatch=0)
 		if (arg > 0) {
