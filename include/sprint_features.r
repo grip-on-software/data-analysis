@@ -15,7 +15,9 @@ get_sprint_features <- function(conn) {
 	join_cols <- c("project_id", "sprint_id")
 	for (item in items) {
 		loginfo('Executing query for table %s', item$table)
-		result <- dbGetQuery(conn, item$query)
+		time <- system.time(result <- dbGetQuery(conn, item$query))
+		loginfo('Query for table %s took %f seconds', item$table,
+				time['elapsed'])
 		sprint_data <- merge(sprint_data, result, by=join_cols, all.x=T)
 		if (!is.null(item$default)) {
 			for (column in item$column) {
