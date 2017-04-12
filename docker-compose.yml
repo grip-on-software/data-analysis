@@ -1,0 +1,6 @@
+version: '2'
+services:
+    agent:
+        build:
+            context: .
+            dockerfile: Dockerfile.dashboard
