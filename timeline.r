@@ -82,7 +82,8 @@ max_date <- list()
 types <- list()
 for (item in items) {
 	loginfo('Executing query for type %s', item$type)
-	result <- dbGetQuery(conn, item$query)
+	time <- system.time(result <- dbGetQuery(conn, item$query))
+	loginfo('Query for type %s took %f seconds', item$type, time['elapsed'])
 	result$date = dateFormat(result$date)
 	result$type = item$type
 	if ("end_date" %in% result) {
