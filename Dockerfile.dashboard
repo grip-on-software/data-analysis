@@ -7,5 +7,6 @@ COPY analysis_reports/ /home/docker/analysis_reports/
 COPY include/ /home/docker/include/
 COPY sprint_events/ /home/docker/sprint_events/
 COPY sprint_features/ /home/docker/sprint_features/
+RUN mkdir /home/docker/output
 
 CMD ["sleep", "infinity"]
