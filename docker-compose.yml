@@ -4,3 +4,4 @@ services:
         build:
             context: .
             dockerfile: Dockerfile.dashboard
+        image: "$DOCKER_REGISTRY/gros-data-analysis-dashboard"
