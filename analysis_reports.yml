@@ -6,3 +6,5 @@ files:
     table: not_done_ratio_log
   - filename: sprint_burndown.sql
     table: sprint_burndown
+  - filename: commit_volume.sql
+    table: commit_volume

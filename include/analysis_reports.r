@@ -1,6 +1,7 @@
 # Analysis reports.
 
 library(yaml)
+library(jsonlite)
 library(ggplot2)
 source('include/log.r')
 
@@ -119,10 +120,22 @@ sprint_burndown <- function(item, result) {
 	}
 }
 
+commit_volume <- function(item, result) {
+	data <- lapply(split(result, f=result$project_id),
+				   function(x) { 
+					   x$project_id <- NULL
+					   names(x)[names(x)=='commit_day'] <- 'day'
+					   return(x)
+				   })
+	write(toJSON(data),
+		  file=paste("output", paste(item$table, "json", sep="."), sep="/"))
+}
+
 get_analysis_reports <- function(analysis_variables) {
 	reports <- list(not_done_ratio=not_done_ratio,
 					not_done_ratio_log=not_done_ratio,
-					sprint_burndown=sprint_burndown)
+					sprint_burndown=sprint_burndown,
+					commit_volume=commit_volume)
 	definitions <- yaml.load_file('analysis_definitions.yml')
 	analysis_definitions <- modifyList(lapply(definitions$fields,
 							   	              function(define) { define$field }),
