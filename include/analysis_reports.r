@@ -121,12 +121,14 @@ sprint_burndown <- function(item, result) {
 }
 
 commit_volume <- function(item, result) {
-	data <- lapply(split(result, f=result$project_id),
-				   function(x) { 
-					   x$project_id <- NULL
-					   names(x)[names(x)=='commit_day'] <- 'day'
-					   return(x)
-				   })
+	projects <- dbGetQuery(conn, 'SELECT project.project_id, project."name" FROM gros.project ORDER BY project.project_id')
+	data <- lapply(as.list(projects$project_id), function(project) {
+		project_id <- projects[project,'project_id']
+		commit_data <- result[result$project_id == project_id,c('commit_day','value')]
+	    names(commit_data)[names(commit_data)=='commit_day'] <- 'day'
+		return(commit_data)
+	})
+	names(data) <- projects$name
 	write(toJSON(data),
 		  file=paste("output", paste(item$table, "json", sep="."), sep="/"))
 }
