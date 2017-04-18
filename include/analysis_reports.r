@@ -133,11 +133,23 @@ commit_volume <- function(item, result) {
 		  file=paste("output", paste(item$table, "json", sep="."), sep="/"))
 }
 
+story_flow <- function(item, result) {
+	columns <- c('old_status','old_resolution','new_status','new_resolution')
+	changes <- split(result, as.list(result[columns]), drop=T)
+	lapply(changes, function(change) {
+		loginfo("Old status: %s Old resolution: %s New status: %s New resolution: %s Count: %s Average time: %s",
+				change[1,'old_status'], change[1,'old_resolution'],
+				change[1,'new_status'], change[1,'new_resolution'],
+				nrow(change), mean(as.numeric(difftime(change$new_date, change$earliest_date, units="days"))))
+	})
+}
+
 get_analysis_reports <- function(analysis_variables) {
 	reports <- list(not_done_ratio=not_done_ratio,
 					not_done_ratio_log=not_done_ratio,
 					sprint_burndown=sprint_burndown,
-					commit_volume=commit_volume)
+					commit_volume=commit_volume,
+					story_flow=story_flow)
 	definitions <- yaml.load_file('analysis_definitions.yml')
 	analysis_definitions <- modifyList(lapply(definitions$fields,
 							   	              function(define) { define$field }),

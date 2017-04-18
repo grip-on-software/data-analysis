@@ -8,3 +8,5 @@ files:
     table: sprint_burndown
   - filename: commit_volume.sql
     table: commit_volume
+  - filename: story_flow.sql
+    table: story_flow
