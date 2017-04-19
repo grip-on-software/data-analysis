@@ -133,15 +133,100 @@ commit_volume <- function(item, result) {
 		  file=paste("output", paste(item$table, "json", sep="."), sep="/"))
 }
 
+to_map <- function(df) {
+	map <- sapply(df$id, function(id) {
+		return(df[df$id == id,2])
+	}, simplify=F)
+	names(map) <- df$id
+	map[['0']] <- ''
+	print(map)
+	return(map)
+}
+
 story_flow <- function(item, result) {
+	states <- to_map(dbGetQuery(conn, 'SELECT id, name FROM gros.status'))
+	resolutions <- to_map(dbGetQuery(conn,
+									 'SELECT id, name FROM gros.resolution'))
+
 	columns <- c('old_status','old_resolution','new_status','new_resolution')
 	changes <- split(result, as.list(result[columns]), drop=T)
-	lapply(changes, function(change) {
+	nodes <- list()
+	edges <- list()
+	total_stories <- nrow(result)
+	colors <- list('1'='blue', # Open
+				   '3'='yellow', # In Progress
+				   '4'='gray', # Reopened
+				   '5'='green', # Resolved
+				   '6'='green', # Closed
+				   '10004'='yellow', # Backlog Approved
+				   '10005'='yellow', # Reviewed
+				   '10006'='yellow') # In Review
+
+	for (change in changes) {
+		old_status_id <- as.character(change[1,'old_status'])
+		old_resolution_id <- as.character(change[1,'old_resolution'])
+		new_status_id <- as.character(change[1,'new_status'])
+		new_resolution_id <- as.character(change[1,'new_resolution'])
+
+		old_status <- states[[old_status_id]]
+		old_resolution <- resolutions[[old_resolution_id]]
+		new_status <- states[[new_status_id]]
+		new_resolution <- resolutions[[new_resolution_id]]
+
+		volume <- nrow(change)
+		loginfo('Volume: %d/%d', volume, total_stories)
+		time_delta <- mean(as.numeric(difftime(change$new_date, change$earliest_date, units="days")))
+		if (time_delta >= 1.0 && volume > total_stories/256) {
+			old_name <- paste('"', paste(old_status, old_resolution, sep=" "),
+							  '"', sep='')
+			new_name <- paste('"', paste(new_status, new_resolution, sep=" "),
+							  '"', sep='')
+
+			old_attrs <- list(style='rounded', shape='box')
+			new_attrs <- list(style='rounded', shape='box')
+			if (old_status_id %in% names(colors)) {
+				old_attrs$color <- colors[[old_status_id]]
+			}
+			if (new_status_id %in% names(colors)) {
+				new_attrs$color <- colors[[new_status_id]]
+			}
+
+			nodes[[old_name]] <- old_attrs
+			nodes[[new_name]] <- new_attrs
+
+			edge_attrs <- list(label=paste('"', round(time_delta), ' days\\n',
+										   volume, ' stories"', sep=""))
+
+			edge <- paste(old_name, new_name, sep=" -> ")
+			edges[[edge]] <- edge_attrs
+		}
 		loginfo("Old status: %s Old resolution: %s New status: %s New resolution: %s Count: %s Average time: %s",
-				change[1,'old_status'], change[1,'old_resolution'],
-				change[1,'new_status'], change[1,'new_resolution'],
-				nrow(change), mean(as.numeric(difftime(change$new_date, change$earliest_date, units="days"))))
-	})
+				old_status, old_resolution, new_status, new_resolution,
+				volume, time_delta)
+	}
+
+	dot_attrs <- function(attrs) {
+		return(paste("[",
+					 paste(names(attrs), attrs, sep="=", collapse=","),
+					 "];", sep=""))
+	}
+
+	dot <- c("digraph G {",
+			 paste(names(edges), lapply(edges, dot_attrs)),
+			 paste(names(nodes), lapply(nodes, dot_attrs)),
+			 "}")
+
+	export_file <- paste("output",
+						 paste(paste(item$table, item$patterns[['id']],
+						 			 sep="-"), "dot", sep="."), sep="/")
+	writeLines(dot, export_file)
+	loginfo("Exported graph to %s", export_file)
+
+	# Write a Makefile
+	writeLines(c(".PHONY: all",
+				 "all: $(patsubst %.dot,%.png,$(wildcard *.dot))",
+				 "%.png: %.dot",
+				 "\tdot -Tpng $< -o $@"), paste("output", "Makefile", sep="/"))
 }
 
 get_analysis_reports <- function(analysis_variables) {

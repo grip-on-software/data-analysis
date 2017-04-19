@@ -10,4 +10,5 @@ FROM gros.issue, (
 ) AS issue_changes
 WHERE issue.issue_id = issue_changes.issue_id
 AND issue.changelog_id = issue_changes.latest_changelog_id+1
+AND ${issue_story}
 ${category_conditions}
