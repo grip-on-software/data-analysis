@@ -22,8 +22,8 @@ items <- load_queries('sprint_events.yml', 'sprint_definitions.yml')
 
 projects <- dbGetQuery(conn, 'SELECT project.project_id, project."name" FROM gros.project ORDER BY project.project_id')
 
-exportFeatures <- function() {
-	result <- get_sprint_features(conn)
+exportFeatures <- function(exclude) {
+	result <- get_sprint_features(conn, exclude)
 	data <- result$data
 	colnames <- result$colnames
 	project_data <- lapply(as.list(projects$project_id), function(project) {
@@ -113,4 +113,5 @@ total_data = list(min_date=safe_unbox(min(unlist(min_date))),
 
 write(toJSON(total_data), file="output/data.json")
 write(toJSON(types), file="output/types.json")
-exportFeatures()
+exportFeatures(get_arg('--exclude',
+					   default='^new_developers$|^sprint_experience$'))

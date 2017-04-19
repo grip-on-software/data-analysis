@@ -3,7 +3,7 @@
 source('include/database.r')
 source('include/log.r')
 
-get_sprint_features <- function(conn) {
+get_sprint_features <- function(conn, exclude) {
 	sprint_data <- dbGetQuery(conn,
 						  	  'SELECT sprint.project_id, sprint.sprint_id
 						  	  FROM gros.sprint
@@ -14,17 +14,19 @@ get_sprint_features <- function(conn) {
 	colnames <- c("project_id")
 	join_cols <- c("project_id", "sprint_id")
 	for (item in items) {
-		loginfo('Executing query for table %s', item$table)
-		time <- system.time(result <- dbGetQuery(conn, item$query))
-		loginfo('Query for table %s took %f seconds', item$table,
-				time['elapsed'])
-		sprint_data <- merge(sprint_data, result, by=join_cols, all.x=T)
-		if (!is.null(item$default)) {
-			for (column in item$column) {
-				sprint_data[is.na(sprint_data[[column]]),column] = item$default
+		if (missing(exclude) || length(grep(exclude, item$table)) == 0) {
+			loginfo('Executing query for table %s', item$table)
+			time <- system.time(result <- dbGetQuery(conn, item$query))
+			loginfo('Query for table %s took %f seconds', item$table,
+					time['elapsed'])
+			sprint_data <- merge(sprint_data, result, by=join_cols, all.x=T)
+			if (!is.null(item$default)) {
+				for (column in item$column) {
+					sprint_data[is.na(sprint_data[[column]]),column] = item$default
+				}
 			}
+			colnames <- c(colnames, item$column)
 		}
-		colnames <- c(colnames, item$column)
 	}
 	list(data=sprint_data, colnames=colnames)
 }
