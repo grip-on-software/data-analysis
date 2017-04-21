@@ -3,6 +3,8 @@
 library(yaml)
 library(jsonlite)
 library(ggplot2)
+library(padr)
+library(zoo)
 source('include/log.r')
 
 not_done_ratio <- function(item, result) {
@@ -133,6 +135,25 @@ commit_volume <- function(item, result) {
 		  file=paste("output", paste(item$table, "json", sep="."), sep="/"))
 }
 
+developers <- function(item, result) {
+	projects <- dbGetQuery(conn, 'SELECT project.project_id, project."name" FROM gros.project ORDER BY project.project_id')
+	data <- lapply(as.list(projects$project_id), function(project) {
+		project_id <- projects[project,'project_id']
+		dev_data <- result[result$project_id == project_id,c('commit_date','value')]
+		date_data <- data.frame(day=as.Date(dev_data$commit_date),
+								value=as.numeric(dev_data$value))
+		if (nrow(date_data) == 0) {
+			return(date_data)
+		}
+		pad_data <- na.locf(pad(date_data, interval='day'))
+		pad_data$value <- as.numeric(pad_data$value)
+		return(pad_data)
+	})
+	names(data) <- projects$name
+	write(toJSON(data),
+		  file=paste("output", paste(item$table, "json", sep="."), sep="/"))
+}
+
 to_map <- function(df) {
 	map <- sapply(df$id, function(id) {
 		return(df[df$id == id,2])
@@ -234,6 +255,7 @@ get_analysis_reports <- function(analysis_variables) {
 					not_done_ratio_log=not_done_ratio,
 					sprint_burndown=sprint_burndown,
 					commit_volume=commit_volume,
+					developers=developers,
 					story_flow=story_flow)
 	definitions <- yaml.load_file('analysis_definitions.yml')
 	analysis_definitions <- modifyList(lapply(definitions$fields,

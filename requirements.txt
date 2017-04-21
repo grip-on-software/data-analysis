@@ -8,3 +8,5 @@ yaml
 plyr
 ggplot2
 ncdf4
+padr
+zoo
