@@ -1,2 +1,6 @@
 FROM r-base
-RUN Rscript -e "install.packages(c('MonetDB.R', 'DBI', 'digest', 'foreign', 'jsonlite', 'logging', 'yaml', 'plyr', 'ggplot2', 'ncdf4'))"
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends libnetcdf-dev \
+	&& rm -rf /var/lib/apt/lists/*
+COPY requirements.txt /tmp/
+RUN Rscript -e "install.packages(readLines('/tmp/requirements.txt'))"

@@ -1,0 +1,10 @@
+MonetDB.R
+DBI
+digest
+foreign
+jsonlite
+logging
+yaml
+plyr
+ggplot2
+ncdf4
