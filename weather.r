@@ -13,7 +13,7 @@ if (!file.exists(knmi_file)) {
 
 
 knmi <- list()
-knmi$nc <- nc_open('knmi.nc')
+knmi$nc <- nc_open(knmi_file)
 knmi$lat <- ncvar_get(knmi$nc, 'lat')
 knmi$lon <- ncvar_get(knmi$nc, 'lon')
 # Simple distance calculation (does not account for WGS coordinate geometry)
