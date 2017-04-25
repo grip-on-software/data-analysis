@@ -250,13 +250,20 @@ story_flow <- function(item, result) {
 				 "\tdot -Tpng $< -o $@"), paste("output", "Makefile", sep="/"))
 }
 
+long_waiting_commits <- function(item, result) {
+
+	write(toJSON(result),
+		  file=paste("output", "long_waiting_commits.json", sep="/"))
+}
+
 get_analysis_reports <- function(analysis_variables) {
 	reports <- list(not_done_ratio=not_done_ratio,
 					not_done_ratio_log=not_done_ratio,
 					sprint_burndown=sprint_burndown,
 					commit_volume=commit_volume,
 					developers=developers,
-					story_flow=story_flow)
+					story_flow=story_flow,
+					long_waiting_commits=long_waiting_commits)
 	definitions <- yaml.load_file('analysis_definitions.yml')
 	analysis_definitions <- modifyList(lapply(definitions$fields,
 							   	              function(define) { define$field }),

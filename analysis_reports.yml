@@ -12,3 +12,5 @@ files:
     table: developers
   - filename: story_flow.sql
     table: story_flow
+  - filename: long_waiting_commits.sql
+    table: long_waiting_commits
