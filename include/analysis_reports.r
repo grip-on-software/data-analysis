@@ -251,9 +251,19 @@ story_flow <- function(item, result) {
 }
 
 long_waiting_commits <- function(item, result) {
+	path <- paste("output", item$table, sep="/")
+	if (!dir.exists(path)) {
+		dir.create(path)
+	}
+	projects <- dbGetQuery(conn, 'SELECT project.project_id, project."name" FROM gros.project ORDER BY project.project_id')
+	lapply(as.list(projects$project_id), function(project) {
+		project_id <- projects[project,'project_id']
+		project_data <- result[result$project_id == project_id,c('file','later_date','earlier_date')]
 
-	write(toJSON(result),
-		  file=paste("output", "long_waiting_commits.json", sep="/"))
+		write(toJSON(project_data),
+		  	  file=paste(path, paste(projects[project,'name'], "json", sep="."),
+						 sep="/"))
+	})
 }
 
 get_analysis_reports <- function(analysis_variables) {
