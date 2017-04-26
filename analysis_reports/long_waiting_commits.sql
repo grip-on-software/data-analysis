@@ -11,3 +11,4 @@ JOIN gros.commits AS earlier_commits ON data.repo_id = earlier_commits.repo_id A
 WHERE data.file NOT LIKE '%/pom.xml' AND data.file <> 'pom.xml' ${category_conditions}
 GROUP BY data.project_id, data.repo_id, data.file, data.later_date
 HAVING EXTRACT(day FROM (data.later_date - MAX(earlier_commits.commit_date))) > 31
+ORDER BY data.project_id, data.later_date
