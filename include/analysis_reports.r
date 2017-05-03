@@ -258,7 +258,7 @@ long_waiting_commits <- function(item, result) {
 	projects <- dbGetQuery(conn, 'SELECT project.project_id, project."name" FROM gros.project ORDER BY project.project_id')
 	lapply(as.list(projects$project_id), function(project) {
 		project_id <- projects[project,'project_id']
-		project_data <- result[result$project_id == project_id,c('file','later_date','earlier_date')]
+		project_data <- result[result$project_id == project_id,c('repo_name','file','later_date','earlier_date')]
 
 		write(toJSON(project_data),
 		  	  file=paste(path, paste(projects[project,'name'], "json", sep="."),
