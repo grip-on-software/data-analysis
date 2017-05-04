@@ -14,3 +14,5 @@ files:
     table: story_flow
   - filename: long_waiting_commits.sql
     table: long_waiting_commits
+  - filename: project_members.sql
+    table: project_members
