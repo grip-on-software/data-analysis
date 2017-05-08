@@ -1,4 +1,9 @@
-SELECT developer.display_name AS source, project.name AS target, issue_update.start_date, issue_update.end_date
+SELECT
+  developer.display_name AS source,
+  project.name AS target,
+  CASE WHEN developer.email LIKE '%@ictu.nl' THEN false ELSE true END AS extern,
+  issue_update.start_date,
+  issue_update.end_date
 FROM gros.project_developer
   JOIN gros.developer ON project_developer.developer_id = developer.id
   JOIN gros.project ON project_developer.project_id = project.project_id
