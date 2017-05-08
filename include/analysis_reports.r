@@ -267,15 +267,7 @@ long_waiting_commits <- function(item, result) {
 }
 
 project_members <- function(item, result) {
-	projects <- dbGetQuery(conn, 'SELECT project.project_id, project."name" FROM gros.project ORDER BY project.project_id')
-		data <- lapply(as.list(projects$project_id), function(project) {
-			project_id <- projects[project,'project_id']
-			project_date <- result[result$project_id == project_id,c('display_name','first_date','last_date')]
-			names(project_date)[names(project_date)=='display_name'] <- 'name'
-			return(project_date)
-		})
-		names(data) <- projects$name
-		write(toJSON(data),
+		write(toJSON(result),
 			file=paste("output", paste(item$table, "json", sep="."), sep="/"))
 }
 
