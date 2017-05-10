@@ -9,13 +9,15 @@ FROM gros.project_developer
   JOIN gros.project ON project_developer.project_id = project.project_id
   JOIN (
          SELECT project_id, updated_by, COUNT(*) as issues
-         FROM gros.issue GROUP BY project_id, updated_by
+         FROM gros.issue ${s(interval_condition, field='updated')}
+		 GROUP BY project_id, updated_by
        ) AS issue_update ON project_developer.project_id = issue_update.project_id
     AND developer.name = issue_update.updated_by
   LEFT JOIN gros.vcs_developer ON developer.id = vcs_developer.jira_dev_id
   LEFT JOIN (
          SELECT project_id, developer_id, COUNT(DISTINCT version_id) as commits
-         FROM gros.commits GROUP BY project_id, developer_id
+         FROM gros.commits ${s(interval_condition, field='commit_date')}
+		 GROUP BY project_id, developer_id
        ) AS commits_count
     ON project_developer.project_id = commits_count.project_id
     AND vcs_developer.alias_id = commits_count.developer_id

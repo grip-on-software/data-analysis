@@ -29,11 +29,16 @@ if (!exists('INC_DATABASE_R')) {
 				variables[[name]] <- arg
 			}
 		}
+
+		recursive_str_interp <- function(string, ...) {
+			str_interp(string, list(...))
+		}
 		patterns <- c(lapply(definitions$fields,
 					  		 function(define) { define$field }),
 					  lapply(definitions$conditions,
 					  		 function(define) { define$condition }),
-					  variables)
+					  variables,
+					  list(s=recursive_str_interp))
 
 		lapply(data$files, function(item) {
 			if (!is.null(item$definition)) {

@@ -5,3 +5,6 @@ fields:
     category_conditions:
         description: "Additional query constraints to group by project or other categories"
         field: ""
+    interval_condition:
+        description: "Condition to constrain to a certain date interval, with a field parameter"
+        field: ""

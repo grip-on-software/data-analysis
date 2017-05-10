@@ -10,7 +10,10 @@ conn <- connect()
 projects_list <- get_arg('--projects', default='')
 projects <- as.vector(as.numeric(unlist(strsplit(projects_list, ','))))
 
+interval <- get_arg('--interval', default='')
+
 report <- get_arg('--report', default='.*')
+
 run_reports <- function(definitions) {
 	items <- get_analysis_reports(definitions)
 
@@ -23,7 +26,17 @@ run_reports <- function(definitions) {
 	}
 }
 
-if (identical(projects, numeric(0))) {
+if (interval != '') {
+	start_date <- start_date <- dbGetQuery(conn, 'SELECT MIN(commit_date) AS start_date FROM gros.commits')[[1]]
+	intervals <- seq(as.POSIXct(start_date), Sys.time(), by=interval)
+	loginfo(intervals)
+	rollapply(intervals, 2, function(range) {
+		run_reports(list(id=paste('interval', as.numeric(range[1]), sep='-'),
+						 interval_condition=paste('WHERE ${field} BETWEEN ',
+												  'epoch(', as.numeric(range[1]), ') AND ',
+												  'epoch(', as.numeric(range[2]), ')', sep='')))
+	})
+} else if (identical(projects, numeric(0))) {
 	run_reports(list(id='all'))
 } else {
 	for (project in projects) {

@@ -267,8 +267,13 @@ long_waiting_commits <- function(item, result) {
 }
 
 project_members <- function(item, result) {
-		write(toJSON(result),
-			file=paste("output", paste(item$table, "json", sep="."), sep="/"))
+	if (item$patterns[['id']] != 'all') {
+		filename <- paste(item$table, item$patterns[['id']], sep='-')
+	} else {
+		filename <- item$table
+	}
+	write(toJSON(result),
+		  file=paste("output", paste(filename, "json", sep="."), sep="/"))
 }
 
 get_analysis_reports <- function(analysis_variables) {
@@ -284,7 +289,6 @@ get_analysis_reports <- function(analysis_variables) {
 	analysis_definitions <- modifyList(lapply(definitions$fields,
 							   	              function(define) { define$field }),
 									   analysis_variables) 
-	print(analysis_definitions)
 	items <- load_queries('analysis_reports.yml', 'sprint_definitions.yml',
 					  	  analysis_definitions)
 	lapply(items, function(item) {
