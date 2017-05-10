@@ -2,7 +2,7 @@ SELECT
   developer.display_name AS source,
   project.name AS target,
   developer.local_domain AS internal,
-  SUM(commits_count.commits) AS num_commits,
+  COALESCE(SUM(commits_count.commits), 0) AS num_commits,
   SUM(issue_update.issues) AS num_issues
 FROM gros.project_developer
   JOIN gros.developer ON project_developer.developer_id = developer.id
