@@ -268,12 +268,17 @@ long_waiting_commits <- function(item, result) {
 
 project_members <- function(item, result) {
 	if (item$patterns[['id']] != 'all') {
+		path <- paste("output", item$table, sep="/")
+		if (!dir.exists(path)) {
+			dir.create(path)
+		}
 		filename <- paste(item$table, item$patterns[['id']], sep='-')
 	} else {
+		path <- "output"
 		filename <- item$table
 	}
 	write(toJSON(result),
-		  file=paste("output", paste(filename, "json", sep="."), sep="/"))
+		  file=paste(path, paste(filename, "json", sep="."), sep="/"))
 }
 
 get_analysis_reports <- function(analysis_variables) {
