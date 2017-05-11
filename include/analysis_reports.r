@@ -267,14 +267,17 @@ long_waiting_commits <- function(item, result) {
 }
 
 project_members <- function(item, result) {
+	path <- paste("output", item$table, sep="/")
 	if (item$patterns[['id']] != 'all') {
-		path <- paste("output", item$table, sep="/")
 		if (!dir.exists(path)) {
 			dir.create(path)
 		}
 		filename <- paste(item$table, item$patterns[['id']], sep='-')
 	} else {
-		path <- "output"
+		loginfo("Emptying %s directory", path)
+		unlink(paste(path, "/*", sep=""))
+
+		path <- "output" # Put the full report in the base output directory
 		filename <- item$table
 	}
 	write(toJSON(result),
