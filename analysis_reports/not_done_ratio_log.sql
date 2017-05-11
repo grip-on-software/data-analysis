@@ -14,7 +14,7 @@ FROM
             WHERE issue.sprint_id = sprint.sprint_id
             AND issue.issue_id = max_data.issue_id
             AND ${issue_not_done}
-            AND issue.changelog_id = max_changelog_id AND sprint.end_date < CURRENT_TIMESTAMP()
+            AND issue.changelog_id = max_changelog_id AND ${sprint_closed}
             GROUP BY issue.issue_id, max_changelog_id) AS not_done_data,
     (SELECT issue.sprint_id, MAX(issue.story_points) AS max_points FROM gros.issue
         WHERE issue.story_points <= ${sprint_points_normalization}
