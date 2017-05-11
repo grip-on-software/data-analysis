@@ -33,6 +33,8 @@ if (interval != '') {
 	start_date <- start_date <- dbGetQuery(conn, 'SELECT MIN(commit_date) AS start_date FROM gros.commits')[[1]]
 	intervals <- seq(as.POSIXct(start_date), Sys.time(), by=interval)
 	loginfo(intervals)
+	write(toJSON(as.numeric(intervals)),
+		  file=paste("output", "intervals.json", sep="/"))
 	rollapply(intervals, 2, function(range) {
 		run_reports(list(id=paste('interval', as.numeric(range[1]), sep='-'),
 						 interval_condition=paste('WHERE ${field} BETWEEN ',
