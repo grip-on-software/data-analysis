@@ -41,16 +41,20 @@ exportFeatures <- function(exclude) {
 
 # Export data to separate per-sprint files.
 exportSplitData <- function(data, item) {
-	lapply(as.list(1:dim(projects)[1]), function(project) {
+	project_data <- lapply(as.list(1:dim(projects)[1]), function(project) {
 		project_name <- projects[project,'name']
 		project_id <- projects[project,'project_id']
+
+		sprints <- dbGetQuery(conn, paste('SELECT sprint.sprint_id FROM gros.sprint WHERE sprint.project_id =', project_id))
+		if (nrow(sprints) == 0) {
+			return(sprints)
+		}
 
 		path <- paste("output", project_name, sep="/")
 		if (!dir.exists(path)) {
 			dir.create(path)
 		}
 
-		sprints <- dbGetQuery(conn, paste('SELECT sprint.sprint_id FROM gros.sprint WHERE sprint.project_id =', project_id))
 		for (sprint_id in sprints$sprint_id) {
 			sprint_split_data <- data[data$project_name == project_name & data$sprint_id == sprint_id,]
 
@@ -58,8 +62,10 @@ exportSplitData <- function(data, item) {
 							 sep="/")
 			write(toJSON(sprint_split_data), file=filename)
 		}
-		return(data)
+		return(sprints)
 	})
+	names(project_data) <- projects$name 
+	return(project_data)
 }
 
 # Export result of a type query to the correct JSON file(s).
@@ -73,13 +79,14 @@ exportData <- function(data, item) {
 	names(project_data) <- projects$name
 	path <- paste("output", paste(item$type, "json", sep="."), sep="/")
 	write(toJSON(project_data), file=path)
-	return(data)
+	return(project_data)
 }
 
 # Perform all queries and extract the extrema data.
 min_date <- list()
 max_date <- list()
 types <- list()
+projects_with_data <- list()
 for (item in items) {
 	loginfo('Executing query for type %s', item$type)
 	time <- system.time(result <- dbGetQuery(conn, item$query))
@@ -89,7 +96,10 @@ for (item in items) {
 	if ("end_date" %in% result) {
 		result$end_date = dateFormat(result$end_date)
 	}
-	exportData(result, item)
+	project_data <- exportData(result, item)
+	have_data <- lapply(project_data, nrow) > 0
+	projects_with_data <- modifyList(projects_with_data,
+									 as.list(have_data)[have_data])
 
 	minDate = min(result$date)
 	maxDate = max(result$date, result$end_date)
@@ -109,7 +119,7 @@ for (item in items) {
 total_data = list(min_date=safe_unbox(min(unlist(min_date))),
 				  max_date=safe_unbox(max(unlist(max_date))),
 				  update_date=safe_unbox(dateFormat(Sys.time())),
-				  projects=projects$name)
+				  projects=names(projects_with_data))
 
 write(toJSON(total_data), file="output/data.json")
 write(toJSON(types), file="output/types.json")
