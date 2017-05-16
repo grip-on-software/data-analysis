@@ -30,7 +30,7 @@ if (interval != '') {
 	# Always run the full report, this will also empty the output directory
 	run_reports(list(id='all'))
 
-	start_date <- start_date <- dbGetQuery(conn, 'SELECT MIN(commit_date) AS start_date FROM gros.commits')[[1]]
+	start_date <- start_date <- dbGetQuery(conn, 'SELECT MIN(updated) AS start_date FROM gros.issue')[[1]]
 	intervals <- seq(as.POSIXct(start_date), Sys.time(), by=interval)
 	loginfo(intervals)
 	write(toJSON(as.numeric(intervals)),
