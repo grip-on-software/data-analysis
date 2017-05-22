@@ -63,6 +63,10 @@ not_done_ratio <- function(item, result) {
 }
 
 sprint_burndown <- function(item, result) {
+	path <- paste("output", item$table, sep="/")
+	if (!dir.exists(path)) {
+		dir.create(path)
+	}
 	aspect_ratio = 1/1.6
 	for (project in levels(factor(result$project_id))) {
 		for (sprint in levels(factor(result[result$project_id == project,'sprint_id']))) {
@@ -70,7 +74,7 @@ sprint_burndown <- function(item, result) {
 			start_points <- sprint_data[1,'story_points']
 			end_time <- sprint_data[sprint_data$story_points == 0,'close_date']
 			if (!is.na(start_points) && !identical(end_time, character(0))) {
-				export_file <- paste("output",
+				export_file <- paste(path,
 									 paste(paste(item$table, project, sprint,
 									 			 sep="-"),
 									 	   "pdf", sep="."),
