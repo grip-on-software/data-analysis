@@ -5,6 +5,7 @@ library(jsonlite)
 library(ggplot2)
 library(padr)
 library(zoo)
+source('include/args.r')
 source('include/log.r')
 
 not_done_ratio <- function(item, result) {
@@ -63,25 +64,34 @@ not_done_ratio <- function(item, result) {
 }
 
 sprint_burndown <- function(item, result) {
-	path <- paste("output", item$table, sep="/")
-	if (!dir.exists(path)) {
-		dir.create(path)
+	format <- get_arg('--format', default='pdf')
+	projects <- dbGetQuery(conn, 'SELECT project.project_id, project."name" FROM gros.project ORDER BY project.project_id')
+
+	baseDir <- paste("output", item$table, sep="/")
+	if (!dir.exists(baseDir)) {
+		dir.create(baseDir)
 	} else {
-		loginfo("Emptying %s directory", path)
-		unlink(paste(path, "/*", sep=""))
+		loginfo("Emptying %s directory", baseDir)
+		unlink(paste(baseDir, "/*", sep=""), recursive=TRUE)
 	}
 	aspect_ratio = 1/1.6
 	for (project in levels(factor(result$project_id))) {
 		for (sprint in levels(factor(result[result$project_id == project,'sprint_id']))) {
+			project_name = projects[projects$project_id == project, 'name']
 			sprint_data = result[result$project_id == project & result$sprint_id == sprint,c('story_points', 'close_date')]
 			start_points <- sprint_data[1,'story_points']
 			end_time <- sprint_data[sprint_data$story_points == 0,'close_date']
 			if (!is.na(start_points) && !identical(end_time, character(0))) {
+				path <- paste(baseDir, project_name, sep="/")
+				if (!dir.exists(path)) {
+					dir.create(path)
+				}
+
 				export_file <- paste(path,
-									 paste(paste(item$table, project, sprint,
-									 			 sep="-"),
-									 	   "pdf", sep="."),
-									 sep="/")
+						paste(paste(item$table, sprint,
+									sep="."),
+							format, sep="."),
+						sep="/")
 
 				points <- cumsum(sprint_data$story_points)
 				date <- as.Date(sprint_data$close_date, '%Y-%m-%d')
@@ -115,15 +125,24 @@ sprint_burndown <- function(item, result) {
 				print(sum(over_under))
 				print(data)
 				# Output plot
-				plot <- ggplot(data, aes(x=date, y=points, group=1)) +
+				if (format == 'pdf') {
+					plot <- ggplot(data, aes(x=date, y=points, group=1)) +
 					geom_point() + geom_line() +
 					geom_segment(aes(x=date[1], y=start_points,
 									 xend=end_date, yend=0), colour='blue') +
 					geom_vline(colour='red', xintercept=as.numeric(end_date)) +
 					coord_equal(ratio=aspect_ratio) +
 					theme(aspect.ratio=aspect_ratio)
-				ggsave(export_file)
-				loginfo("Wrote plot to %s", export_file)
+					ggsave(export_file)
+					loginfo("Wrote plot to %s", export_file)
+				} else if (format == 'json') {
+					names(data)[names(data)=='sprint_data$close_date'] <- 'date'
+
+					write(toJSON(data),file=export_file)
+					loginfo("Wrote data to %s", export_file)					
+				} else {
+					loginfo("Not a supported format");
+				}
 			}
 		}
 	}
