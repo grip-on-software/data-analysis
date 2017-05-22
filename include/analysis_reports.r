@@ -66,6 +66,9 @@ sprint_burndown <- function(item, result) {
 	path <- paste("output", item$table, sep="/")
 	if (!dir.exists(path)) {
 		dir.create(path)
+	} else {
+		loginfo("Emptying %s directory", path)
+		unlink(paste(path, "/*", sep=""))
 	}
 	aspect_ratio = 1/1.6
 	for (project in levels(factor(result$project_id))) {
