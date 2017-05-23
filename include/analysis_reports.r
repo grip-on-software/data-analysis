@@ -119,14 +119,6 @@ sprint_burndown <- function(item, result) {
 				high_indexes = which(over_under == T)
 				low_distances = line_points[low_indexes] - points[low_indexes]
 				high_distances = points[high_indexes] - line_points[high_indexes]
-				print(sum(low_distances))
-				print(sum(high_distances))
-
-				# More details
-				print(line_points)
-				print(over_under)
-				print(sum(over_under))
-				print(data)
 				# Output plot
 				if (format == 'pdf') {
 					plot <- ggplot(data, aes(x=date, y=points, group=1)) +
@@ -142,7 +134,16 @@ sprint_burndown <- function(item, result) {
 					names(data)[names(data)=='sprint_data$close_date'] <- 'date'
 
 					write(toJSON(data),file=export_file)
-					loginfo("Wrote data to %s", export_file)					
+					loginfo("Wrote data to %s", export_file)
+				} else if (format == 'txt') {
+					print(sum(low_distances))
+					print(sum(high_distances))
+
+					# More details
+					print(line_points)
+					print(over_under)
+					print(sum(over_under))
+					print(data)
 				} else {
 					loginfo("Not a supported format");
 				}
