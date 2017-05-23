@@ -1,4 +1,4 @@
-SELECT project."name" AS project_name, sprint.sprint_id AS sprint_id, sprint."name" AS sprint_name, issuedata.date AS date, issuedata.end_date AS end_date 
+SELECT project."name" AS project_name, sprint.sprint_id AS sprint_id, sprint."name" AS sprint_name, issuedata.date AS start_date, issuedata.end_date AS date 
 FROM (SELECT start_issue.project_id, start_issue.sprint_id, start_issue.issue_id, MIN(start_issue.updated) AS date, MIN(issue.updated) AS end_date
 	FROM gros.issue AS start_issue
 	JOIN gros.issue AS issue ON start_issue.issue_id = issue.issue_id AND start_issue.changelog_id < issue.changelog_id
