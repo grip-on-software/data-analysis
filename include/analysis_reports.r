@@ -80,7 +80,7 @@ sprint_burndown <- function(item, result) {
 			project_name = projects[projects$project_id == project, 'name']
 			sprint_data = result[result$project_id == project & result$sprint_id == sprint,c('story_points', 'close_date')]
 			start_points <- sprint_data[1,'story_points']
-			end_time <- sprint_data[sprint_data$story_points == 0,'close_date']
+			end_time <- sprint_data[is.na(sprint_data$story_points),'close_date']
 			if (!is.na(start_points) && !identical(end_time, character(0))) {
 				path <- paste(baseDir, project_name, sep="/")
 				if (!dir.exists(path)) {
@@ -93,7 +93,10 @@ sprint_burndown <- function(item, result) {
 							format, sep="."),
 						sep="/")
 
-				points <- cumsum(sprint_data$story_points)
+				changes <- sprint_data$story_points
+				# Set close date points change to 0.0
+				changes[is.na(changes)] <- 0.0
+				points <- cumsum(changes)
 				date <- as.Date(sprint_data$close_date, '%Y-%m-%d')
 				end_date <- as.Date(end_time, '%Y-%m-%d')
 				data <- cbind(as.data.frame(sprint_data$close_date),
