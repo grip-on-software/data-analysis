@@ -1,0 +1,5 @@
+db:
+    host: $MONETDB_HOSTNAME
+    dbname: $MONETDB_DATABASE
+    user: $MONETDB_USER
+    password: $MONETDB_PASSWORD
