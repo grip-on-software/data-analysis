@@ -314,6 +314,36 @@ project_members <- function(item, result) {
 		  file=paste(path, paste(filename, "json", sep="."), sep="/"))
 }
 
+project_backlog_burndown <- function(item, result) {
+	# Output plot
+	format <- get_arg('--format', default='json')
+	export_file = function(name, format) {
+		paste("output", paste(name, format, sep="."), sep="/")
+	}
+	if (format == 'pdf') {
+		for (project in levels(factor(result$project_id))) {
+			project_data <- result[result$project_id == project,]
+			date <- as.Date(project_data$start_date, '%Y-%m-%d')
+			epic_points <- project_data$num_epics * mean(na.omit(project_data$num_epic_points/project_data$num_epics))
+			points <- project_data$num_points + (!is.na(epic_points) & epic_points)
+			data <- cbind(as.data.frame(project_data$start_date),
+						  as.data.frame(points))
+			loginfo(date)
+			loginfo(points)
+			aspect_ratio = 1/1.6
+			plot <- ggplot(data, aes(x=date, y=points, group=1)) +
+				geom_point() + geom_line() +
+				coord_equal(ratio=aspect_ratio) +
+				theme(aspect.ratio=aspect_ratio)
+			file <- export_file(paste(item$table, project, sep="-"), format)
+			ggsave(file)
+			loginfo("Wrote plot to %s", file)
+		}
+	} else if (format == 'json') {
+		write(toJSON(result), file=export_file(item$table, format))
+	}
+}
+
 get_analysis_reports <- function(analysis_variables) {
 	reports <- list(not_done_ratio=not_done_ratio,
 					not_done_ratio_log=not_done_ratio,
@@ -322,7 +352,8 @@ get_analysis_reports <- function(analysis_variables) {
 					developers=developers,
 					story_flow=story_flow,
 					long_waiting_commits=long_waiting_commits,
-					project_members=project_members)
+					project_members=project_members,
+					project_backlog_burndown=project_backlog_burndown)
 	definitions <- yaml.load_file('analysis_definitions.yml')
 	analysis_definitions <- modifyList(lapply(definitions$fields,
 							   	              function(define) { define$field }),

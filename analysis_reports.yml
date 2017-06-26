@@ -16,3 +16,5 @@ files:
     table: long_waiting_commits
   - filename: project_members.sql
     table: project_members
+  - filename: project_backlog_burndown.sql
+    table: project_backlog_burndown
