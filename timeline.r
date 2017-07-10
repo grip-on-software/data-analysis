@@ -45,7 +45,7 @@ exportFeatures <- function(exclude) {
 		names(project_data) <- projects$name
 	}
 	else {
-		names(project_data) <- projects$project_id
+		names(project_data) <- paste('Proj', projects$project_id, sep='')
 	}
 	write(toJSON(project_data), file="output/features.json")
 }
@@ -58,7 +58,7 @@ exportSplitData <- function(data, item) {
 			project_name <- projects[project,'name']
 		}
 		else {
-			project_name <- project_id
+			project_name <- paste('Proj', project_id, sep='')
 		}
 
 		sprints <- dbGetQuery(conn, paste('SELECT sprint.sprint_id FROM gros.sprint WHERE sprint.project_id =', project_id))
@@ -84,7 +84,7 @@ exportSplitData <- function(data, item) {
 		names(project_data) <- projects$name
 	}
 	else {
-		names(project_data) <- projects$project_id
+		names(project_data) <- paste('Proj', projects$project_id, sep='')
 	}
 	return(project_data)
 }
@@ -98,7 +98,7 @@ exportData <- function(data, item) {
 		project_names <- as.list(projects$name)
 	}
 	else {
-		project_names <- as.list(projects$project_id)
+		project_names <- paste('Proj', as.list(projects$project_id), sep='')
 	}
 	project_data <- lapply(project_names, function(project) {
 		data[data$project_name == project,]
@@ -107,7 +107,7 @@ exportData <- function(data, item) {
 		names(project_data) <- projects$name
 	}
 	else {
-		names(project_data) <- projects$project_id
+		names(project_data) <- paste('Proj', projects$project_id, sep='')
 	}
 	path <- paste("output", paste(item$type, "json", sep="."), sep="/")
 	write(toJSON(project_data), file=path)
