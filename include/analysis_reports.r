@@ -77,8 +77,13 @@ sprint_burndown <- function(item, result) {
 	aspect_ratio = 1/1.6
 	for (project in levels(factor(result$project_id))) {
 		for (sprint in levels(factor(result[result$project_id == project,'sprint_id']))) {
-			project_name = projects[projects$project_id == project, 'name']
-			sprint_data = result[result$project_id == project & result$sprint_id == sprint,c('story_points', 'close_date')]
+			if (item$patterns[['project_ids']] != '1') {
+				project_name <- projects[projects$project_id == project, 'name']
+			}
+			else {
+				project_name <- project
+			}
+			sprint_data <- result[result$project_id == project & result$sprint_id == sprint,c('story_points', 'close_date')]
 			start_points <- sprint_data[1,'story_points']
 			end_time <- sprint_data[is.na(sprint_data$story_points),'close_date']
 			if (!is.na(start_points) && !identical(end_time, character(0))) {
@@ -145,7 +150,7 @@ sprint_burndown <- function(item, result) {
 					print(sum(over_under))
 					print(data)
 				} else {
-					loginfo("Not a supported format");
+					loginfo("Not a supported format")
 				}
 			}
 		}
@@ -160,7 +165,12 @@ commit_volume <- function(item, result) {
 	    names(commit_data)[names(commit_data)=='commit_day'] <- 'day'
 		return(commit_data)
 	})
-	names(data) <- projects$name
+	if (item$patterns[['project_ids']] != '1') {
+		names(data) <- projects$name
+	}
+	else {
+		names(data) <- projects$project_id
+	}
 	write(toJSON(data),
 		  file=paste("output", paste(item$table, "json", sep="."), sep="/"))
 }
@@ -179,7 +189,12 @@ developers <- function(item, result) {
 		pad_data$value <- as.numeric(pad_data$value)
 		return(pad_data)
 	})
-	names(data) <- projects$name
+	if (item$patterns[['project_ids']] != '1') {
+		names(data) <- projects$name
+	}
+	else {
+		names(data) <- projects$project_id
+	}
 	write(toJSON(data),
 		  file=paste("output", paste(item$table, "json", sep="."), sep="/"))
 }
@@ -290,9 +305,14 @@ long_waiting_commits <- function(item, result) {
 		project_id <- projects[project,'project_id']
 		project_data <- result[result$project_id == project_id,c('repo_name','file','later_date','earlier_date')]
 
+		if (item$patterns[['project_ids']] != '1') {
+			name <- projects[project,'name']
+		}
+		else {
+			name <- project_id
+		}
 		write(toJSON(project_data),
-		  	  file=paste(path, paste(projects[project,'name'], "json", sep="."),
-						 sep="/"))
+		  	  file=paste(path, paste(name, "json", sep="."), sep="/"))
 	})
 }
 

@@ -1,6 +1,7 @@
 library(jsonlite)
 library(logging)
 library(plyr)
+source('include/args.r')
 source('include/database.r')
 source('include/log.r')
 source('include/sprint_features.r')
@@ -21,6 +22,10 @@ conn <- connect()
 items <- load_queries('sprint_events.yml', 'sprint_definitions.yml')
 
 projects <- dbGetQuery(conn, 'SELECT project.project_id, project."name" FROM gros.project ORDER BY project.project_id')
+project_ids <- get_arg('--project-ids', default='0')
+if (project_ids != '0') {
+	project_ids = '1'
+}
 
 exportFeatures <- function(exclude) {
 	result <- get_sprint_features(conn, exclude)
@@ -35,7 +40,12 @@ exportFeatures <- function(exclude) {
 		names(result) <- sprint_data$sprint_id
 		return(result)
 	})
-	names(project_data) <- projects$name
+	if (project_ids != '1') {
+		names(project_data) <- projects$name
+	}
+	else {
+		names(project_data) <- projects$project_id
+	}
 	write(toJSON(project_data), file="output/features.json")
 }
 
@@ -44,13 +54,19 @@ exportSplitData <- function(data, item) {
 	project_data <- lapply(as.list(1:dim(projects)[1]), function(project) {
 		project_name <- projects[project,'name']
 		project_id <- projects[project,'project_id']
+		if (project_ids != '1') {
+			export_name <- project_name
+		}
+		else {
+			export_name <- project_id
+		}
 
 		sprints <- dbGetQuery(conn, paste('SELECT sprint.sprint_id FROM gros.sprint WHERE sprint.project_id =', project_id))
 		if (nrow(sprints) == 0) {
 			return(sprints)
 		}
 
-		path <- paste("output", project_name, sep="/")
+		path <- paste("output", export_name, sep="/")
 		if (!dir.exists(path)) {
 			dir.create(path)
 		}
@@ -64,7 +80,12 @@ exportSplitData <- function(data, item) {
 		}
 		return(sprints)
 	})
-	names(project_data) <- projects$name 
+	if (project_ids != '1') {
+		names(project_data) <- projects$name
+	}
+	else {
+		names(project_data) <- projects$project_id
+	}
 	return(project_data)
 }
 
@@ -76,7 +97,12 @@ exportData <- function(data, item) {
 	project_data <- lapply(as.list(projects$name), function(project) {
 		data[data$project_name == project,]
 	})
-	names(project_data) <- projects$name
+	if (project_ids != '1') {
+		names(project_data) <- projects$name
+	}
+	else {
+		names(project_data) <- projects$project_id
+	}
 	path <- paste("output", paste(item$type, "json", sep="."), sep="/")
 	write(toJSON(project_data), file=path)
 	return(project_data)
@@ -98,6 +124,8 @@ for (item in items) {
 	}
 	project_data <- exportData(result, item)
 	have_data <- lapply(project_data, nrow) > 0
+	loginfo(names(have_data))
+	loginfo(have_data)
 	projects_with_data <- modifyList(projects_with_data,
 									 as.list(have_data)[have_data])
 

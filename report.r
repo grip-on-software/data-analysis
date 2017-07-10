@@ -14,6 +14,11 @@ interval <- get_arg('--interval', default='')
 
 report <- get_arg('--report', default='.*')
 
+project_ids <- get_arg('--project-ids', default='0')
+if (project_ids != '0') {
+	project_ids = '1'
+}
+
 run_reports <- function(definitions) {
 	items <- get_analysis_reports(definitions)
 
@@ -28,7 +33,7 @@ run_reports <- function(definitions) {
 
 if (interval != '') {
 	# Always run the full report, this will also empty the output directory
-	run_reports(list(id='all'))
+	run_reports(list(id='all', project_ids=project_ids))
 
 	start_date <- start_date <- dbGetQuery(conn, 'SELECT MIN(updated) AS start_date FROM gros.issue')[[1]]
 	intervals <- seq(as.POSIXct(start_date), Sys.time(), by=interval)
@@ -37,17 +42,20 @@ if (interval != '') {
 		  file=paste("output", "intervals.json", sep="/"))
 	rollapply(intervals, 2, function(range) {
 		run_reports(list(id=paste('interval', as.numeric(range[1]), sep='-'),
+						 project_ids=project_ids,
 						 interval_condition=paste('WHERE ${field} BETWEEN ',
 												  'epoch(', as.numeric(range[1]), ') AND ',
 												  'epoch(', as.numeric(range[2]), ')', sep='')))
 	})
 } else if (identical(projects, numeric(0))) {
-	run_reports(list(id='all'))
+	run_reports(list(id='all', project_ids=project_ids))
 } else {
 	for (project in projects) {
 		run_reports(list(id=project,
+						 project_ids=project_ids,
 						 category_conditions=paste('AND project_id =', project)))
 		run_reports(list(id=paste('not', project, sep='-'),
+						 project_ids=project_ids,
 						 category_conditions=paste('AND project_id <>', project)))
 	}
 }
