@@ -1,6 +1,6 @@
 SELECT
   developer.display_name AS source,
-  CASE WHEN ${project_ids} THEN project.project_id ELSE project.name END AS target,
+  ${s(project_name)} AS target,
   developer.local_domain AS internal,
   COALESCE(SUM(commits_count.commits), 0) AS num_commits,
   SUM(issue_update.issues) AS num_issues

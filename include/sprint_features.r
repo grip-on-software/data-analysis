@@ -3,14 +3,15 @@
 source('include/database.r')
 source('include/log.r')
 
-get_sprint_features <- function(conn, exclude) {
+get_sprint_features <- function(conn, exclude, variables) {
 	sprint_data <- dbGetQuery(conn,
 						  	  'SELECT sprint.project_id, sprint.sprint_id
 						  	  FROM gros.sprint
 						  	  ORDER BY sprint.project_id, sprint.start_date'
 						  	  )
 
-	items <- load_queries('sprint_features.yml', 'sprint_definitions.yml')
+	items <- load_queries('sprint_features.yml', 'sprint_definitions.yml',
+						  variables)
 	colnames <- c("project_id")
 	join_cols <- c("project_id", "sprint_id")
 	for (item in items) {

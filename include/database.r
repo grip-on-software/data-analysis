@@ -30,15 +30,15 @@ if (!exists('INC_DATABASE_R')) {
 			}
 		}
 
-		recursive_str_interp <- function(string, ...) {
-			str_interp(string, list(...))
-		}
 		patterns <- c(lapply(definitions$fields,
 					  		 function(define) { define$field }),
 					  lapply(definitions$conditions,
 					  		 function(define) { define$condition }),
-					  variables,
-					  list(s=recursive_str_interp))
+					  variables)
+		recursive_str_interp <- function(string, ...) {
+			str_interp(string, c(patterns, list(...)))
+		}
+		patterns <- c(patterns, list(s=recursive_str_interp))
 
 		lapply(data$files, function(item) {
 			if (!is.null(item$definition)) {

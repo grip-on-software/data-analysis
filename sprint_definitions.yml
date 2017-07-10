@@ -1,4 +1,8 @@
 fields:
+    project_name:
+        description: "Identifer of a project"
+        table: project
+        field: CASE WHEN ${project_ids} THEN project.project_id ELSE project.name END
     sprint_days:
         description: "Number of days in a sprint"
         table: sprint
