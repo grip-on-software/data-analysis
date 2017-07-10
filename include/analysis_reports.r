@@ -81,7 +81,7 @@ sprint_burndown <- function(item, result) {
 				project_name <- projects[projects$project_id == project, 'name']
 			}
 			else {
-				project_name <- project
+				project_name <- paste('Proj', project, sep='')
 			}
 			sprint_data <- result[result$project_id == project & result$sprint_id == sprint,c('story_points', 'close_date')]
 			start_points <- sprint_data[1,'story_points']
