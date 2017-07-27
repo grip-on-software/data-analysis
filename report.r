@@ -38,7 +38,7 @@ if (interval != '') {
 	start_date <- start_date <- dbGetQuery(conn, 'SELECT MIN(updated) AS start_date FROM gros.issue')[[1]]
 	intervals <- seq(as.POSIXct(start_date), Sys.time(), by=interval)
 	loginfo(intervals)
-	write(toJSON(as.numeric(intervals)),
+	write(toJSON(head(as.numeric(intervals), n=-1)),
 		  file=paste("output", "intervals.json", sep="/"))
 	rollapply(intervals, 2, function(range) {
 		run_reports(list(id=paste('interval', as.numeric(range[1]), sep='-'),
