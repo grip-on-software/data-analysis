@@ -7,7 +7,7 @@ source('include/database.r')
 source('include/sprint_features.r')
 conn <- connect()
 
-exclude <- get_arg('--exclude')
+exclude <- get_arg('--exclude', '^$')
 result <- get_sprint_features(conn, exclude)
 sprint_data <- result$data
 
