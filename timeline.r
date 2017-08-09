@@ -155,5 +155,4 @@ total_data = list(min_date=safe_unbox(min(unlist(min_date))),
 
 write(toJSON(total_data), file="output/data.json")
 write(toJSON(types), file="output/types.json")
-exportFeatures(get_arg('--exclude',
-					   default='^new_developers$|^sprint_experience$'))
+exportFeatures(get_arg('--exclude', default='^$'))
