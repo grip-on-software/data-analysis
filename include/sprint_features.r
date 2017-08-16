@@ -3,6 +3,25 @@
 source('include/database.r')
 source('include/log.r')
 
+get_features <- function(conn, exclude, items, data, colnames, join_cols) {
+	for (item in items) {
+		if (missing(exclude) || length(grep(exclude, item$table)) == 0) {
+			loginfo('Executing query for table %s', item$table)
+			time <- system.time(result <- dbGetQuery(conn, item$query))
+			loginfo('Query for table %s took %f seconds', item$table,
+					time['elapsed'])
+			data <- merge(data, result, by=join_cols, all.x=T)
+			if (!is.null(item$default)) {
+				for (column in item$column) {
+					data[is.na(data[[column]]),column] = item$default
+				}
+			}
+			colnames <- c(colnames, item$column)
+		}
+	}
+	list(data=data, colnames=colnames)
+}
+
 get_sprint_features <- function(conn, exclude, variables) {
 	sprint_data <- dbGetQuery(conn,
 						  	  'SELECT sprint.project_id, sprint.sprint_id
@@ -14,20 +33,19 @@ get_sprint_features <- function(conn, exclude, variables) {
 						  variables)
 	colnames <- c("project_id")
 	join_cols <- c("project_id", "sprint_id")
-	for (item in items) {
-		if (missing(exclude) || length(grep(exclude, item$table)) == 0) {
-			loginfo('Executing query for table %s', item$table)
-			time <- system.time(result <- dbGetQuery(conn, item$query))
-			loginfo('Query for table %s took %f seconds', item$table,
-					time['elapsed'])
-			sprint_data <- merge(sprint_data, result, by=join_cols, all.x=T)
-			if (!is.null(item$default)) {
-				for (column in item$column) {
-					sprint_data[is.na(sprint_data[[column]]),column] = item$default
-				}
-			}
-			colnames <- c(colnames, item$column)
-		}
-	}
-	list(data=sprint_data, colnames=colnames)
+	get_features(conn, exclude, items, sprint_data, colnames, join_cols)
+}
+
+get_project_features <- function(conn, exclude, variables) {
+	data <- dbGetQuery(conn,
+					   'SELECT project.project_id
+			  	  		FROM gros.project
+	  	  				ORDER BY project.project_id'
+  						)
+
+	items <- load_queries('project_features.yml', 'sprint_definitions.yml',
+						  variables)
+	colnames <- c("project_id")
+	join_cols <- c("project_id")
+	get_features(conn, exclude, items, data, colnames, join_cols)
 }
