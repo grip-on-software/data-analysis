@@ -13,6 +13,8 @@ results <- read_json(input_file, simplifyVector=T)
 conn <- connect()
 projects <- dbGetQuery(conn, 'SELECT project.project_id, project."name" FROM gros.project ORDER BY project.project_id')
 
+write(toJSON(projects$name, auto_unbox=T),
+	  file=paste("output", "projects.json", sep="/"))
 for (idx in 1:length(results$projects)) {
 	project <- results$projects[idx]
 	project_name <- projects[project,'name'] 
