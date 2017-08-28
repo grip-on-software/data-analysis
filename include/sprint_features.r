@@ -38,14 +38,14 @@ get_sprint_features <- function(conn, exclude, variables) {
 
 get_project_features <- function(conn, exclude, variables) {
 	data <- dbGetQuery(conn,
-					   'SELECT project.project_id
+					   'SELECT project.project_id, project.name
 			  	  		FROM gros.project
-	  	  				ORDER BY project.project_id'
+	  	  				ORDER BY project.name'
   						)
 
 	items <- load_queries('project_features.yml', 'sprint_definitions.yml',
 						  variables)
-	colnames <- c("project_id")
+	colnames <- c("name")
 	join_cols <- c("project_id")
 	get_features(conn, exclude, items, data, colnames, join_cols)
 }
