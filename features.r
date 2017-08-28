@@ -11,8 +11,10 @@ conn <- connect()
 exclude <- get_arg('--exclude', '^$')
 if (get_arg('--project', F)) {
 	result <- get_project_features(conn, exclude)
-	data <- result$data
-	write(toJSON(data[,result$colnames]), file="output/project_features.json")
+	df <- result$data[,result$colnames]
+	data <- lapply(as.list(split(df, seq(nrow(df)))), unbox)
+	names(data) <- result$data[['name']]
+	write(toJSON(data), file="output/project_features.json")
 } else {
 	result <- get_sprint_features(conn, exclude)
 	sprint_data <- result$data

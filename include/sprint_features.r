@@ -45,7 +45,7 @@ get_project_features <- function(conn, exclude, variables) {
 
 	items <- load_queries('project_features.yml', 'sprint_definitions.yml',
 						  variables)
-	colnames <- c("name")
+	colnames <- c()
 	join_cols <- c("project_id")
 	get_features(conn, exclude, items, data, colnames, join_cols)
 }
