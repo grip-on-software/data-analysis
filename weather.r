@@ -8,7 +8,7 @@ config <- yaml.load_file('weather.yml')
 
 knmi_file = paste("output", "knmi.nc", sep="/")
 if (!file.exists(knmi_file)) {
-	download.file(config$url, knmi_file)
+	download.file(config$url, knmi_file, mode="wb")
 }
 
 
