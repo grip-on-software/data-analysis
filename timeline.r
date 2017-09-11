@@ -4,7 +4,7 @@ library(plyr)
 source('include/args.r')
 source('include/database.r')
 source('include/log.r')
-source('include/sprint_features.r')
+source('include/features.r')
 
 dateFormat <- function(date) {
 	format(as.POSIXct(date), format="%Y-%m-%dT%H:%M:%S")

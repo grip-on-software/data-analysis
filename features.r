@@ -5,7 +5,7 @@ library(foreign) # For write.arff
 library(jsonlite)
 source('include/args.r')
 source('include/database.r')
-source('include/sprint_features.r')
+source('include/features.r')
 conn <- connect()
 
 exclude <- get_arg('--exclude', '^$')
@@ -18,8 +18,10 @@ if (get_arg('--project', F)) {
 
 	config <- yaml.load_file('config.yml')
 	patterns <- load_definitions('sprint_definitions.yml', config$fields)
-	links <- lapply(result$data[['name']], function(project) {
+	links <- mapply(function(project_id, project) {
 		project_links <- list()
+		project_environments <- dbGetQuery(conn, paste('SELECT source_type, url FROM gros.source_environment WHERE project_id = ', project_id, sep=''))
+		print(project_environments)
 		project_patterns <- c(patterns, list(jira_key=project))
 
 		for (item in result$items) {
@@ -27,7 +29,7 @@ if (get_arg('--project', F)) {
 			project_links[[item$column]] <- list(source=unbox(source_url))
 		}
 		return(project_links)
-	})
+	}, result$data[['project_id']], result$data[['name']], SIMPLIFY=F)
 	names(links) <- result$data[['name']]
 	write(toJSON(links), file="output/project_features_links.json")
 
