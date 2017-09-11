@@ -36,6 +36,10 @@ conditions:
         description: "Issues that are not stories or subtasks"
         table: issue
         condition: issue."type" NOT IN (5,7)
+    issue_test_case:
+        description: "Issues that are test cases"
+        table: issue
+        condition: '"type" IN (9, 10, 10301)'
     sprint_closed:
         descritpion: "Sprints that have been ended or completed"
         table: sprint
