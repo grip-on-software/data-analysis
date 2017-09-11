@@ -3,3 +3,6 @@ db:
     dbname: $MONETDB_DATABASE
     user: $MONETDB_USER
     password: $MONETDB_PASSWORD
+fields:
+    jira_url: $JIRA_URL
+    vcs_url: $SOURCE_URL

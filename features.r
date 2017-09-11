@@ -8,6 +8,24 @@ source('include/database.r')
 source('include/features.r')
 conn <- connect()
 
+get_source_urls <- function(conn, project_id) {
+	vcs_sources <- c('svn', 'git', 'github', 'gitlab', 'tfs')
+	environments <- dbGetQuery(conn, paste('SELECT source_type, url FROM gros.source_environment WHERE project_id = ', project_id, sep=''))
+	urls <- as.list(sub("/$", "", environments$url))
+	if (length(urls) == 0) {
+		return(urls)
+	}
+	names(urls) <- paste(environments$source_type, 'url', sep='_')
+
+	for (vcs_source in vcs_sources) {
+		if (vcs_source %in% environments$source_type) {
+			urls$vcs_url <- urls[[paste(vcs_source, 'url', sep='_')]]
+		}
+	}
+
+	return(urls)
+}
+
 exclude <- get_arg('--exclude', '^$')
 if (get_arg('--project', F)) {
 	result <- get_project_features(conn, exclude)
@@ -20,9 +38,8 @@ if (get_arg('--project', F)) {
 	patterns <- load_definitions('sprint_definitions.yml', config$fields)
 	links <- mapply(function(project_id, project) {
 		project_links <- list()
-		project_environments <- dbGetQuery(conn, paste('SELECT source_type, url FROM gros.source_environment WHERE project_id = ', project_id, sep=''))
-		print(project_environments)
-		project_patterns <- c(patterns, list(jira_key=project))
+		project_urls <- get_source_urls(conn, project_id)
+		project_patterns <- c(list(jira_key=project), project_urls, patterns)
 
 		for (item in result$items) {
 			source_url <- str_interp(item$source, project_patterns)
@@ -46,3 +63,4 @@ if (get_arg('--project', F)) {
 			   file='output/sprint_features.arff',
 		   	   relation="sprint_data")
 }
+
