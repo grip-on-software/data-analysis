@@ -18,3 +18,5 @@ files:
     table: project_members
   - filename: project_backlog_burndown.sql
     table: project_backlog_burndown
+  - filename: bigboat_status.sql
+    table: bigboat_status

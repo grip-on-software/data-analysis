@@ -364,6 +364,44 @@ project_backlog_burndown <- function(item, result) {
 	}
 }
 
+bigboat_status <- function(item, result) {
+	path <- paste("output", item$table, sep="/")
+	if (!dir.exists(path)) {
+		dir.create(path)
+	}
+	projects <- dbGetQuery(conn, 'SELECT project.project_id, project."name" FROM gros.project ORDER BY project.project_id')
+
+	# Create list of project names
+	if (item$patterns[['project_ids']] != '1') {
+		projectNames <- projects$name
+	}
+	else {
+		projectNames <- projects$project_id
+	}
+	write(toJSON(projectNames),
+		file=paste(path, "projects.json", sep="/"))
+
+	lapply(as.list(projects$project_id), function(project) {
+		project_id <- projects[project,'project_id']
+		project_data <- result[result$project_id == project_id,c('name','checked_date','ok','value','max')]
+
+		if (nrow(project_data) > 0) {
+			if (item$patterns[['project_ids']] != '1') {
+				name <- projects[project,'name']
+			}
+			else {
+				name <- project_id
+			}
+
+			write(toJSON(project_data),
+				file=paste(path, paste(name, "json", sep="."), sep="/"))
+		}
+		else {
+			loginfo("No data for %s", projects[project,'name'])
+		}
+	})
+}
+
 get_analysis_reports <- function(analysis_variables) {
 	reports <- list(not_done_ratio=not_done_ratio,
 					not_done_ratio_log=not_done_ratio,
@@ -373,7 +411,8 @@ get_analysis_reports <- function(analysis_variables) {
 					story_flow=story_flow,
 					long_waiting_commits=long_waiting_commits,
 					project_members=project_members,
-					project_backlog_burndown=project_backlog_burndown)
+					project_backlog_burndown=project_backlog_burndown,
+					bigboat_status=bigboat_status)
 	definitions <- yaml.load_file('analysis_definitions.yml')
 	analysis_definitions <- modifyList(lapply(definitions$fields,
 							   	              function(define) { define$field }),
