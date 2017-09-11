@@ -386,6 +386,7 @@ bigboat_status <- function(item, result) {
 		project_data <- result[result$project_id == project_id,c('name','checked_date','ok','value','max')]
 
 		if (nrow(project_data) > 0) {
+			project_data$checked_date <- as.POSIXct(project_data$checked_date)
 			if (item$patterns[['project_ids']] != '1') {
 				name <- projects[project,'name']
 			}
