@@ -6,4 +6,4 @@ SELECT
   value,
   max
 FROM gros.bigboat_status
-ORDER BY project_id
+ORDER BY project_id, checked_date, name
