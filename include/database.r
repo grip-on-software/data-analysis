@@ -16,8 +16,7 @@ if (!exists('INC_DATABASE_R')) {
 			  	  user=config$db$user, password=config$db$password)
 	}
 
-	load_queries <- function(specification_file, definition_file, variables) {
-		data <- yaml.load_file(specification_file)
+	load_definitions <- function(definition_file, variables) {
 		definitions <- yaml.load_file(definition_file)
 		if (missing(variables)) {
 			variables <- NULL
@@ -40,25 +39,38 @@ if (!exists('INC_DATABASE_R')) {
 		}
 		patterns <- c(patterns, list(s=recursive_str_interp))
 
-		lapply(data$files, function(item) {
-			if (!is.null(item$definition)) {
-				fields <- list()
-				for (field in c("project_id", "sprint_id")) {
-					fields <- c(fields, paste(item$table, field, sep="."))
-				}
-				define <- definitions$fields[[item$definition]]
-				fields <- c(fields,
-							paste(define$field, "AS", item$column, sep=" "))
-				item$query <- paste('SELECT', paste(fields, collapse=", "),
-									'FROM', paste('gros', item$table, sep='.'))
+		return(patterns)
+	}
+
+	load_query <- function(item, patterns, path) {
+		if (!is.null(item$definition)) {
+			fields <- list()
+			for (field in c("project_id", "sprint_id")) {
+				fields <- c(fields, paste(item$table, field, sep="."))
+			}
+			define <- patterns[[item$definition]]
+			fields <- c(fields, paste(define, "AS", item$column, sep=" "))
+			item$query <- paste('SELECT', paste(fields, collapse=", "),
+								'FROM', paste('gros', item$table, sep='.'))
+		}
+		else {
+			if (!is.null(item$query)) {
+				query <- item$query
 			}
 			else {
-				path <- paste(data$path, item$filename, sep="/")
+				path <- paste(path, item$filename, sep="/")
 				query <- paste(readLines(path, encoding="UTF-8"), collapse="\n")
-				item$query <- str_interp(query, patterns)
-				item$patterns <- patterns
 			}
-			return(item)
-		})
+			item$query <- str_interp(query, patterns)
+			item$patterns <- patterns
+		}
+		return(item)
+	}
+
+	load_queries <- function(specification_file, definition_file, variables) {
+		data <- yaml.load_file(specification_file)
+		patterns <- load_definitions(definition_file, variables)
+
+		lapply(data$files, load_query, patterns, data$path)
 	}
 }
