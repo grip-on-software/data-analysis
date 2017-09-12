@@ -13,7 +13,12 @@ get_features <- function(conn, exclude, items, data, colnames, join_cols) {
 			data <- merge(data, result, by=join_cols, all.x=T)
 			if (!is.null(item$default)) {
 				for (column in item$column) {
-					data[is.na(data[[column]]),column] = item$default
+					if (column %in% names(data)) {
+						data[is.na(data[[column]]),column] = item$default
+					}
+					else {
+						logwarn(paste('Column', column, 'could not be found'))
+					}
 				}
 			}
 			colnames <- c(colnames, item$column)

@@ -6,18 +6,21 @@ files:
     default: 0
     name: Issues
     source: "${jira_url}/projects/${jira_key}/issues?filter=allissues"
+    normalize: num_sprints
   - filename: 00-num-stories.sql
     table: sprint_issue
     column: num_stories
     default: 0
     name: Stories
     source: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=project %3D ${jira_key} and type %3D Story&runQuery=true"
+    normalize: num_sprints
   - filename: 00-comments.sql
     table: num_comments
     column: num_comments
     default: 0
     name: Comments
     source: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=project %3D ${jira_key} and comment !~ '.'&runQuery=true"
+    normalize: num_sprints
   - filename: 00-test-cases.sql
     table: issue
     column: num_tests
@@ -36,21 +39,57 @@ files:
     default: 0
     name: "VCS Tags"
     source: "${vcs_url}"
+    normalize: num_repos
   - filename: 02-issue-links.sql
     table: issuelink
     column: num_links
     default: 0
     name: "Issue Links"
     source: "${jira_url}/projects/${jira_key}/issues?filter=allissues"
+    normalize: num_issues
+  - filename: 03-commits.sql
+    table: commits
+    column: num_commits
+    default: 0
+    name: Commits
+    source: "${vcs_url}"
+    normalize: num_sprints
+  - filename: 03-push-events.sql
+    table: vcs_event
+    column: num_push_events
+    default: 0
+    name: "Push Events"
+    source: "${vcs_url}"
+    normalize: 
   - filename: 03-merges.sql
     table: commits
     column: num_merges
     default: 0
     name: Merges
     source: "${vcs_url}"
+    normalize: num_commits
   - filename: 03-merge-requests.sql
     table: merge_request
     column: num_requests
     default: 0
     name: "Merge Requests"
     source: "${vcs_url}"
+  - filename: 04-sprints.sql
+    table: sprint
+    column: num_sprints
+    default: 0
+    name: "Sprints"
+    source: "{$jira_url}/secure/RapidBoard.jspa?projectKey=${jira_key}"
+  - filename: 04-sprint-lifespan.sql
+    table: sprint
+    column: lifespan
+    default: 0
+    name: "Life Span"
+    source: "{$jira_url}/secure/RapidBoard.jspa?projectKey=${jira_key}"
+  - filename: 04-fix-versions.sql
+    table: fixversion
+    column: num_versions
+    default: 0
+    name: "Fix Versions"
+    source: "{$jira_url}/projects/${jira_key}?selectedItem=com.atlassian.jira.jira-projects-plugin%3Arelease-page&status=released-unreleased" 
+    normalize: num_sprints

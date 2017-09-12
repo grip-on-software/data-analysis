@@ -33,6 +33,13 @@ if (get_arg('--project', F)) {
 	data <- lapply(as.list(split(df, seq(nrow(df)))), unbox)
 	names(data) <- result$data[['name']]
 	write(toJSON(data), file="output/project_features.json")
+	loginfo("Wrote project_features.json")
+
+	normalize <- lapply(result$items, function(item) { unbox(item$normalize) })
+	names(normalize) <- result$colnames
+	write(toJSON(normalize, null="null"),
+		  file="output/project_features_normalize.json")
+	loginfo("Wrote project_features_normalize.json")
 
 	config <- yaml.load_file('config.yml')
 	patterns <- load_definitions('sprint_definitions.yml', config$fields)
@@ -49,12 +56,14 @@ if (get_arg('--project', F)) {
 	}, result$data[['project_id']], result$data[['name']], SIMPLIFY=F)
 	names(links) <- result$data[['name']]
 	write(toJSON(links), file="output/project_features_links.json")
+	loginfo("Wrote project_features_links.json")
 
 	locale <- list()
 	for (item in result$items) {
 		locale[[item$column]] <- unbox(item$name)
 	}
 	write(toJSON(locale), file="output/project_features_localization.json")
+	loginfo("Wrote project_features_localization.json")
 } else {
 	result <- get_sprint_features(conn, exclude)
 	sprint_data <- result$data
