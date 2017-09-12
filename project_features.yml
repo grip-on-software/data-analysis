@@ -11,19 +11,19 @@ files:
     column: num_stories
     default: 0
     name: Stories
-    source: "${jira_url}/issues?jql=project %3D ${jira_key} and type %3D Story"
+    source: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=project %3D ${jira_key} and type %3D Story&runQuery=true"
   - filename: 00-comments.sql
     table: num_comments
     column: num_comments
     default: 0
     name: Comments
-    source: "${jira_url}/issues?jql=project %3D ${jira_key} and comment !~ '.'"
+    source: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=project %3D ${jira_key} and comment !~ '.'&runQuery=true"
   - filename: 00-test-cases.sql
     table: issue
     column: num_tests
     default: 0
     name: "Test Cases"
-    source: "${jira_url}/issues?jql=project %3D ${jira_key} and ${issue_test_case}"
+    source: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=project %3D ${jira_key} and ${issue_test_case}&runQuery=true"
   - filename: 01-repos.sql
     table: repo
     column: num_repos
