@@ -79,17 +79,17 @@ files:
     column: num_sprints
     default: 0
     name: "Sprints"
-    source: "{$jira_url}/secure/RapidBoard.jspa?projectKey=${jira_key}"
+    source: "${jira_url}/secure/RapidBoard.jspa?projectKey=${jira_key}"
   - filename: 04-sprint-lifespan.sql
     table: sprint
     column: lifespan
     default: 0
     name: "Life Span"
-    source: "{$jira_url}/secure/RapidBoard.jspa?projectKey=${jira_key}"
+    source: "${jira_url}/secure/RapidBoard.jspa?projectKey=${jira_key}"
   - filename: 04-fix-versions.sql
     table: fixversion
     column: num_versions
     default: 0
     name: "Fix Versions"
-    source: "{$jira_url}/projects/${jira_key}?selectedItem=com.atlassian.jira.jira-projects-plugin%3Arelease-page&status=released-unreleased" 
+    source: "${jira_url}/projects/${jira_key}?selectedItem=com.atlassian.jira.jira-projects-plugin%3Arelease-page&status=released-unreleased" 
     normalize: num_sprints
