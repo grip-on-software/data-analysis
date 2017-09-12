@@ -10,14 +10,19 @@ export <- function(items, prefix, field) {
 	}
 }
 
+project_ids <- get_arg('--project-ids', default='0')
 definitions <- yaml.load_file('analysis_definitions.yml')
-analysis_definitions <- lapply(definitions$fields,
-							   function(define) { define$field })
+analysis_definitions <- c(lapply(definitions$fields,
+								 function(define) { define$field }),
+						  list(project_ids=project_ids))
 
 export(load_queries('sprint_features.yml', 'sprint_definitions.yml'),
 	   'feature', 'table')
-export(load_queries('sprint_events.yml', 'sprint_definitions.yml'),
+export(load_queries('sprint_events.yml', 'sprint_definitions.yml',
+					list(project_ids=project_ids)),
 	   'event', 'type')
 export(load_queries('analysis_reports.yml', 'sprint_definitions.yml',
 					analysis_definitions),
 	   'report', 'table')
+export(load_queries('project_features.yml', 'sprint_definitions.yml'),
+	   'project', 'column')

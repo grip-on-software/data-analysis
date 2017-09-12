@@ -19,7 +19,7 @@ get_features <- function(conn, exclude, items, data, colnames, join_cols) {
 			colnames <- c(colnames, item$column)
 		}
 	}
-	list(data=data, colnames=colnames)
+	list(data=data, colnames=colnames, items=items)
 }
 
 get_sprint_features <- function(conn, exclude, variables) {

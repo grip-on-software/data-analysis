@@ -5,8 +5,26 @@ library(foreign) # For write.arff
 library(jsonlite)
 source('include/args.r')
 source('include/database.r')
-source('include/sprint_features.r')
+source('include/features.r')
 conn <- connect()
+
+get_source_urls <- function(conn, project_id) {
+	vcs_sources <- c('svn', 'git', 'github', 'gitlab', 'tfs')
+	environments <- dbGetQuery(conn, paste('SELECT source_type, url FROM gros.source_environment WHERE project_id = ', project_id, sep=''))
+	urls <- as.list(sub("/$", "", environments$url))
+	if (length(urls) == 0) {
+		return(urls)
+	}
+	names(urls) <- paste(environments$source_type, 'url', sep='_')
+
+	for (vcs_source in vcs_sources) {
+		if (vcs_source %in% environments$source_type) {
+			urls$vcs_url <- urls[[paste(vcs_source, 'url', sep='_')]]
+		}
+	}
+
+	return(urls)
+}
 
 exclude <- get_arg('--exclude', '^$')
 if (get_arg('--project', F)) {
@@ -15,10 +33,34 @@ if (get_arg('--project', F)) {
 	data <- lapply(as.list(split(df, seq(nrow(df)))), unbox)
 	names(data) <- result$data[['name']]
 	write(toJSON(data), file="output/project_features.json")
+
+	config <- yaml.load_file('config.yml')
+	patterns <- load_definitions('sprint_definitions.yml', config$fields)
+	links <- mapply(function(project_id, project) {
+		project_links <- list()
+		project_urls <- get_source_urls(conn, project_id)
+		project_patterns <- c(list(jira_key=project), project_urls, patterns)
+
+		for (item in result$items) {
+			source_url <- str_interp(item$source, project_patterns)
+			project_links[[item$column]] <- list(source=unbox(source_url))
+		}
+		return(project_links)
+	}, result$data[['project_id']], result$data[['name']], SIMPLIFY=F)
+	names(links) <- result$data[['name']]
+	write(toJSON(links), file="output/project_features_links.json")
+
+	locale <- list()
+	for (item in result$items) {
+		locale[[item$column]] <- unbox(item$name)
+	}
+	write(toJSON(locale), file="output/project_features_localization.json")
 } else {
 	result <- get_sprint_features(conn, exclude)
 	sprint_data <- result$data
 
-	write.arff(sprint_data[,result$colnames], file='output/sprint_features.arff',
+	write.arff(sprint_data[,result$colnames],
+			   file='output/sprint_features.arff',
 		   	   relation="sprint_data")
 }
+
