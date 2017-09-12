@@ -25,8 +25,12 @@ run_reports <- function(definitions) {
 	for (item in items) {
 		if (length(grep(report, item$table)) > 0) {
 			loginfo('Executing query for report %s', item$table)
-			result <- dbGetQuery(conn, item$query)
-			item$report(item, result)
+			time <- system.time(result <- dbGetQuery(conn, item$query))
+			loginfo('Query for report %s took %f seconds', item$table,
+					time['elapsed'])
+			time <- system.time(item$report(item, result))
+			loginfo('Generation of report %s took %f seconds', item$table,
+					time['elapsed'])
 		}
 	}
 }
