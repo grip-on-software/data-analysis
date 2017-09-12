@@ -303,7 +303,7 @@ long_waiting_commits <- function(item, result) {
 	projects <- dbGetQuery(conn, 'SELECT project.project_id, project."name" FROM gros.project ORDER BY project.project_id')
 	lapply(as.list(projects$project_id), function(project) {
 		project_id <- projects[project,'project_id']
-		project_data <- result[result$project_id == project_id,c('repo_name','file','later_date','earlier_date')]
+		project_data <- result[result$project_id == project_id,c('repo_name','url','file','later_date','earlier_date')]
 
 		if (item$patterns[['project_ids']] != '1') {
 			name <- projects[project,'name']
@@ -311,6 +311,8 @@ long_waiting_commits <- function(item, result) {
 		else {
 			name <- project_id
 		}
+		project_data$earlier_date <- as.POSIXct(project_data$earlier_date)
+		project_data$later_date <- as.POSIXct(project_data$later_date)
 		write(toJSON(project_data),
 		  	  file=paste(path, paste(name, "json", sep="."), sep="/"))
 	})
