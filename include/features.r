@@ -2,6 +2,7 @@
 
 source('include/database.r')
 source('include/log.r')
+source('include/project.r')
 
 get_features <- function(conn, exclude, items, data, colnames, join_cols) {
 	for (item in items) {
@@ -42,11 +43,7 @@ get_sprint_features <- function(conn, exclude, variables) {
 }
 
 get_project_features <- function(conn, exclude, variables) {
-	data <- dbGetQuery(conn,
-					   'SELECT project.project_id, project.name
-			  	  		FROM gros.project
-	  	  				ORDER BY project.name'
-  						)
+	data <- get_projects(conn, by='name')
 
 	items <- load_queries('project_features.yml', 'sprint_definitions.yml',
 						  variables)

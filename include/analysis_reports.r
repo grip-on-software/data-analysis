@@ -7,6 +7,7 @@ library(padr)
 library(zoo)
 source('include/args.r')
 source('include/log.r')
+source('include/project.r')
 
 not_done_ratio <- function(item, result) {
 	bins <- c(0.0, 0.5, 1, 2, 3, 5, 8, 13, 20, 40, 100, Inf)
@@ -65,7 +66,7 @@ not_done_ratio <- function(item, result) {
 
 sprint_burndown <- function(item, result) {
 	format <- get_arg('--format', default='pdf')
-	projects <- dbGetQuery(conn, 'SELECT project.project_id, project."name" FROM gros.project ORDER BY project.project_id')
+	projects <- get_projects(conn)
 
 	baseDir <- paste("output", item$table, sep="/")
 	if (!dir.exists(baseDir)) {
@@ -158,7 +159,7 @@ sprint_burndown <- function(item, result) {
 }
 
 commit_volume <- function(item, result) {
-	projects <- dbGetQuery(conn, 'SELECT project.project_id, project."name" FROM gros.project ORDER BY project.project_id')
+	projects <- get_projects(conn)
 	data <- lapply(as.list(projects$project_id), function(project) {
 		project_id <- projects[project,'project_id']
 		commit_data <- result[result$project_id == project_id,c('commit_day','value')]
@@ -176,7 +177,7 @@ commit_volume <- function(item, result) {
 }
 
 developers <- function(item, result) {
-	projects <- dbGetQuery(conn, 'SELECT project.project_id, project."name" FROM gros.project ORDER BY project.project_id')
+	projects <- get_projects(conn)
 	data <- lapply(as.list(projects$project_id), function(project) {
 		project_id <- projects[project,'project_id']
 		dev_data <- result[result$project_id == project_id,c('commit_date','value')]
@@ -300,7 +301,7 @@ long_waiting_commits <- function(item, result) {
 	if (!dir.exists(path)) {
 		dir.create(path)
 	}
-	projects <- dbGetQuery(conn, 'SELECT project.project_id, project."name" FROM gros.project ORDER BY project.project_id')
+	projects <- get_projects(conn)
 	lapply(as.list(projects$project_id), function(project) {
 		project_id <- projects[project,'project_id']
 		project_data <- result[result$project_id == project_id,c('repo_name','url','file','later_date','earlier_date')]
@@ -371,7 +372,7 @@ bigboat_status <- function(item, result) {
 	if (!dir.exists(path)) {
 		dir.create(path)
 	}
-	projects <- dbGetQuery(conn, 'SELECT project.project_id, project."name" FROM gros.project ORDER BY project.project_id')
+	projects <- get_projects(conn)
 
 	# Create list of project names
 	if (item$patterns[['project_ids']] != '1') {

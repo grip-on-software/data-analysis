@@ -5,13 +5,14 @@ library(jsonlite)
 source('include/args.r')
 source('include/database.r')
 source('include/log.r')
+source('include/project.r')
 
 input_file <- get_arg('--file', default='sprint_labels.json')
 
 results <- read_json(input_file, simplifyVector=T)
 
 conn <- connect()
-projects <- dbGetQuery(conn, 'SELECT project.project_id, project."name" FROM gros.project ORDER BY project.project_id')
+projects <- get_projects(conn)
 
 write(toJSON(projects$name, auto_unbox=T),
 	  file=paste("output", "projects.json", sep="/"))

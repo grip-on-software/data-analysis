@@ -5,6 +5,7 @@ source('include/args.r')
 source('include/database.r')
 source('include/log.r')
 source('include/features.r')
+source('include/project.r')
 
 dateFormat <- function(date) {
 	format(as.POSIXct(date), format="%Y-%m-%dT%H:%M:%S")
@@ -19,7 +20,7 @@ safe_unbox <- function(x) {
 
 conn <- connect()
 
-projects <- dbGetQuery(conn, 'SELECT project.project_id, project."name" FROM gros.project ORDER BY project.project_id')
+projects <- get_projects(conn)
 project_ids <- get_arg('--project-ids', default='0')
 if (project_ids != '0') {
 	project_ids = '1'
