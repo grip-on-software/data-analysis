@@ -42,11 +42,46 @@ get_sprint_features <- function(conn, exclude, variables) {
 	get_features(conn, exclude, items, sprint_data, colnames, join_cols)
 }
 
+get_recent_sprint_features <- function(conn, features, variables, date, limit) {
+	if (missing(limit)) {
+		limit <- 5
+	}
+	patterns <- load_definitions('sprint_definitions.yml', variables)
+	projects <- get_recent_projects(conn, date)
+	query = 'SELECT sprint.project_id, project.name AS project_name,
+			 sprint.sprint_id, sprint.name AS sprint_name, sprint.start_date
+		  	 FROM gros.sprint
+		  	 JOIN gros.project
+		  	 ON project.project_id = sprint.project_id
+		  	 WHERE sprint.project_id = ${project_id}
+		  	 AND ${sprint_close} < CURRENT_TIMESTAMP()
+		  	 ORDER BY sprint.project_id, sprint.start_date DESC
+		  	 LIMIT ${limit}'
+	sprint_data <- data.frame()
+	for (project in projects$project_id) {
+		item <- load_query(list(query=query),
+						   c(patterns, list(limit=limit, project_id=project)))
+		sprint_data <- rbind(sprint_data, dbGetQuery(conn, item$query))
+	}
+
+	data <- yaml.load_file('sprint_features.yml')
+	items <- list()
+	for (item in data$files) {
+		if (length(item$column) == 1 && item$column %in% features) {
+			items <- c(items, list(load_query(item, patterns, data$path)))
+		}
+	}
+
+	colnames <- c("project_name", "sprint_name", "start_date")
+	join_cols <- c("project_id", "sprint_id")
+	get_features(conn, '^$', items, sprint_data, colnames, join_cols)
+}
+
 get_project_features <- function(conn, exclude, variables) {
 	data <- get_projects(conn, by='name')
 
 	items <- load_queries('project_features.yml', 'sprint_definitions.yml',
-						  variables)
+					  	  variables)
 	colnames <- c()
 	join_cols <- c("project_id")
 	get_features(conn, exclude, items, data, colnames, join_cols)

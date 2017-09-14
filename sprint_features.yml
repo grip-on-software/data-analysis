@@ -59,6 +59,18 @@ files:
     table: not_done
     column: num_not_done
     default: 0
+  - filename: 04-added-stories.sql
+    table: added_stories
+    column: num_added_stories
+    default: 0
+  - filename: 04-stories.sql
+    table: stories
+    column: num_stories
+    default: 0
+  - filename: 04-done-stories.sql
+    table: done_stories
+    column: num_done_stories
+    default: 0
   - filename: 04-issue-links.sql
     table: issue_links
     column: num_links
