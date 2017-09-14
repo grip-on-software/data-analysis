@@ -372,19 +372,12 @@ bigboat_status <- function(item, result) {
 	if (!dir.exists(path)) {
 		dir.create(path)
 	}
+
 	projects <- get_projects(conn)
 
-	# Create list of project names
-	if (item$patterns[['project_ids']] != '1') {
-		projectNames <- projects$name
-	}
-	else {
-		projectNames <- projects$project_id
-	}
-	write(toJSON(projectNames),
-		file=paste(path, "projects.json", sep="/"))
+	projectList <- list()
 
-	lapply(as.list(projects$project_id), function(project) {
+	for(project in as.list(projects$project_id)) {
 		project_id <- projects[project,'project_id']
 		project_data <- result[result$project_id == project_id,c('name','checked_date','ok','value','max')]
 
@@ -396,6 +389,7 @@ bigboat_status <- function(item, result) {
 			else {
 				name <- project_id
 			}
+			projectList = c(projectList, name)
 
 			write(toJSON(project_data),
 				file=paste(path, paste(name, "json", sep="."), sep="/"))
@@ -403,7 +397,9 @@ bigboat_status <- function(item, result) {
 		else {
 			loginfo("No data for %s", projects[project,'name'])
 		}
-	})
+	}
+	write(toJSON(projectList, auto_unbox=T),
+		file=paste(path, "projects.json", sep="/"))
 }
 
 get_analysis_reports <- function(analysis_variables) {
