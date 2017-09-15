@@ -14,18 +14,22 @@ if (!exists('INC_PROJECT_R')) {
 	}
 
 	get_sprint_projects <- function(conn, by='project_id') {
-		dbGetQuery(conn, paste('SELECT DISTINCT project.project_id, project.name
+		dbGetQuery(conn, paste('SELECT project_id, name FROM
+							   (SELECT DISTINCT project.project_id, project.name
 							   FROM gros.project
 							   JOIN gros.sprint
-							   ON project.project_id = sprint.project_id
+							   ON project.project_id = sprint.project_id)
+							   AS sprint_project
 							   ORDER BY', by))
 	}
 
 	get_repo_projects <- function(conn, by='project_id') {
-		dbGetQuery(conn, paste('SELECT DISTINCT project.project_id, project.name
+		dbGetQuery(conn, paste('SELECT project_id, name FROM
+							   (SELECT DISTINCT project.project_id, project.name
 							   FROM gros.project
 							   JOIN gros.repo
-							   ON project.project_id = repo.project_id
+							   ON project.project_id = repo.project_id)
+							   AS repo_project
 							   ORDER BY', by))
 	}
 
