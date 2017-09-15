@@ -160,8 +160,7 @@ sprint_burndown <- function(item, result) {
 
 commit_volume <- function(item, result) {
 	projects <- get_repo_projects(conn)
-	data <- lapply(as.list(projects$project_id), function(project) {
-		project_id <- projects[project,'project_id']
+	data <- lapply(as.list(projects$project_id), function(project_id) {
 		commit_data <- result[result$project_id == project_id,c('commit_day','value')]
 	    names(commit_data)[names(commit_data)=='commit_day'] <- 'day'
 		return(commit_data)
@@ -178,8 +177,7 @@ commit_volume <- function(item, result) {
 
 developers <- function(item, result) {
 	projects <- get_repo_projects(conn)
-	data <- lapply(as.list(projects$project_id), function(project) {
-		project_id <- projects[project,'project_id']
+	data <- lapply(as.list(projects$project_id), function(project_id) {
 		dev_data <- result[result$project_id == project_id,c('commit_date','value')]
 		date_data <- data.frame(day=as.Date(dev_data$commit_date),
 								value=as.numeric(dev_data$value))
@@ -302,21 +300,17 @@ long_waiting_commits <- function(item, result) {
 		dir.create(path)
 	}
 	projects <- get_repo_projects(conn)
-	lapply(as.list(projects$project_id), function(project) {
-		project_id <- projects[project,'project_id']
+	mapply(function(project_id, name) {
 		project_data <- result[result$project_id == project_id,c('repo_name','url','file','later_date','earlier_date')]
 
-		if (item$patterns[['project_ids']] != '1') {
-			name <- projects[project,'name']
-		}
-		else {
+		if (item$patterns[['project_ids']] == '1') {
 			name <- project_id
 		}
 		project_data$earlier_date <- as.POSIXct(project_data$earlier_date)
 		project_data$later_date <- as.POSIXct(project_data$later_date)
 		write(toJSON(project_data),
 		  	  file=paste(path, paste(name, "json", sep="."), sep="/"))
-	})
+	}, as.list(projects$project_id), as.list(projects$name))
 }
 
 project_members <- function(item, result) {
