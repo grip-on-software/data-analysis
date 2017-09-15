@@ -1,0 +1,20 @@
+fields:
+    "Agent http://agent":
+        description: "Whether the dashboard can reach the backend agent, which handles all actions regarding containers and storage buckets"
+    "Available IPs":
+        description: "An indicator of whether the dashboard can assign enough IP addresses for all the instances"
+    "Datastore: /shared/data":
+        description: "Space that is in use by the storage buckets"
+        unit: bytes
+    "Docker graph: /var/lib/docker":
+        description: "Space that is in use by (intermediate) Docker images"
+        unit: bytes
+    "Memory":
+        description: "Space that is in use by processes in the containers"
+        unit: bytes
+    "System Load":
+        description: "Load average caused by processes that want to use CPU time in the containers"
+    "System Uptime":
+        description: "Time since the dashboard was last restarted"
+        unit: seconds
+

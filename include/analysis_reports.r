@@ -367,6 +367,11 @@ bigboat_status <- function(item, result) {
 		dir.create(path)
 	}
 
+	# Write the status field descriptions
+	status <- yaml.load_file("bigboat_status.yml")
+	write(toJSON(status$fields, auto_unbox=T),
+		  file=paste(path, "fields.json", sep="/"))
+
 	projects <- get_projects(conn)
 
 	projectList <- list()
