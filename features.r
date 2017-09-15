@@ -65,8 +65,9 @@ if (get_arg('--project', F)) {
 	write(toJSON(locale), file="output/project_features_localization.json")
 	loginfo("Wrote project_features_localization.json")
 } else if (get_arg('--recent', F)) {
-	features <- c('num_story_points', 'num_not_done', 'num_added_stories',
-				  'num_stories', 'num_done_stories')
+	features <- c('num_story_points', 'num_stories', 'num_not_done',
+				  'num_removed_stories', 'num_added_stories',
+				  'num_done_stories')
 	result <- get_recent_sprint_features(conn, features)
 	sprint_data <- result$data
 	write.csv(sprint_data[,result$colnames],

@@ -55,6 +55,7 @@ get_recent_sprint_features <- function(conn, features, variables, date, limit) {
 		  	 ON project.project_id = sprint.project_id
 		  	 WHERE sprint.project_id = ${project_id}
 		  	 AND ${sprint_close} < CURRENT_TIMESTAMP()
+			 AND sprint.name NOT LIKE \'Technical%\'
 		  	 ORDER BY sprint.project_id, sprint.start_date DESC
 		  	 LIMIT ${limit}'
 	sprint_data <- data.frame()
@@ -63,6 +64,7 @@ get_recent_sprint_features <- function(conn, features, variables, date, limit) {
 						   c(patterns, list(limit=limit, project_id=project)))
 		sprint_data <- rbind(sprint_data, dbGetQuery(conn, item$query))
 	}
+	sprint_data$start_date <- as.POSIXct(sprint_data$start_date)
 
 	data <- yaml.load_file('sprint_features.yml')
 	items <- list()

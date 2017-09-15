@@ -63,6 +63,10 @@ files:
     table: added_stories
     column: num_added_stories
     default: 0
+  - filename: 04-removed-stories.sql
+    table: removed_stories
+    column: num_removed_stories
+    default: 0
   - filename: 04-stories.sql
     table: stories
     column: num_stories
