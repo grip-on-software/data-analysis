@@ -159,7 +159,7 @@ sprint_burndown <- function(item, result) {
 }
 
 commit_volume <- function(item, result) {
-	projects <- get_projects(conn)
+	projects <- get_repo_projects(conn)
 	data <- lapply(as.list(projects$project_id), function(project) {
 		project_id <- projects[project,'project_id']
 		commit_data <- result[result$project_id == project_id,c('commit_day','value')]
@@ -177,7 +177,7 @@ commit_volume <- function(item, result) {
 }
 
 developers <- function(item, result) {
-	projects <- get_projects(conn)
+	projects <- get_repo_projects(conn)
 	data <- lapply(as.list(projects$project_id), function(project) {
 		project_id <- projects[project,'project_id']
 		dev_data <- result[result$project_id == project_id,c('commit_date','value')]
@@ -301,7 +301,7 @@ long_waiting_commits <- function(item, result) {
 	if (!dir.exists(path)) {
 		dir.create(path)
 	}
-	projects <- get_projects(conn)
+	projects <- get_repo_projects(conn)
 	lapply(as.list(projects$project_id), function(project) {
 		project_id <- projects[project,'project_id']
 		project_data <- result[result$project_id == project_id,c('repo_name','url','file','later_date','earlier_date')]

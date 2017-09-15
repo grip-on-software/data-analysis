@@ -12,7 +12,7 @@ input_file <- get_arg('--file', default='sprint_labels.json')
 results <- read_json(input_file, simplifyVector=T)
 
 conn <- connect()
-projects <- get_projects(conn)
+projects <- get_sprint_projects(conn)
 
 write(toJSON(projects$name, auto_unbox=T),
 	  file=paste("output", "projects.json", sep="/"))
