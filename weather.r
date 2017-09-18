@@ -23,21 +23,29 @@ knmi$distance <- abs(config$lat - knmi$lat) + abs(config$lon - knmi$lon)
 num_measurements <- knmi$nc$var$TG$size[1]
 
 get_temperatures <- function(end_index) {
-	latest_measurements <- ncvar_get(knmi$nc, 'TG',
-									 start=c(end_index-1,1), count=c(1,-1))
-	active_stations <- which(!is.na(latest_measurements))
+	active_stations <- logical(0)
+	while (length(active_stations) == 0 && end_index > 1) {
+		latest_measurements <- ncvar_get(knmi$nc, 'TG',
+									 	 start=c(end_index-1,1), count=c(1,-1))
+		active_stations <- which(!is.na(latest_measurements))
+		end_index <- end_index - 1
+	}
+
+	if (length(active_stations) == 0) {
+		stop("Could not find any active weather stations")
+	}
 
 	# Select closest active weather station.
 	station <- which.min(knmi$distance[active_stations])
 
-	ncvar_get(knmi$nc, 'TG', start=c(1,station), count=c(-1,1))
+	ncvar_get(knmi$nc, 'TG', start=c(1,station), count=c(end_index,1))
 }
 
 na_temperatures <- get_temperatures(num_measurements)
 first_measurement <- which(!is.na(na_temperatures))[1]
-seconds <- knmi$nc$dim$time$vals[first_measurement:num_measurements]
+seconds <- knmi$nc$dim$time$vals[first_measurement:length(na_temperatures)]
 dates <- as.Date(as.POSIXct(seconds, origin=config$origin))
-temperatures <- na_temperatures[first_measurement:num_measurements]
+temperatures <- na_temperatures[first_measurement:length(na_temperatures)]
 names(temperatures) <- dates
 
 write(toJSON(as.list(temperatures), auto_unbox=T),
