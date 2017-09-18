@@ -4,6 +4,7 @@ library(yaml)
 library(jsonlite)
 library(ggplot2)
 library(padr)
+library(stringr)
 library(zoo)
 source('include/args.r')
 source('include/log.r')
@@ -381,6 +382,8 @@ bigboat_status <- function(item, result) {
 		project_data <- result[result$project_id == project_id,c('name','checked_date','ok','value','max')]
 
 		if (nrow(project_data) > 0) {
+			project_data$name <- str_replace_all(project_data$name,
+												 status$match)
 			project_data$checked_date <- as.POSIXct(project_data$checked_date)
 			if (item$patterns[['project_ids']] != '1') {
 				name <- projects[project,'name']
@@ -390,7 +393,8 @@ bigboat_status <- function(item, result) {
 			}
 			projectList = c(projectList, name)
 
-			write(toJSON(project_data),
+			write(toJSON(project_data[with(project_data,
+										   order(name, checked_date)),]),
 				file=paste(path, paste(name, "json", sep="."), sep="/"))
 		}
 		else {
