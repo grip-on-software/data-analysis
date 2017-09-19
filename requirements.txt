@@ -8,5 +8,6 @@ yaml
 plyr
 ggplot2
 ncdf4
+stringr
 padr
 zoo

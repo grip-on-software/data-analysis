@@ -383,7 +383,8 @@ bigboat_status <- function(item, result) {
 
 		if (nrow(project_data) > 0) {
 			project_data$name <- str_replace_all(project_data$name,
-												 status$match)
+												 names(status$match),
+												 unname(status$match))
 			project_data$checked_date <- as.POSIXct(project_data$checked_date)
 			if (item$patterns[['project_ids']] != '1') {
 				name <- projects[project,'name']
