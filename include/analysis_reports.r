@@ -373,8 +373,7 @@ bigboat_status <- function(item, result) {
 	write(toJSON(status$fields, auto_unbox=T),
 		  file=paste(path, "fields.json", sep="/"))
 
-	patterns <- names(status$match)
-	replacements <- as.vector(unname(status$match), mode="character")
+	matches <- unlist(status$match)
 
 	projects <- get_projects(conn)
 
@@ -385,8 +384,7 @@ bigboat_status <- function(item, result) {
 		project_data <- result[result$project_id == project_id,c('name','checked_date','ok','value','max')]
 
 		if (nrow(project_data) > 0) {
-			project_data$name <- str_replace_all(project_data$name,
-												 patterns, replacements)
+			project_data$name <- str_replace_all(project_data$name, matches)
 			project_data$checked_date <- as.POSIXct(project_data$checked_date)
 			if (item$patterns[['project_ids']] != '1') {
 				name <- projects[project,'name']
