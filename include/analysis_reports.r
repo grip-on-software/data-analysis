@@ -377,7 +377,8 @@ bigboat_status <- function(item, result) {
 
 	projects <- get_projects(conn)
 
-	projectList <- list()
+	project_ids <- list()
+	project_names <- list()
 
 	for(project in as.list(projects$project_id)) {
 		project_id <- projects[project,'project_id']
@@ -392,7 +393,8 @@ bigboat_status <- function(item, result) {
 			else {
 				name <- project_id
 			}
-			projectList = c(projectList, name)
+			project_ids <- c(project_ids, project_id)
+			project_names <- c(project_names, name)
 
 			write(toJSON(project_data[with(project_data,
 										   order(name, checked_date)),]),
@@ -402,8 +404,25 @@ bigboat_status <- function(item, result) {
 			loginfo("No data for %s", projects[project,'name'])
 		}
 	}
-	write(toJSON(projectList, auto_unbox=T),
+
+	write(toJSON(project_names, auto_unbox=T),
 		file=paste(path, "projects.json", sep="/"))
+
+	if (length(project_ids) > 0) {
+		urls <- dbGetQuery(conn, paste("SELECT project_id, url
+								    	FROM gros.source_environment
+										WHERE project_id IN (",
+										paste(project_ids, collapse=","), ")
+										AND source_type = 'bigboat'", sep=""))
+		names(project_names) <- project_ids
+		project_urls <- as.list(urls$url)
+		names(project_urls) <- project_names[as.character(urls$project_id)]
+	}
+	else {
+		project_urls <- list()
+	}
+	write(toJSON(project_urls, auto_unbox=T),
+		  file=paste(path, "urls.json", sep="/"))
 }
 
 get_analysis_reports <- function(analysis_variables) {
