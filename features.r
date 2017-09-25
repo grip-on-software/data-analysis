@@ -64,6 +64,13 @@ if (get_arg('--project', F)) {
 	}
 	write(toJSON(locale), file="output/project_features_localization.json")
 	loginfo("Wrote project_features_localization.json")
+
+	groups <- list()
+	for (item in result$items) {
+		groups[[item$column]] <- item$groups
+	}
+	write(toJSON(groups), file="output/project_features_groups.json")
+	loginfo("Wrote project_features_groups.json")
 } else if (get_arg('--recent', F)) {
 	features <- c('num_story_points', 'num_stories', 'num_not_done',
 				  'num_removed_stories', 'num_added_stories',
