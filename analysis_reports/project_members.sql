@@ -8,7 +8,7 @@ SELECT
 FROM gros.project_developer
   JOIN gros.developer ON project_developer.developer_id = developer.id
   JOIN gros.project ON project_developer.project_id = project.project_id
-  JOIN (
+  LEFT JOIN (
          SELECT project_id, assignee, COUNT(DISTINCT issue_id) as issues
          FROM gros.issue ${s(interval_condition, field='updated')}
 		 GROUP BY project_id, assignee
