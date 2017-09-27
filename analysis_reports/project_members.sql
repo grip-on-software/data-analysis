@@ -4,7 +4,7 @@ SELECT
   developer.local_domain AS internal,
   project.is_support_team AS support,
   COALESCE(SUM(commits_count.commits), 0) AS num_commits,
-  SUM(issue_update.issues) AS num_issues
+  COALESCE(SUM(issue_update.issues), 0) AS num_issues
 FROM gros.project_developer
   JOIN gros.developer ON project_developer.developer_id = developer.id
   JOIN gros.project ON project_developer.project_id = project.project_id
@@ -23,4 +23,5 @@ FROM gros.project_developer
     ON project_developer.project_id = commits_count.project_id
     AND vcs_developer.alias_id = commits_count.developer_id
   GROUP BY developer.display_name, project.project_id, project.name, project.is_support_team, developer.local_domain
+  HAVING SUM(issue_update.issues) IS NOT NULL
   ORDER BY developer.display_name, project.name, project.project_id;
