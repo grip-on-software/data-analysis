@@ -39,7 +39,7 @@ if (interval != '') {
 	# Always run the full report, this will also empty the output directory
 	run_reports(list(id='all', project_ids=project_ids))
 
-	start_date <- start_date <- dbGetQuery(conn, 'SELECT MIN(updated) AS start_date FROM gros.issue')[[1]]
+	start_date <- dbGetQuery(conn, 'SELECT MIN(updated) AS start_date FROM gros.issue WHERE assignee IS NOT NULL')[[1]]
 	intervals <- seq(as.POSIXct(start_date), Sys.time(), by=interval)
 	loginfo(intervals)
 	write(toJSON(head(as.numeric(intervals), n=-1)),
