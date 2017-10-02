@@ -20,7 +20,7 @@ safe_unbox <- function(x) {
 
 conn <- connect()
 
-projects <- get_projects(conn)
+projects <- get_core_projects(conn)
 project_ids <- get_arg('--project-ids', default='0')
 if (project_ids != '0') {
 	project_ids = '1'
