@@ -36,7 +36,7 @@ if (get_arg('--project', F)) {
 	names(data) <- result$data[['name']]
 	for (subproject in subprojects$name) {
 		main_project <- subprojects[subprojects$name == subproject,'main_project']
-		data[[main_project]] <- data[[main_project]] + data[[subproject]]
+		data[[main_project]] <- unbox(data[[main_project]] + data[[subproject]])
 		data[subproject] <- NULL
 	}
 	write(toJSON(data), file="output/project_features.json")
