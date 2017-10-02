@@ -29,9 +29,16 @@ get_source_urls <- function(conn, project_id) {
 exclude <- get_arg('--exclude', '^$')
 if (get_arg('--project', F)) {
 	result <- get_project_features(conn, exclude)
+	subprojects <- get_subprojects(conn)
+
 	df <- result$data[,result$colnames]
 	data <- lapply(as.list(split(df, seq(nrow(df)))), unbox)
 	names(data) <- result$data[['name']]
+	for (subproject in subprojects$name) {
+		main_project <- subprojects[subprojects$name == subproject,'main_project']
+		data[[main_project]] <- data[[main_project]] + data[[subproject]]
+		data[subproject] <- NULL
+	}
 	write(toJSON(data), file="output/project_features.json")
 	loginfo("Wrote project_features.json")
 

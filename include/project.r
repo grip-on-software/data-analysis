@@ -13,6 +13,12 @@ if (!exists('INC_PROJECT_R')) {
 							   WHERE main_project IS NULL ORDER BY', by))
 	}
 
+	get_subprojects <- function(conn, by='project_id') {
+		dbGetQuery(conn, paste('SELECT project_id, name, main_project
+							   FROM gros.project WHERE main_project IS NOT NULL
+							   ORDER BY', by))
+	}
+
 	get_core_projects <- function(conn, by='project_id') {
 		dbGetQuery(conn, paste('SELECT project_id, name FROM gros.project
 							   WHERE COALESCE(is_support_team, false) = false
