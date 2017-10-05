@@ -15,7 +15,12 @@ get_features <- function(conn, exclude, items, data, colnames, join_cols) {
 			if (!is.null(item$default)) {
 				for (column in item$column) {
 					if (column %in% names(data)) {
-						data[is.na(data[[column]]),column] = item$default
+						if (length(data[[column]]) == 0) {
+							logwarn(paste('Column', column, 'is empty'))
+						}
+						else {
+							data[is.na(data[[column]]),column] = item$default
+						}
 					}
 					else {
 						logwarn(paste('Column', column, 'could not be found'))
@@ -28,12 +33,18 @@ get_features <- function(conn, exclude, items, data, colnames, join_cols) {
 	list(data=data, colnames=colnames, items=items)
 }
 
-get_sprint_features <- function(conn, exclude, variables) {
+get_sprint_features <- function(conn, exclude, variables, latest_date) {
+	if (!missing(latest_date) && latest_date != '') {
+		condition <- paste('WHERE sprint.start_date <= CAST(\'',
+						   latest_date, '\' AS TIMESTAMP)', sep='')
+	}
+	else {
+		condition <- ''
+	}
 	sprint_data <- dbGetQuery(conn,
-						  	  'SELECT sprint.project_id, sprint.sprint_id
-						  	  FROM gros.sprint
-						  	  ORDER BY sprint.project_id, sprint.start_date'
-						  	  )
+						  	  paste('SELECT sprint.project_id, sprint.sprint_id
+									 FROM gros.sprint', condition, 'ORDER BY
+									 sprint.project_id, sprint.start_date'))
 
 	items <- load_queries('sprint_features.yml', 'sprint_definitions.yml',
 						  variables)

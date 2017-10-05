@@ -88,7 +88,8 @@ if (get_arg('--project', F)) {
 			  file='output/recent_sprint_features.csv',
 			  row.names=F)
 } else {
-	result <- get_sprint_features(conn, exclude)
+	latest_date <- get_arg('--latest-date', '')
+	result <- get_sprint_features(conn, exclude, NULL, latest_date)
 	sprint_data <- result$data
 
 	write.arff(sprint_data[,result$colnames],
