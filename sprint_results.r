@@ -19,8 +19,8 @@ write(toJSON(projects$name, auto_unbox=T),
 patterns <- load_definitions('sprint_definitions.yml')
 for (idx in 1:length(results$projects)) {
 	project <- results$projects[idx]
-	project_name <- projects[project,'name'] 
-	query <- paste('SELECT sprint.start_date, ${sprint_close} AS close_date FROM gros.sprint WHERE sprint.project_id = ', projects[project,'project_id'], ' ORDER BY sprint.start_date', sep='')
+	project_name <- projects[projects$project_id == project,'name']
+	query <- paste('SELECT sprint.start_date, ${sprint_close} AS close_date FROM gros.sprint WHERE sprint.project_id = ', project, ' ORDER BY sprint.start_date', sep='')
 	item <- load_query(list(query=query), patterns)
 	sprint <- dbGetQuery(conn, item$query)
 	path <- paste("output", project_name, sep="/")
