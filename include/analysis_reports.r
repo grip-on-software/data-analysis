@@ -163,7 +163,7 @@ commit_volume <- function(item, result) {
 	projects <- get_repo_projects(conn)
 	data <- lapply(as.list(projects$project_id), function(project_id) {
 		commit_data <- result[result$project_id == project_id,c('commit_day','value')]
-	    names(commit_data)[names(commit_data)=='commit_day'] <- 'day'
+		names(commit_data)[names(commit_data)=='commit_day'] <- 'day'
 		return(commit_data)
 	})
 	if (item$patterns[['project_ids']] != '1') {
@@ -310,7 +310,7 @@ long_waiting_commits <- function(item, result) {
 		project_data$earlier_date <- as.POSIXct(project_data$earlier_date)
 		project_data$later_date <- as.POSIXct(project_data$later_date)
 		write(toJSON(project_data),
-		  	  file=paste(path, paste(name, "json", sep="."), sep="/"))
+			  file=paste(path, paste(name, "json", sep="."), sep="/"))
 	}, as.list(projects$project_id), as.list(projects$name))
 }
 
@@ -410,7 +410,7 @@ bigboat_status <- function(item, result) {
 
 	if (length(project_ids) > 0) {
 		urls <- dbGetQuery(conn, paste("SELECT project_id, url
-								    	FROM gros.source_environment
+										FROM gros.source_environment
 										WHERE project_id IN (",
 										paste(project_ids, collapse=","), ")
 										AND source_type = 'bigboat'", sep=""))
@@ -438,10 +438,10 @@ get_analysis_reports <- function(analysis_variables) {
 					bigboat_status=bigboat_status)
 	definitions <- yaml.load_file('analysis_definitions.yml')
 	analysis_definitions <- modifyList(lapply(definitions$fields,
-							   	              function(define) { define$field }),
+											  function(define) { define$field }),
 									   analysis_variables) 
 	items <- load_queries('analysis_reports.yml', 'sprint_definitions.yml',
-					  	  analysis_definitions)
+						  analysis_definitions)
 	lapply(items, function(item) {
 		item$report <- reports[[item$table]]
 		return(item)

@@ -25,17 +25,17 @@ pipeline {
                 sh 'docker build -t $DOCKER_REGISTRY/gros-data-analysis .'
             }
         }
-		stage('Compose') {
-			steps {
-				sh 'docker-compose build'
-			}
-		}
-		stage('Push') {
-			when { branch 'master' }
-			steps {
-				sh 'docker push $DOCKER_REGISTRY/gros-data-analysis:latest'
-				sh 'docker push $DOCKER_REGISTRY/gros-data-analysis-dashboard:latest'
-			}
-		}
+        stage('Compose') {
+            steps {
+                sh 'docker-compose build'
+            }
+        }
+        stage('Push') {
+            when { branch 'master' }
+            steps {
+                sh 'docker push $DOCKER_REGISTRY/gros-data-analysis:latest'
+                sh 'docker push $DOCKER_REGISTRY/gros-data-analysis-dashboard:latest'
+            }
+        }
     }
 }

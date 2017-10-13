@@ -94,6 +94,6 @@ if (get_arg('--project', F)) {
 
 	write.arff(sprint_data[,result$colnames],
 			   file='output/sprint_features.arff',
-		   	   relation="sprint_data")
+			   relation="sprint_data")
 }
 
