@@ -14,6 +14,8 @@ interval <- get_arg('--interval', default='')
 
 report <- get_arg('--report', default='.*')
 
+output_directory <- get_arg('--output', default='output')
+
 project_ids <- get_arg('--project-ids', default='0')
 if (project_ids != '0') {
 	project_ids = '1'
@@ -28,7 +30,7 @@ run_reports <- function(definitions) {
 			time <- system.time(result <- dbGetQuery(conn, item$query))
 			loginfo('Query for report %s took %f seconds', item$table,
 					time['elapsed'])
-			time <- system.time(item$report(item, result))
+			time <- system.time(item$report(item, result, output_directory))
 			loginfo('Generation of report %s took %f seconds', item$table,
 					time['elapsed'])
 		}

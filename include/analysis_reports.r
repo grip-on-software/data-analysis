@@ -10,7 +10,7 @@ source('include/args.r')
 source('include/log.r')
 source('include/project.r')
 
-not_done_ratio <- function(item, result) {
+not_done_ratio <- function(item, result, output_dir) {
 	bins <- c(0.0, 0.5, 1, 2, 3, 5, 8, 13, 20, 40, 100, Inf)
 	codes <- .bincode(result$story_points, bins, right=F,
 					  include.lowest=T)
@@ -38,7 +38,7 @@ not_done_ratio <- function(item, result) {
 						 ratio=ratio)
 
 	filename <- paste(item$table, item$patterns[['id']], sep='-')
-	export_file <- paste("output", paste(filename, 'csv', sep='.'), sep="/")
+	export_file <- paste(output_dir, paste(filename, 'csv', sep='.'), sep="/")
 	write.table(output, file=export_file, row.names=F, sep=",")
 	loginfo("Wrote report to %s", export_file)
 
@@ -60,16 +60,16 @@ not_done_ratio <- function(item, result) {
 			 x="Story points", y="Ratio (% not done)") +
 		theme(plot.title = element_text(hjust = 0.5), legend.position="none")
 
-	plot_file <- paste("output", paste(filename, 'png', sep='.'), sep='/')
+	plot_file <- paste(output_dir, paste(filename, 'png', sep='.'), sep='/')
 	ggsave(plot_file)
 	loginfo("Wrote plot to %s", plot_file)
 }
 
-sprint_burndown <- function(item, result) {
+sprint_burndown <- function(item, result, output_dir) {
 	format <- get_arg('--format', default='pdf')
 	projects <- get_projects(conn)
 
-	baseDir <- paste("output", item$table, sep="/")
+	baseDir <- paste(output_dir, item$table, sep="/")
 	if (!dir.exists(baseDir)) {
 		dir.create(baseDir)
 	} else {
@@ -159,7 +159,7 @@ sprint_burndown <- function(item, result) {
 	}
 }
 
-commit_volume <- function(item, result) {
+commit_volume <- function(item, result, output_dir) {
 	projects <- get_repo_projects(conn)
 	data <- lapply(as.list(projects$project_id), function(project_id) {
 		commit_data <- result[result$project_id == project_id,c('commit_day','value')]
@@ -173,10 +173,10 @@ commit_volume <- function(item, result) {
 		names(data) <- projects$project_id
 	}
 	write(toJSON(data),
-		  file=paste("output", paste(item$table, "json", sep="."), sep="/"))
+		  file=paste(output_dir, paste(item$table, "json", sep="."), sep="/"))
 }
 
-developers <- function(item, result) {
+developers <- function(item, result, output_dir) {
 	projects <- get_repo_projects(conn)
 	data <- lapply(as.list(projects$project_id), function(project_id) {
 		dev_data <- result[result$project_id == project_id,c('commit_date','value')]
@@ -196,7 +196,7 @@ developers <- function(item, result) {
 		names(data) <- projects$project_id
 	}
 	write(toJSON(data),
-		  file=paste("output", paste(item$table, "json", sep="."), sep="/"))
+		  file=paste(output_dir, paste(item$table, "json", sep="."), sep="/"))
 }
 
 to_map <- function(df) {
@@ -209,7 +209,7 @@ to_map <- function(df) {
 	return(map)
 }
 
-story_flow <- function(item, result) {
+story_flow <- function(item, result, output_dir) {
 	states <- to_map(dbGetQuery(conn, 'SELECT id, name FROM gros.status'))
 	resolutions <- to_map(dbGetQuery(conn,
 									 'SELECT id, name FROM gros.resolution'))
@@ -282,7 +282,7 @@ story_flow <- function(item, result) {
 			 paste(names(nodes), lapply(nodes, dot_attrs)),
 			 "}")
 
-	export_file <- paste("output",
+	export_file <- paste(output_dir,
 						 paste(paste(item$table, item$patterns[['id']],
 						 			 sep="-"), "dot", sep="."), sep="/")
 	writeLines(dot, export_file)
@@ -295,8 +295,8 @@ story_flow <- function(item, result) {
 				 "\tdot -Tpng $< -o $@"), paste("output", "Makefile", sep="/"))
 }
 
-long_waiting_commits <- function(item, result) {
-	path <- paste("output", item$table, sep="/")
+long_waiting_commits <- function(item, result, output_dir) {
+	path <- paste(output_dir, item$table, sep="/")
 	if (!dir.exists(path)) {
 		dir.create(path)
 	}
@@ -314,8 +314,8 @@ long_waiting_commits <- function(item, result) {
 	}, as.list(projects$project_id), as.list(projects$name))
 }
 
-project_members <- function(item, result) {
-	path <- paste("output", item$table, sep="/")
+project_members <- function(item, result, output_dir) {
+	path <- paste(output_dir, item$table, sep="/")
 	if (item$patterns[['id']] != 'all') {
 		if (!dir.exists(path)) {
 			dir.create(path)
@@ -325,18 +325,18 @@ project_members <- function(item, result) {
 		loginfo("Emptying %s directory", path)
 		unlink(paste(path, "/*", sep=""))
 
-		path <- "output" # Put the full report in the base output directory
+		path <- output_dir # Put the full report in the base output directory
 		filename <- item$table
 	}
 	write(toJSON(result),
 		  file=paste(path, paste(filename, "json", sep="."), sep="/"))
 }
 
-project_backlog_burndown <- function(item, result) {
+project_backlog_burndown <- function(item, result, output_dir) {
 	# Output plot
 	format <- get_arg('--format', default='json')
 	export_file = function(name, format) {
-		paste("output", paste(name, format, sep="."), sep="/")
+		paste(output_dir, paste(name, format, sep="."), sep="/")
 	}
 	if (format == 'pdf') {
 		for (project in levels(factor(result$project_id))) {
@@ -362,8 +362,8 @@ project_backlog_burndown <- function(item, result) {
 	}
 }
 
-bigboat_status <- function(item, result) {
-	path <- paste("output", item$table, sep="/")
+bigboat_status <- function(item, result, output_dir) {
+	path <- paste(output_dir, item$table, sep="/")
 	if (!dir.exists(path)) {
 		dir.create(path)
 	}
