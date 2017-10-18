@@ -4,12 +4,16 @@ library(jsonlite)
 library(ncdf4)
 library(yaml)
 
-config <- yaml.load_file('weather.yml')
+source('include/args.r')
+source('include/log.r')
 
-knmi_file = paste("output", "knmi.nc", sep="/")
+config <- yaml.load_file('weather.yml')
+output_directory <- get_arg('--output', default='output')
+
+knmi_file = paste(output_directory, "knmi.nc", sep="/")
 if (!file.exists(knmi_file)) {
 	tryCatch(download.file(config$url, knmi_file, mode="wb"),
-			 error=function(e) { cat(paste("Download problems: ", e)) })
+			 error=function(e) { logwarn(paste("Download problems: ", e)) })
 }
 
 
@@ -49,4 +53,4 @@ temperatures <- na_temperatures[first_measurement:length(na_temperatures)]
 names(temperatures) <- dates
 
 write(toJSON(as.list(temperatures), auto_unbox=T),
-	  paste("output", "weather.json", sep="/"))
+	  paste(output_directory, "weather.json", sep="/"))
