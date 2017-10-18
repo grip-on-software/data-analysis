@@ -26,8 +26,9 @@ get_source_urls <- function(conn, project_id) {
 	return(urls)
 }
 
-exclude <- get_arg('--exclude', '^$')
-if (get_arg('--project', F)) {
+output_directory <- get_arg('--output', default='output')
+exclude <- get_arg('--exclude', default='^$')
+if (get_arg('--project', default=F)) {
 	result <- get_project_features(conn, exclude)
 	subprojects <- get_subprojects(conn)
 
@@ -39,13 +40,15 @@ if (get_arg('--project', F)) {
 		data[[main_project]] <- unbox(data[[main_project]] + data[[subproject]])
 		data[subproject] <- NULL
 	}
-	write(toJSON(data), file="output/project_features.json")
+	write(toJSON(data),
+		  file=paste(output_directory, "project_features.json", sep="/"))
 	loginfo("Wrote project_features.json")
 
 	normalize <- lapply(result$items, function(item) { unbox(item$normalize) })
 	names(normalize) <- result$colnames
 	write(toJSON(normalize, null="null"),
-		  file="output/project_features_normalize.json")
+		  file=paste(output_directory, "project_features_normalize.json",
+		  			 sep="/"))
 	loginfo("Wrote project_features_normalize.json")
 
 	config <- yaml.load_file('config.yml')
@@ -62,38 +65,43 @@ if (get_arg('--project', F)) {
 		return(project_links)
 	}, result$data[['project_id']], result$data[['name']], SIMPLIFY=F)
 	names(links) <- result$data[['name']]
-	write(toJSON(links), file="output/project_features_links.json")
+	write(toJSON(links),
+		  file=paste(output_directory, "project_features_links.json", sep="/"))
 	loginfo("Wrote project_features_links.json")
 
 	locale <- list()
 	for (item in result$items) {
 		locale[[item$column]] <- unbox(item$name)
 	}
-	write(toJSON(locale), file="output/project_features_localization.json")
+	write(toJSON(locale),
+		  file=paste(output_directory, "project_features_localization.json",
+		  			 sep="/"))
 	loginfo("Wrote project_features_localization.json")
 
 	groups <- list()
 	for (item in result$items) {
 		groups[[item$column]] <- item$groups
 	}
-	write(toJSON(groups), file="output/project_features_groups.json")
+	write(toJSON(groups),
+		  file=paste(output_directory, "project_features_groups.json", sep="/"))
 	loginfo("Wrote project_features_groups.json")
-} else if (get_arg('--recent', F)) {
+} else if (get_arg('--recent', default=F)) {
 	features <- c('num_story_points', 'num_stories', 'num_not_done',
 				  'num_removed_stories', 'num_added_stories',
 				  'num_done_stories')
 	result <- get_recent_sprint_features(conn, features)
 	sprint_data <- result$data
 	write.csv(sprint_data[,result$colnames],
-			  file='output/recent_sprint_features.csv',
+			  file=paste(output_directory, 'recent_sprint_features.csv',
+			  			 sep="/"),
 			  row.names=F)
 } else {
-	latest_date <- get_arg('--latest-date', '')
+	latest_date <- get_arg('--latest-date', default='')
 	result <- get_sprint_features(conn, exclude, NULL, latest_date)
 	sprint_data <- result$data
 
 	write.arff(sprint_data[,result$colnames],
-			   file='output/sprint_features.arff',
+			   file=paste(output_directory, "sprint_features.arff", sep="/"),
 			   relation="sprint_data")
 }
 
