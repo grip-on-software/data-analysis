@@ -25,11 +25,12 @@ project_ids <- get_arg('--project-ids', default='0')
 if (project_ids != '0') {
 	project_ids = '1'
 }
+output_directory <- get_arg('--output', default='output')
 
 variables <- list(project_ids=project_ids)
 items <- load_queries('sprint_events.yml', 'sprint_definitions.yml', variables)
 
-exportFeatures <- function(exclude) {
+exportFeatures <- function(exclude, output_directory) {
 	result <- get_sprint_features(conn, exclude, variables)
 	data <- result$data
 	colnames <- result$colnames
@@ -48,11 +49,12 @@ exportFeatures <- function(exclude) {
 	else {
 		names(project_data) <- paste('Proj', projects$project_id, sep='')
 	}
-	write(toJSON(project_data), file="output/features.json")
+	write(toJSON(project_data),
+		  file=paste(output_directory, "features.json", sep="/"))
 }
 
 # Export data to separate per-sprint files.
-exportSplitData <- function(data, item) {
+exportSplitData <- function(data, item, output_directory) {
 	project_data <- lapply(as.list(1:dim(projects)[1]), function(project) {
 		project_id <- projects[project,'project_id']
 		if (project_ids != '1') {
@@ -67,7 +69,7 @@ exportSplitData <- function(data, item) {
 			return(sprints)
 		}
 
-		path <- paste("output", project_name, sep="/")
+		path <- paste(output_directory, project_name, sep="/")
 		if (!dir.exists(path)) {
 			dir.create(path)
 		}
@@ -91,9 +93,9 @@ exportSplitData <- function(data, item) {
 }
 
 # Export result of a type query to the correct JSON file(s).
-exportData <- function(data, item) {
+exportData <- function(data, item, output_directory) {
 	if (isTRUE(item$split)) {
-		return(exportSplitData(data, item))
+		return(exportSplitData(data, item, output_directory))
 	}
 	if (project_ids != '1') {
 		project_names <- as.list(projects$name)
@@ -110,7 +112,7 @@ exportData <- function(data, item) {
 	else {
 		names(project_data) <- paste('Proj', projects$project_id, sep='')
 	}
-	path <- paste("output", paste(item$type, "json", sep="."), sep="/")
+	path <- paste(output_directory, paste(item$type, "json", sep="."), sep="/")
 	write(toJSON(project_data), file=path)
 	return(project_data)
 }
@@ -129,7 +131,7 @@ for (item in items) {
 	if ("end_date" %in% result) {
 		result$end_date = dateFormat(result$end_date)
 	}
-	project_data <- exportData(result, item)
+	project_data <- exportData(result, item, output_directory)
 	have_data <- lapply(project_data, nrow) > 0
 	projects_with_data <- modifyList(projects_with_data,
 									 as.list(have_data)[have_data])
@@ -154,6 +156,6 @@ total_data = list(min_date=safe_unbox(min(unlist(min_date))),
 				  update_date=safe_unbox(dateFormat(Sys.time())),
 				  projects=names(projects_with_data))
 
-write(toJSON(total_data), file="output/data.json")
-write(toJSON(types), file="output/types.json")
-exportFeatures(get_arg('--exclude', default='^$'))
+write(toJSON(total_data), file=paste(output_directory, "data.json", sep="/"))
+write(toJSON(types), file=paste(output_directory, "types.json", sep="/"))
+exportFeatures(get_arg('--exclude', default='^$'), output_directory)
