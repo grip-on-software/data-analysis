@@ -307,9 +307,9 @@ long_waiting_commits <- function(item, result, output_dir) {
 
 		if (item$patterns[['project_ids']] == '1') {
 			name <- paste('Proj', project_id, sep='')
-			project_data$repo_name <- sha256(project_data$repo_name)
+			project_data$repo_name <- as.character(sha256(project_data$repo_name))
 			project_data$url <- NULL
-			project_data$file <- sha256(project_data$file)
+			project_data$file <- as.character(sha256(project_data$file))
 		}
 		project_data$earlier_date <- as.POSIXct(project_data$earlier_date)
 		project_data$later_date <- as.POSIXct(project_data$later_date)
@@ -395,7 +395,7 @@ bigboat_status <- function(item, result, output_dir) {
 				name <- projects[project,'name']
 			}
 			else {
-				name <- project_id
+				name <- paste('Proj', project_id, sep='')
 			}
 			project_ids <- c(project_ids, project_id)
 			project_names <- c(project_names, name)
