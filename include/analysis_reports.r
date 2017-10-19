@@ -405,7 +405,12 @@ bigboat_status <- function(item, result, output_dir) {
 				file=paste(path, paste(name, "json", sep="."), sep="/"))
 		}
 		else {
-			loginfo("No data for %s", projects[project,'name'])
+			if (item$patterns[['project_ids']] != '1') {
+				loginfo("No data for project %d", project_id)
+			}
+			else {
+				loginfo("No data for %s", projects[project,'name'])
+			}
 		}
 	}
 
