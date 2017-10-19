@@ -3,6 +3,7 @@
 library(yaml)
 library(jsonlite)
 library(ggplot2)
+library(openssl)
 library(padr)
 library(stringr)
 library(zoo)
