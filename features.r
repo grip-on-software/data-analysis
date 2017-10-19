@@ -27,6 +27,7 @@ get_source_urls <- function(conn, project_id) {
 }
 
 output_directory <- get_arg('--output', default='output')
+config_file <- get_arg('--config', default='config.yml')
 exclude <- get_arg('--exclude', default='^$')
 if (get_arg('--project', default=F)) {
 	result <- get_project_features(conn, exclude)
@@ -51,7 +52,7 @@ if (get_arg('--project', default=F)) {
 		  			 sep="/"))
 	loginfo("Wrote project_features_normalize.json")
 
-	config <- yaml.load_file('config.yml')
+	config <- yaml.load_file(config_file)
 	patterns <- load_definitions('sprint_definitions.yml', config$fields)
 	links <- mapply(function(project_id, project) {
 		project_links <- list()
