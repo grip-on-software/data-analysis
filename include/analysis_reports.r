@@ -170,7 +170,7 @@ commit_volume <- function(item, result, output_dir) {
 		names(data) <- projects$name
 	}
 	else {
-		names(data) <- projects$project_id
+		names(data) <- paste('Proj', projects$project_id, sep='')
 	}
 	write(toJSON(data),
 		  file=paste(output_dir, paste(item$table, "json", sep="."), sep="/"))
@@ -193,7 +193,7 @@ developers <- function(item, result, output_dir) {
 		names(data) <- projects$name
 	}
 	else {
-		names(data) <- projects$project_id
+		names(data) <- paste('Proj', projects$project_id, sep='')
 	}
 	write(toJSON(data),
 		  file=paste(output_dir, paste(item$table, "json", sep="."), sep="/"))
@@ -305,7 +305,10 @@ long_waiting_commits <- function(item, result, output_dir) {
 		project_data <- result[result$project_id == project_id,c('repo_name','url','file','later_date','earlier_date')]
 
 		if (item$patterns[['project_ids']] == '1') {
-			name <- project_id
+			name <- paste('Proj', project_id, sep='')
+			project_data$repo_name <- sha256(project_data$repo_name)
+			project_data$url <- NULL
+			project_data$file <- sha256(project_data$file)
 		}
 		project_data$earlier_date <- as.POSIXct(project_data$earlier_date)
 		project_data$later_date <- as.POSIXct(project_data$later_date)
@@ -408,7 +411,8 @@ bigboat_status <- function(item, result, output_dir) {
 	write(toJSON(project_names, auto_unbox=T),
 		file=paste(path, "projects.json", sep="/"))
 
-	if (length(project_ids) > 0) {
+	if (length(project_ids) > 0 && item$patterns[['project_ids']] != '1') {
+		# Create list of source URLs
 		urls <- dbGetQuery(conn, paste("SELECT project_id, url
 										FROM gros.source_environment
 										WHERE project_id IN (",
