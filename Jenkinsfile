@@ -1,12 +1,16 @@
 pipeline {
     agent { label 'docker' }
 
+    environment {
+        GITLAB_TOKEN = credentials('data-analysis-gitlab-token')
+    }
+
     options {
         gitLabConnection('gitlab')
         buildDiscarder(logRotator(numToKeepStr: '10'))
     }
     triggers {
-        gitlab(triggerOnPush: true, triggerOnMergeRequest: true, branchFilterType: 'All')
+        gitlab(triggerOnPush: true, triggerOnMergeRequest: true, branchFilterType: 'All', secretToken: env.GITLAB_TOKEN)
     }
 
     post {
@@ -15,6 +19,9 @@ pipeline {
         }
         failure {
             updateGitlabCommitStatus name: env.JOB_NAME, state: 'failed'
+        }
+        aborted {
+            updateGitlabCommitStatus name: env.JOB_NAME, state: 'canceled'
         }
     }
 
