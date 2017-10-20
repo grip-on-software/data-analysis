@@ -8,19 +8,28 @@ source('include/log.r')
 source('include/project.r')
 
 input_file <- get_arg('--file', default='sprint_labels.json')
+project_ids <- get_arg('--project-ids', default='0')
+if (project_ids != '0') {
+	project_ids <- '1'
+}
 
 results <- read_json(input_file, simplifyVector=T)
 
 conn <- connect()
-projects <- get_sprint_projects(conn)
 
-write(toJSON(projects$name, auto_unbox=T),
-	  file=paste("output", "projects.json", sep="/"))
+sprint_projects <- get_sprint_projects(conn)
+projects <- list()
 patterns <- load_definitions('sprint_definitions.yml')
 for (idx in 1:length(results$projects)) {
-	project <- results$projects[idx]
-	project_name <- projects[projects$project_id == project,'name']
-	query <- paste('SELECT sprint.start_date, ${sprint_close} AS close_date FROM gros.sprint WHERE sprint.project_id = ', project, ' ORDER BY sprint.start_date', sep='')
+	project_id <- results$projects[idx]
+	if (project_ids != '1') {
+		project_name <- sprint_projects[sprint_projects$project_id == project_id,'name']
+	}
+	else {
+		project_name <- paste("Proj", project_id, sep="")
+	}
+	projects <- c(projects, project_name)
+	query <- paste('SELECT sprint.start_date, ${sprint_close} AS close_date FROM gros.sprint WHERE sprint.project_id = ', project_id, ' ORDER BY sprint.start_date', sep='')
 	item <- load_query(list(query=query), patterns)
 	sprint <- dbGetQuery(conn, item$query)
 	path <- paste("output", project_name, sep="/")
@@ -39,5 +48,7 @@ for (idx in 1:length(results$projects)) {
 	write(toJSON(project_data, auto_unbox=T),
 		  file=paste(path, "latest.json", sep="/"))
 }
+write(toJSON(projects, auto_unbox=T),
+	  file=paste("output", "projects.json", sep="/"))
 
 loginfo('Output all project predictions')

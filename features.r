@@ -28,7 +28,12 @@ get_source_urls <- function(conn, project_id) {
 
 output_directory <- get_arg('--output', default='output')
 config_file <- get_arg('--config', default='config.yml')
+project_ids <- get_arg('--project-ids', default='0')
+if (project_ids != '0') {
+	project_ids = '1'
+}
 exclude <- get_arg('--exclude', default='^$')
+
 if (get_arg('--project', default=F)) {
 	result <- get_project_features(conn, exclude)
 	subprojects <- get_subprojects(conn)
@@ -40,6 +45,10 @@ if (get_arg('--project', default=F)) {
 		main_project <- subprojects[subprojects$name == subproject,'main_project']
 		data[[main_project]] <- unbox(data[[main_project]] + data[[subproject]])
 		data[subproject] <- NULL
+	}
+	if (project_ids == '1') {
+		names(data) <- paste("Proj", result$data[['project_id']][names(data)],
+							 sep="")
 	}
 	write(toJSON(data),
 		  file=paste(output_directory, "project_features.json", sep="/"))
@@ -54,18 +63,24 @@ if (get_arg('--project', default=F)) {
 
 	config <- yaml.load_file(config_file)
 	patterns <- load_definitions('sprint_definitions.yml', config$fields)
-	links <- mapply(function(project_id, project) {
-		project_links <- list()
-		project_urls <- get_source_urls(conn, project_id)
-		project_patterns <- c(list(jira_key=project), project_urls, patterns)
+	if (project_ids != '1') {
+		links <- mapply(function(project_id, project) {
+			project_links <- list()
+			project_urls <- get_source_urls(conn, project_id)
+			project_patterns <- c(list(jira_key=project),
+								  project_urls, patterns)
 
-		for (item in result$items) {
-			source_url <- str_interp(item$source, project_patterns)
-			project_links[[item$column]] <- list(source=unbox(source_url))
-		}
-		return(project_links)
-	}, result$data[['project_id']], result$data[['name']], SIMPLIFY=F)
-	names(links) <- result$data[['name']]
+			for (item in result$items) {
+				source_url <- str_interp(item$source, project_patterns)
+				project_links[[item$column]] <- list(source=unbox(source_url))
+			}
+			return(project_links)
+		}, result$data[['project_id']], result$data[['name']], SIMPLIFY=F)
+		names(links) <- result$data[['name']]
+	}
+	else {
+		links <- list()
+	}
 	write(toJSON(links),
 		  file=paste(output_directory, "project_features_links.json", sep="/"))
 	loginfo("Wrote project_features_links.json")
