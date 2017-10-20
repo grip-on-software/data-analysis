@@ -47,7 +47,8 @@ if (get_arg('--project', default=F)) {
 		data[subproject] <- NULL
 	}
 	if (project_ids == '1') {
-		names(data) <- paste("Proj", result$data[['project_id']][names(data)],
+		names(data) <- paste("Proj",
+							 result$data[['project_id']][result$data[['name']] %in% names(data)],
 							 sep="")
 	}
 	write(toJSON(data),
