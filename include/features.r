@@ -90,8 +90,13 @@ get_recent_sprint_features <- function(conn, features, variables, date, limit) {
 	get_features(conn, '^$', items, sprint_data, colnames, join_cols)
 }
 
-get_project_features <- function(conn, exclude, variables) {
-	data <- get_projects(conn, by='name')
+get_project_features <- function(conn, exclude, variables, core=F) {
+	if (core) {
+		data <- get_core_projects(conn, by='name')
+	}
+	else {
+		data <- get_projects(conn, by='name')
+	}
 
 	items <- load_queries('project_features.yml', 'sprint_definitions.yml',
 					  	  variables)

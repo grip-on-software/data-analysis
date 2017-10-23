@@ -35,7 +35,8 @@ if (project_ids != '0') {
 exclude <- get_arg('--exclude', default='^$')
 
 if (get_arg('--project', default=F)) {
-	result <- get_project_features(conn, exclude)
+	core <- get_arg('--core', default=F)
+	result <- get_project_features(conn, exclude, NULL, core=core)
 	subprojects <- get_subprojects(conn)
 
 	df <- result$data[,result$colnames]
