@@ -33,9 +33,9 @@ if (project_ids != '0') {
 	project_ids = '1'
 }
 exclude <- get_arg('--exclude', default='^$')
+core <- get_arg('--core', default=F)
 
 if (get_arg('--project', default=F)) {
-	core <- get_arg('--core', default=F)
 	result <- get_project_features(conn, exclude, NULL, core=core)
 	subprojects <- get_subprojects(conn)
 
@@ -115,7 +115,7 @@ if (get_arg('--project', default=F)) {
 			  row.names=F)
 } else {
 	latest_date <- get_arg('--latest-date', default='')
-	result <- get_sprint_features(conn, exclude, NULL, latest_date)
+	result <- get_sprint_features(conn, exclude, NULL, latest_date, core=core)
 	sprint_data <- result$data
 
 	write.arff(sprint_data[,result$colnames],

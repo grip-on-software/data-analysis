@@ -33,17 +33,27 @@ get_features <- function(conn, exclude, items, data, colnames, join_cols) {
 	list(data=data, colnames=colnames, items=items)
 }
 
-get_sprint_features <- function(conn, exclude, variables, latest_date) {
+get_sprint_features <- function(conn, exclude, variables, latest_date, core=F) {
+	conditions <- list()
 	if (!missing(latest_date) && latest_date != '') {
-		condition <- paste('WHERE sprint.start_date <= CAST(\'',
-						   latest_date, '\' AS TIMESTAMP)', sep='')
+		conditions <- c(conditions,
+						paste('sprint.start_date <= CAST(\'',
+							  latest_date, '\' AS TIMESTAMP)', sep=''))
+	}
+	if (core) {
+		conditions <- c(conditions, 'COALESCE(is_support_team, false) = false')
+	}
+	if (length(conditions) != 0) {
+		where_clause <- paste('WHERE', paste(conditions, collapse=' AND '))
 	}
 	else {
-		condition <- ''
+		where_clause <- ''
 	}
 	sprint_data <- dbGetQuery(conn,
 						  	  paste('SELECT sprint.project_id, sprint.sprint_id
-									 FROM gros.sprint', condition, 'ORDER BY
+									 FROM gros.sprint
+									 JOIN gros.project
+									 ON project.project_id = sprint.project_id',									 where_clause, 'ORDER BY
 									 sprint.project_id, sprint.start_date'))
 
 	items <- load_queries('sprint_features.yml', 'sprint_definitions.yml',
