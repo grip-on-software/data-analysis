@@ -115,7 +115,8 @@ if (get_arg('--project', default=F)) {
 			  row.names=F)
 } else {
 	latest_date <- get_arg('--latest-date', default='')
-	result <- get_sprint_features(conn, exclude, NULL, latest_date, core=core)
+	result <- get_sprint_features(conn, exclude, NULL, latest_date, core=core,
+								  metrics=get_arg('--metrics', default=F))
 	sprint_data <- result$data
 
 	write.arff(sprint_data[,result$colnames],

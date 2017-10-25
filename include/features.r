@@ -7,10 +7,15 @@ source('include/project.r')
 get_features <- function(conn, exclude, items, data, colnames, join_cols) {
 	for (item in items) {
 		if (missing(exclude) || length(grep(exclude, item$table)) == 0) {
-			loginfo('Executing query for table %s', item$table)
-			time <- system.time(result <- dbGetQuery(conn, item$query))
-			loginfo('Query for table %s took %f seconds', item$table,
-					time['elapsed'])
+			if (!is.null(item$result)) {
+				result <- item$result
+			}
+			else {
+				loginfo('Executing query for table %s', item$table)
+				time <- system.time(result <- dbGetQuery(conn, item$query))
+				loginfo('Query for table %s took %f seconds', item$table,
+						time['elapsed'])
+			}
 			data <- merge(data, result, by=join_cols, all.x=T)
 			if (!is.null(item$default)) {
 				for (column in item$column) {
@@ -33,7 +38,7 @@ get_features <- function(conn, exclude, items, data, colnames, join_cols) {
 	list(data=data, colnames=colnames, items=items)
 }
 
-get_sprint_features <- function(conn, exclude, variables, latest_date, core=F) {
+get_sprint_features <- function(conn, exclude, variables, latest_date, core=F, metrics=F) {
 	conditions <- list()
 	if (!missing(latest_date) && latest_date != '') {
 		conditions <- c(conditions,
@@ -60,6 +65,29 @@ get_sprint_features <- function(conn, exclude, variables, latest_date, core=F) {
 						  variables)
 	colnames <- c("project_id")
 	join_cols <- c("project_id", "sprint_id")
+	metric_cols <- c("project_id", "sprint_id", "value")
+
+	if (metrics) {
+		loginfo('Executing query for metric features')
+		metric_data <- dbGetQuery(conn,
+								  'SELECT metric.base_name, project_id,
+								   sprint_id, AVG(value) AS value
+								   FROM gros.metric_value
+								   JOIN gros.metric
+								   ON metric_value.metric_id = metric.metric_id
+								   WHERE metric.base_name IS NOT NULL
+								   AND sprint_id <> 0 AND value <> -1
+								   GROUP BY metric.base_name, project_id, sprint_id
+								   ORDER BY metric.base_name, project_id, sprint_id')
+		for (metric_group in split(metric_data, metric_data$base_name)) {
+			name <- metric_group$base_name[1]
+			result <- metric_group[metric_cols]
+			names(result) <- c(join_cols, name) 
+			items <- c(items,
+					   list(list(table=name, column=name, result=result)))
+		}
+	}
+
 	get_features(conn, exclude, items, sprint_data, colnames, join_cols)
 }
 
