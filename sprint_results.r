@@ -8,6 +8,7 @@ source('include/log.r')
 source('include/project.r')
 
 input_file <- get_arg('--file', default='sprint_labels.json')
+output_directory <- get_arg('--output', default='output')
 project_ids <- get_arg('--project-ids', default='0')
 if (project_ids != '0') {
 	project_ids <- '1'
@@ -32,7 +33,7 @@ for (idx in 1:length(results$projects)) {
 	query <- paste('SELECT sprint.start_date, ${sprint_close} AS close_date FROM gros.sprint WHERE sprint.project_id = ', project_id, ' ORDER BY sprint.start_date', sep='')
 	item <- load_query(list(query=query), patterns)
 	sprint <- dbGetQuery(conn, item$query)
-	path <- paste("output", project_name, sep="/")
+	path <- paste(output_directory, project_name, sep="/")
 	if (!dir.exists(path)) {
 		dir.create(path)
 	}
@@ -49,6 +50,6 @@ for (idx in 1:length(results$projects)) {
 		  file=paste(path, "latest.json", sep="/"))
 }
 write(toJSON(projects, auto_unbox=T),
-	  file=paste("output", "projects.json", sep="/"))
+	  file=paste(output_directory, "projects.json", sep="/"))
 
 loginfo('Output all project predictions')
