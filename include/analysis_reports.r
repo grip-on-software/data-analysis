@@ -216,7 +216,7 @@ story_flow <- function(item, result, output_dir) {
 									 'SELECT id, name FROM gros.resolution'))
 
 	columns <- c('old_status','old_resolution','new_status','new_resolution')
-	changes <- split(result, as.list(result[columns]), drop=T)
+	changes <- split(result, list(result$old_status, result$old_resolution, result$new_status, result$new_resolution), drop=T)
 	nodes <- list()
 	edges <- list()
 	total_stories <- nrow(result)
@@ -228,6 +228,7 @@ story_flow <- function(item, result, output_dir) {
 				   '10004'='yellow', # Backlog Approved
 				   '10005'='yellow', # Reviewed
 				   '10006'='yellow') # In Review
+	ranks <- list(green=c(), yellow=c(), blue=c())
 
 	for (change in changes) {
 		old_status_id <- as.character(change[1,'old_status'])
@@ -252,10 +253,14 @@ story_flow <- function(item, result, output_dir) {
 			old_attrs <- list(style='rounded', shape='box')
 			new_attrs <- list(style='rounded', shape='box')
 			if (old_status_id %in% names(colors)) {
-				old_attrs$color <- colors[[old_status_id]]
+				color <- colors[[old_status_id]]
+				ranks[[color]] <- c(ranks[[color]], old_name)
+				old_attrs$color <- color
 			}
 			if (new_status_id %in% names(colors)) {
-				new_attrs$color <- colors[[new_status_id]]
+				color <- colors[[new_status_id]]
+				ranks[[color]] <- c(ranks[[color]], new_name)
+				new_attrs$color <- color
 			}
 
 			nodes[[old_name]] <- old_attrs
@@ -278,9 +283,16 @@ story_flow <- function(item, result, output_dir) {
 					 "];", sep=""))
 	}
 
+	dot_ranks <- function(rank) {
+		return(paste("{rank = same;",
+					 paste(levels(factor(rank)), collapse="; "),
+					 "}", sep=""))
+	}
+
 	dot <- c("digraph G {",
 			 paste(names(edges), lapply(edges, dot_attrs)),
 			 paste(names(nodes), lapply(nodes, dot_attrs)),
+			 paste(lapply(ranks, dot_ranks)),
 			 "}")
 
 	export_file <- paste(output_dir,

@@ -1,6 +1,6 @@
 SELECT issue.issue_id, issue_changes.earliest_date,
-issue_changes.status AS old_status, issue_changes.resolution AS old_resolution,
-issue.status AS new_status, issue.resolution AS new_resolution,
+issue_changes.status AS old_status, COALESCE(issue_changes.resolution, 0) AS old_resolution,
+issue.status AS new_status, COALESCE(issue.resolution, 0) AS new_resolution,
 issue.updated AS new_date
 FROM gros.issue, (
 	SELECT issue_id, status, resolution,

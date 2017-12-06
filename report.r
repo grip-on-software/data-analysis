@@ -1,5 +1,6 @@
 # Analysis reports.
 
+library(jsonlite)
 source('include/args.r')
 source('include/database.r')
 source('include/log.r')
@@ -8,7 +9,7 @@ source('include/analysis_reports.r')
 conn <- connect()
 
 projects_list <- get_arg('--projects', default='')
-projects <- as.vector(as.numeric(unlist(strsplit(projects_list, ','))))
+invert <- get_arg('--invert', default=F)
 
 interval <- get_arg('--interval', default='')
 
@@ -54,15 +55,25 @@ if (interval != '') {
 												  'epoch(', as.numeric(range[1]), ') AND ',
 												  'epoch(', as.numeric(range[2]), ')', sep='')))
 	})
-} else if (identical(projects, numeric(0))) {
+} else if (projects_list == '') {
 	run_reports(list(id='all', project_ids=project_ids))
 } else {
+	if (projects_list == 'each') {
+		projects <- get_projects(conn)$project_id
+	}
+	else {
+		projects <- as.vector(as.numeric(unlist(strsplit(projects_list, ','))))
+	}
 	for (project in projects) {
 		run_reports(list(id=project,
 						 project_ids=project_ids,
 						 category_conditions=paste('AND project_id =', project)))
-		run_reports(list(id=paste('not', project, sep='-'),
-						 project_ids=project_ids,
-						 category_conditions=paste('AND project_id <>', project)))
+		if (invert) {
+			run_reports(list(id=paste('not', project, sep='-'),
+						 	 project_ids=project_ids,
+						 	 category_conditions=paste('AND project_id <>', project)))
+		}
 	}
+	write(toJSON(projects),
+		  file=paste(output_directory, 'report_projects.json', sep='/'))
 }
