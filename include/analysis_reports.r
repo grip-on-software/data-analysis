@@ -306,7 +306,7 @@ story_flow <- function(item, result, output_dir) {
 				 "all: $(patsubst %.dot,%.png,$(wildcard *.dot))",
 				 "%.png: %.dot",
 				 "\tdot -Tpng $< -o $@"),
-			   paste(output_dur, "Makefile", sep="/"))
+			   paste(output_dir, "Makefile", sep="/"))
 }
 
 long_waiting_commits <- function(item, result, output_dir) {
