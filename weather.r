@@ -40,7 +40,7 @@ get_temperatures <- function(end_index) {
 	}
 
 	# Select closest active weather station.
-	station <- which.min(knmi$distance[active_stations])
+	station <- active_stations[which.min(knmi$distance[active_stations])]
 
 	ncvar_get(knmi$nc, 'TG', start=c(1,station), count=c(end_index,1))
 }
