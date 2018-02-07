@@ -316,7 +316,7 @@ long_waiting_commits <- function(item, result, output_dir) {
 	}
 	projects <- get_repo_projects(conn)
 	mapply(function(project_id, name) {
-		project_data <- result[result$project_id == project_id,c('repo_name','url','file','later_date','earlier_date')]
+		project_data <- result[result$project_id == project_id,c('repo_name','url','environment_url','file','later_date','earlier_date')]
 
 		if (item$patterns[['project_ids']] == '1') {
 			name <- paste('Proj', project_id, sep='')
@@ -324,6 +324,11 @@ long_waiting_commits <- function(item, result, output_dir) {
 			project_data$url <- NULL
 			project_data$file <- unclass(sha256(project_data$file))
 		}
+		else if (is.null(project_data$url) || length(grep("^https?://", project_data$url)) == 0) {
+			# Link to a webpage with relevant information about the source.
+			project_data$url <- project_data$environment_url
+		}
+		project_data$environment_url <- NULL
 		project_data$earlier_date <- as.POSIXct(project_data$earlier_date)
 		project_data$later_date <- as.POSIXct(project_data$later_date)
 		write(toJSON(project_data),
