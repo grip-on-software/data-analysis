@@ -35,9 +35,17 @@ files:
     table: updaters
     column: avg_updaters
     default: 0
+  - filename: 04-expected-story-points.sql
+    table: expected_story_points
+    column: initial_story_points
+    default: 0
   - filename: 04-done-story-points.sql
-    table: story_points
+    table: done_story_points
     column: num_story_points
+    default: 0
+  - filename: 04-weighted-story-points.sql
+    table: weighted_story_points
+    column: num_weighted_points
     default: 0
   - filename: 04-attachments.sql
     table: attachments
