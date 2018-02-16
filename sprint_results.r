@@ -14,7 +14,7 @@ get_sprint <- function(project_id, sprint_id, cache=T) {
 		loginfo('Using cached sprints for project %d', project_id)
 		return(sprint_cache[[project_id]][sprint_id,])
 	}
-	query <- 'SELECT project.quality_display_name, sprint.sprint_id, sprint.name, sprint.start_date, ${sprint_close} AS close_date FROM gros.sprint JOIN gros.project ON sprint.project_id = project.project_id WHERE sprint.project_id = ${project_id} ORDER BY sprint.start_date'
+	query <- 'SELECT project.name AS project_key, project.quality_display_name, sprint.sprint_id, sprint.name, sprint.start_date, ${sprint_close} AS close_date FROM gros.sprint JOIN gros.project ON sprint.project_id = project.project_id WHERE sprint.project_id = ${project_id} ORDER BY sprint.start_date'
 	item <- load_query(list(query=query), c(patterns, project_id=project_id))
 	time <- system.time(sprint <- dbGetQuery(conn, item$query))
 	loginfo('Obtained sprints of project %d in %f seconds',
@@ -59,6 +59,7 @@ for (idx in 1:length(results$projects)) {
 			analogy_sprint <- get_sprint(features[analogy,"project_id"],
 										 features[analogy,"sprint_num"])
 			return(list(project=analogy_sprint$quality_display_name,
+						project_id=analogy_sprint$project_key,
 						sprint=features[analogy,"sprint_num"],
 						id=analogy_sprint$sprint_id,
 						name=analogy_sprint$name,
