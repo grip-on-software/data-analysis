@@ -54,6 +54,7 @@ for (idx in 1:length(results$projects)) {
 	sprint <- get_sprint(project_id, sprint_id,
 						 cache=!is.null(results$analogy_indexes))
 
+	feature_names <- results$configuration$features
 	if (!is.null(results$analogy_indexes)) {
 		analogies <- mapply(function(analogy, label) {
 			analogy_sprint <- get_sprint(features[analogy,"project_id"],
@@ -65,7 +66,8 @@ for (idx in 1:length(results$projects)) {
 						name=analogy_sprint$name,
 						start_date=as.POSIXct(analogy_sprint$start_date),
 						end_date=as.POSIXct(analogy_sprint$close_date),
-						label=label))
+						label=label,
+						features=unlist(features[analogy,feature_names])))
 		}, results$analogy_indexes[idx,], results$analogy_labels[idx,],
 		SIMPLIFY=F)
 	}
@@ -88,6 +90,7 @@ for (idx in 1:length(results$projects)) {
 						 risk=results$risks[idx],
 						 metrics=results$metrics,
 						 analogies=analogies,
+						 features=unlist(features[analogy,feature_names]),
 						 configuration=results$configuration)
 	write(toJSON(project_data, auto_unbox=T, null="null"),
 		  file=paste(path, "latest.json", sep="/"))
