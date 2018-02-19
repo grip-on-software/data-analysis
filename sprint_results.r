@@ -90,7 +90,7 @@ for (idx in 1:length(results$projects)) {
 						 risk=results$risks[idx],
 						 metrics=results$metrics,
 						 analogies=analogies,
-						 features=features[analogy,feature_names],
+						 features=results$features[idx],
 						 configuration=results$configuration)
 	write(toJSON(project_data, auto_unbox=T, null="null"),
 		  file=paste(path, "latest.json", sep="/"))
