@@ -78,10 +78,8 @@ for (idx in 1:length(results$projects)) {
 		analogies <- NULL
 	}
 
-	path <- paste(output_directory, project_name, sep="/")
-	if (!dir.exists(path)) {
-		dir.create(path)
-	}
+	sprint_features <- as.list(results$features[idx,])
+	names(sprint_features) <- results$configuration$features
 	project_data <- list(project=sprint$quality_display_name,
 						 sprint=sprint_id,
 						 id=sprint$sprint_id,
@@ -93,8 +91,13 @@ for (idx in 1:length(results$projects)) {
 						 risk=results$risks[idx],
 						 metrics=results$metrics,
 						 analogies=analogies,
-						 features=safe_unbox(results$features[idx,]),
+						 features=safe_unbox(sprint_features),
 						 configuration=results$configuration)
+
+	path <- paste(output_directory, project_name, sep="/")
+	if (!dir.exists(path)) {
+		dir.create(path)
+	}
 	write(toJSON(project_data, auto_unbox=T, null="null"),
 		  file=paste(path, "latest.json", sep="/"))
 }
