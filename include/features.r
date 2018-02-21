@@ -20,7 +20,7 @@ safe_unbox <- function(x) {
 get_feature_locales <- function(items, field='descriptions') {
 	locales <- list()
 	for (item in items) {
-		for (code in names(item$descriptions)) {
+		for (code in names(item[[field]])) {
 			if (!(code %in% names(locales))) {
 				locales[[code]] <- list()
 			}
