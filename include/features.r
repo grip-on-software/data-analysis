@@ -4,6 +4,37 @@ source('include/database.r')
 source('include/log.r')
 source('include/project.r')
 
+safe_unbox <- function(x) {
+	if (is.vector(x) && length(x) > 1) {
+		return(x)
+	}
+	if (is.data.frame(x) && nrow(x) == 0) {
+		return(NA)
+	}
+	if (is.list(x)) {
+		return(sapply(x, safe_unbox, simplify=F))
+	}
+	return(unbox(x))
+}
+
+get_feature_locales <- function(items, field='descriptions') {
+	locales <- list()
+	for (item in items) {
+		for (code in names(item$descriptions)) {
+			if (!(code %in% names(locales))) {
+				locales[[code]] <- list()
+			}
+			locales[[code]] <- c(locales[[code]],
+								 mapply(function(column, description) {
+									safe_unbox(description)
+								 }, item$column, item$descriptions[[code]],
+								 SIMPLIFY=F))
+
+		}
+	}
+	return(locales)
+}
+
 get_features <- function(conn, exclude, items, data, colnames, join_cols) {
 	for (item in items) {
 		if (missing(exclude) || length(grep(exclude, item$table)) == 0) {

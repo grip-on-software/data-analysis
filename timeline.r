@@ -11,13 +11,6 @@ dateFormat <- function(date) {
 	format(as.POSIXct(date), format="%Y-%m-%dT%H:%M:%S")
 }
 
-safe_unbox <- function(x) {
-	if (is.data.frame(x) && nrow(x) == 0) {
-		return(NA);
-	}
-	return(unbox(x));
-}
-
 conn <- connect()
 
 projects <- get_core_projects(conn)
@@ -49,6 +42,8 @@ exportFeatures <- function(exclude, output_directory) {
 	else {
 		names(project_data) <- paste('Proj', projects$project_id, sep='')
 	}
+	write(toJSON(get_feature_locales(result$items)),
+		  file=paste(output_directory, "locales.json", sep="/"))
 	write(toJSON(project_data),
 		  file=paste(output_directory, "features.json", sep="/"))
 }
@@ -141,7 +136,8 @@ for (item in items) {
 	min_date[[item$type]] <- minDate
 	max_date[[item$type]] <- maxDate
 
-	type <- list(name=safe_unbox(item$type))
+	type <- list(name=safe_unbox(item$type),
+				 locales=safe_unbox(item$descriptions))
 	if (!is.null(item$display)) {
 		type$enabled = safe_unbox(item$display)
 	}

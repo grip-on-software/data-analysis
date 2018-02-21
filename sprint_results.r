@@ -3,8 +3,10 @@
 
 library(foreign)
 library(jsonlite)
+library(yaml)
 source('include/args.r')
 source('include/database.r')
+source('include/features.r')
 source('include/log.r')
 source('include/project.r')
 
@@ -41,6 +43,7 @@ conn <- connect()
 sprint_projects <- get_sprint_projects(conn)
 projects <- list()
 patterns <- load_definitions('sprint_definitions.yml')
+specifications <- yaml.load_file('sprint_features.yml')
 for (idx in 1:length(results$projects)) {
 	project_id <- results$projects[idx]
 	if (project_ids != '1') {
@@ -67,7 +70,7 @@ for (idx in 1:length(results$projects)) {
 						start_date=as.POSIXct(analogy_sprint$start_date),
 						end_date=as.POSIXct(analogy_sprint$close_date),
 						label=label,
-						features=unbox(features[analogy,feature_names])))
+						features=safe_unbox(features[analogy,feature_names])))
 		}, results$analogy_indexes[idx,], results$analogy_labels[idx,],
 		SIMPLIFY=F)
 	}
@@ -90,11 +93,15 @@ for (idx in 1:length(results$projects)) {
 						 risk=results$risks[idx],
 						 metrics=results$metrics,
 						 analogies=analogies,
-						 features=unbox(results$features[idx,]),
+						 features=safe_unbox(results$features[idx,]),
 						 configuration=results$configuration)
 	write(toJSON(project_data, auto_unbox=T, null="null"),
 		  file=paste(path, "latest.json", sep="/"))
 }
+write(toJSON(get_feature_locales(specifications$files)),
+	  file=paste(output_directory, "descriptions.json", sep="/"))
+write(toJSON(get_feature_locales(specifications$files, 'units')),
+	  file=paste(output_directory, "units.json", sep="/"))
 write(toJSON(projects, auto_unbox=T),
 	  file=paste(output_directory, "projects.json", sep="/"))
 

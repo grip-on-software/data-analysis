@@ -4,146 +4,398 @@ files:
     table: sprint_num
     column: sprint_num
     optional: No
+    descriptions:
+        nl: Sprintnummer
+        en: Sprint number
+    units:
+        nl: "Sprint #%s"
+        en: "Sprint #%s"
   - definition: sprint_days
     table: sprint
     column: sprint_days
     optional: No
+    descriptions:
+        nl: Sprintlengte
+        en: Sprint length
+    units:
+        nl: "%s dagen"
+        en: "%s days"
   - filename: 01-number-of-vcs-committers.sql
     table: sprint_vcs_dev_count
     column: number_of_vcs_devs
     default: 0
+    descriptions:
+        nl: Developer teamgrootte
+        en: Development team size
+    units:
+        nl: "%s developers"
+        en: "%s developers"
   - filename: 01-number-of-jira-updaters.sql
     table: sprint_jira_dev_count
     column: number_of_jira_devs
     default: 0
+    descriptions:
+        nl: Project teamgrootte
+        en: Project team size
+    units:
+        nl: "%s projectleden"
+        en: "%s project members"
   - filename: 01-dev-sprint-experience.sql
     table: sprint_experience
     column: dev_sprint_experience
     default: 0
+    descriptions:
+        nl: Teamervaring
+        en: Team experience
+    units:
+        nl: "%s sprints ervaring"
+        en: "%s sprints of experience"
   - filename: 01-new-committers.sql
     table: new_developers
     column: num_new_developers
     default: 0
+    descriptions:
+        nl: Nieuwe developers
+        en: New developers
+    units:
+        nl: "%s nieuwe developers"
+        en: "%s new developers"
   - filename: 02-team-spirit-metric.sql
     table: team_spirit_metric
     column: team_spirit
+    descriptions:
+        nl: Teamstemming
+        en: Team spirit
+    units:
+        nl: "Stemming van %s"
+        en: "Spirit %s"
   - filename: 03-story-watchers.sql
     table: watchers
     column: num_watchers
     default: 0
+    descriptions:
+        nl: Issue-watchers
+        en: Issue watchers
+    units:
+        nl: "%s issue-watchers"
+        en: "%s issue watchers"
   - filename: 03-number-of-issue-changers.sql
     table: updaters
     column: avg_updaters
     default: 0
+    descriptions:
+        nl: Issue-updaters
+        en: Issue updaters
+    units:
+        nl: "%s issue-updaters"
+        en: "%s issue updaters"
   - filename: 04-expected-story-points.sql
     table: expected_story_points
     column: initial_story_points
     default: 0
+    descriptions:
+        nl: Geplande storypoints
+        en: Planned story points
+    units:
+        nl: "%s geplande punten"
+        en: "%s planned points"
   - filename: 04-done-story-points.sql
     table: done_story_points
     column: num_story_points
     default: 0
+    descriptions:
+        nl: Afgeronde storypoints
+        en: Done story points
+    units:
+        nl: "%s afgronde storypoints"
+        en: "%s done story points"
   - filename: 04-weighted-story-points.sql
     table: weighted_story_points
     column: num_weighted_points
     default: 0
+    descriptions:
+        nl: Gewogen storypoints
+        en: Weighted story points
+    units:
+        nl: "%s gewogen storypoints"
+        en: "%s weighted story points"
   - filename: 04-attachments.sql
     table: attachments
     column: num_attachments
     default: 0
+    descriptions:
+        nl: Bijlagen
+        en: Attachments
+    units:
+        nl: "%s bijlagen"
+        en: "%s attachments"
   - filename: 04-labels.sql
     table: labels
     column: num_labels
     default: 0
+    descriptions:
+        nl: Labels
+        en: Labels
+    units:
+        nl: "%s labels"
+        en: "%s labels"
   - filename: 04-impediments.sql
     table: impediments
     column: num_impediments
     default: 0
+    descriptions:
+        nl: Impediments
+        en: Impediments
+    units:
+        nl: "%s impediments"
+        en: "%s impediments"
   - filename: 04-late-rank-changes.sql
     table: rank_changes
     column: num_late_rank_changes
     default: 0
+    descriptions:
+        nl: Late rangwijzigingen
+        en: Late rank changes
+    units:
+        nl: "%s rangwijzigingen na begin van sprint"
+        en: "%s rank changes after start of sprint"
   - filename: 04-not-done-status.sql
     table: not_done
     column: num_not_done
     default: 0
+    descriptions:
+        nl: Niet afgeronde stories
+        en: Unfinished stories
+    units:
+        nl: "%s stories die niet afgerond zijn"
+        en: "%s stories that are not done"
   - filename: 04-added-stories.sql
     table: added_stories
     column: num_added_stories
     default: 0
+    descriptions:
+        nl: Toegevoegde stories
+        en: Added stories
+    units:
+        nl: "%s stories toegevoegd tijdens sprint"
+        en: "%s stories added during sprint"
   - filename: 04-removed-stories.sql
     table: removed_stories
     column: num_removed_stories
     default: 0
+    descriptions:
+        nl: Weggehaalde stories
+        en: Removed stories
+    units:
+        nl: "%s stories weggehaald tijdens sprint"
+        en: "%s stories removed during sprint"
   - filename: 04-stories.sql
     table: stories
     column: num_stories
     default: 0
+    descriptions:
+        nl: User stories
+        en: User stories
+    units:
+        nl: "%s stories"
+        en: "%s stories"
   - filename: 04-done-stories.sql
     table: done_stories
     column: num_done_stories
     default: 0
+    descriptions:
+        nl: Afgeronde stories
+        en: Done stories
+    units:
+        nl: "%s afgeronde stories"
+        en: "%s done stories"
   - filename: 04-issue-links.sql
     table: issue_links
     column: num_links
     default: 0
+    descriptions:
+        nl: Issue-links
+        en: Issue links
+    units:
+        nl: "%s issue-links"
+        en: "%s issue links"
   - filename: 05-number-of-comments.sql
     table: issue_comments
     column: num_comments
     default: 0
+    descriptions:
+        nl: Commentaren
+        en: Comments
+    units:
+        nl: "%s commentaren bij issues"
+        en: "%s issue comments"
   - filename: 05-average-changes.sql
     table: issue_changes
     column: avg_changes
     default: 0
+    descriptions:
+        nl: Wijzigingen per issue
+        en: Changes per issue
+    units:
+        nl: "gemiddeld %s wijzigingen per issue"
+        en: "average of %s changes per issue"
   - filename: 05-issue-change-pivot.sql
     table: issue_change_pivot
     column: avg_change_day
+    descriptions:
+        nl: Middelpunt van issuewijzigingen
+        en: Midpoint of issue changes
+    units:
+        nl: "middelpunt van issuewijzigingen op %s dagen na begin van sprint"
+        en: "midpoint of issuechanges at %s days after start of sprint"
   - filename: 06-sprints-velocity.sql
     table: sprint_velocity
     column: velocity
     default: 0
+    descriptions:
+        nl: Gerealiseerde velocity
+        en: Realized elocity
+    units:
+        nl: "%s storypoints per werkdag"
+        en: "%s story points per working day"
   - filename: 06-sprints-average-velocity.sql
     table: sprint_three_velocity
     column: avg_velocity
     default: 0
+    descriptions:
+        nl: Gemiddelde velocity
+        en: Average velocity
+    units:
+        nl: "velocity van %s storypoints over drie sprints"
+        en: "velocity of %s story points over three sprints"
   - filename: 06-other-issues-done.sql
     table: other_done_issues
     column: other_done_issues
     default: 0
+    descriptions:
+        nl: Afgeronde niet-story issues
+        en: Done non-story issues
+    units:
+        nl: "%s afgeronde issues die geen story of subtask zijn"
+        en: "%s done issues that are not stories or subtasks"
   - filename: 07-concurrent-in-progress-stories.sql
     table: concurrent_in_progress_stories
     column: avg_concurrent_progress
     default: 0
+    descriptions:
+        nl: Gelijktijdige stories in progress
+        en: Concurrent stories in progress
+    units:
+        nl: "gemiddeld %s stories die gelijktijdig in progress zijn"
+        en: "average of %s stories that are concurrently in progress"
   - filename: 07-duration-in-progress-stories.sql
     table: duration_in_progress_stories
     column: avg_duration_progress
     default: 0
+    descriptions:
+        nl: Looptijd stories in progress
+        en: Duration of stories in progress
+    units:
+        nl: "gemiddeld %s dagen in progress per story"
+        en: "average of %s days in progress per story"
   - filename: 08-vcs-statistics.sql
     table: vcs_statistics
     column: [num_commits, avg_insertions, avg_deletions, avg_size, avg_files, avg_lines]
     default: 0
+    descriptions:
+        nl:
+            - Commits
+            - Toegevoegde regels
+            - Verwijderde regels
+            - Commitgrootte
+            - Bestanden in commit
+            - Regels in commit
+        en:
+            - Commits
+            - Added lines
+            - Removed lines
+            - Commit size
+            - Files in commit
+            - Lines in commit
+    units:
+        nl:
+            - "%s commits"
+            - "gemiddeld %s toegevoegde regels per commit"
+            - "gemiddeld %s verwijderde regels per commit"
+            - "gemiddeld %s bytes per commit"
+            - "gemiddeld %s bestanden per commit"
+            - "gemiddeld %s regels per commit"
+        en:
+            - "%s commits"
+            - "average of %s added lines per commit"
+            - "average of %s removed lines per commit"
+            - "average of %s bytes per commit"
+            - "average of %s files per commit"
+            - "average of %s lines per commit"
   - filename: 09-metric-count.sql
     table: metric_count
     column: num_metrics
+    descriptions:
+        nl: Metrieken
+        en: Metrics
+    units:
+        nl: "%s metrieken"
+        en: "%s metrics"
   - filename: 09-red-metric-count.sql
     table: red_metric_count
     column: num_red_metrics
+    descriptions:
+        nl: Rode metrieken
+        en: Red metrics
+    units:
+        nl: "%s metrieken die op rood staan"
+        en: "%s metrics that are red"
   - filename: 09-missing-metric-count.sql
     table: missing_metric_count
     column: num_missing_metrics
+    descriptions:
+        nl: Metrieken met missende bronnen
+        en: Metrics with missing sources
+    units:
+        nl: "%s metrieken met missende bron"
+        en: "%s metrics with missing sources"
   - filename: 10-metric-target-change.sql
     table: metric_target_change
     column: num_metric_target_changes
     default: 0
+    descriptions:
+        nl: Veranderde metrieknormen
+        en: Changed metric targets
+    units:
+        nl: "%s veranderingen aan metrieknormen"
+        en: "%s changes to metric targets"
   - filename: 11-early-rank-changes.sql
     table: early_rank_changes
     column: num_early_rank_changes
     default: 0
+    descriptions:
+        nl: Rangwijzigingen
+        en: Rank changes
+    units:
+        nl: "%s rangwijzigingen voor begin van sprint"
+        en: "%s rank changes before start of sprint"
   - filename: 11-early-storypoint-changes.sql
     table: early_storypoint_changes
     column: num_early_storypoint_changes
     default: 0
+    descriptions:
+        nl: Storypointwijzigingen
+        en: Story point changes
+    units:
+        nl: "%s wijzigingen aan storypoints voor begin van sprint"
+        en: "%s story point changes before start of sprint"
   - filename: 11-early-changes.sql
     table: early_changes
     column: num_early_changes
     default: 0
+    descriptions:
+        nl: Vroege issuewijzigingen
+        en: Early issue changes
+    units:
+        nl: "%s overige wijzigingen aan issues voor begin van sprint"
+        en: "%s other issue changes before start of sprint"

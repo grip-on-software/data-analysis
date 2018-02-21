@@ -87,14 +87,10 @@ if (get_arg('--project', default=F)) {
 		  file=paste(output_directory, "project_features_links.json", sep="/"))
 	loginfo("Wrote project_features_links.json")
 
-	locale <- list()
-	for (item in result$items) {
-		locale[[item$column]] <- unbox(item$name)
-	}
-	write(toJSON(locale),
-		  file=paste(output_directory, "project_features_localization.json",
+	write(toJSON(get_feature_locales(result$items)),
+		  file=paste(output_directory, "project_features_locales.json",
 		  			 sep="/"))
-	loginfo("Wrote project_features_localization.json")
+	loginfo("Wrote project_features_locales.json")
 
 	groups <- list()
 	for (item in result$items) {
