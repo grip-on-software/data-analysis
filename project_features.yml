@@ -111,7 +111,9 @@ files:
     table: sprint
     column: num_sprints
     default: 0
-    name: "Sprints"
+    descriptions:
+        nl: Sprints
+        en: Sprints
     source: "${jira_url}/secure/RapidBoard.jspa?projectKey=${jira_key}"
     groups: [jira, normalize]
   - filename: 04-sprint-lifespan.sql
