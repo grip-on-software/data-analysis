@@ -67,7 +67,7 @@ for (idx in 1:length(results$projects)) {
 						start_date=as.POSIXct(analogy_sprint$start_date),
 						end_date=as.POSIXct(analogy_sprint$close_date),
 						label=label,
-						features=features[analogy,feature_names]))
+						features=unbox(features[analogy,feature_names])))
 		}, results$analogy_indexes[idx,], results$analogy_labels[idx,],
 		SIMPLIFY=F)
 	}
@@ -90,7 +90,7 @@ for (idx in 1:length(results$projects)) {
 						 risk=results$risks[idx],
 						 metrics=results$metrics,
 						 analogies=analogies,
-						 features=results$features[idx],
+						 features=unbox(results$features[idx,]),
 						 configuration=results$configuration)
 	write(toJSON(project_data, auto_unbox=T, null="null"),
 		  file=paste(path, "latest.json", sep="/"))
