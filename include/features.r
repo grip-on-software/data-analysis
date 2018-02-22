@@ -27,7 +27,7 @@ get_feature_locales <- function(items, field='descriptions') {
 			locales[[code]] <- c(locales[[code]],
 								 mapply(function(column, description) {
 									safe_unbox(description)
-								 }, item$column, item$descriptions[[code]],
+								 }, item$column, item[[field]][[code]],
 								 SIMPLIFY=F))
 
 		}
