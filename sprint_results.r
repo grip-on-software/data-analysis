@@ -37,13 +37,23 @@ if (project_ids != '0') {
 
 results <- read_json(input_file, simplifyVector=T)
 features <- read.arff(feature_file)
-
 conn <- connect()
 
 sprint_projects <- get_sprint_projects(conn)
 projects <- list()
 patterns <- load_definitions('sprint_definitions.yml')
 specifications <- yaml.load_file('sprint_features.yml')
+
+get_tags <- function(features_row) {
+	tags <- list()
+	for (file in specifications$files) {
+		if (!is.null(file$tags)) {
+			tags <- c(tags, file$column[as.logical(features_row[[file$column]])])
+		}
+	}
+	return(tags)
+}
+
 for (idx in 1:length(results$projects)) {
 	project_id <- results$projects[idx]
 	if (project_ids != '1') {
@@ -70,7 +80,8 @@ for (idx in 1:length(results$projects)) {
 						start_date=as.POSIXct(analogy_sprint$start_date),
 						end_date=as.POSIXct(analogy_sprint$close_date),
 						label=label,
-						features=safe_unbox(features[analogy,feature_names])))
+						features=safe_unbox(features[analogy,feature_names]),
+						tags=get_tags(features[analogy,])))
 		}, results$analogy_indexes[idx,], results$analogy_labels[idx,],
 		SIMPLIFY=F)
 	}
@@ -79,6 +90,7 @@ for (idx in 1:length(results$projects)) {
 	}
 
 	sprint_features <- as.list(results$features[idx,])
+	features_row <- features[features$project_id==project_id& features$sprint_num==sprint_id,]
 	names(sprint_features) <- as.character(results$configuration$features)
 	project_data <- list(project=sprint$quality_display_name,
 						 sprint=sprint_id,
@@ -92,6 +104,7 @@ for (idx in 1:length(results$projects)) {
 						 metrics=results$metrics,
 						 analogies=analogies,
 						 features=safe_unbox(sprint_features),
+						 tags=get_tags(features_row),
 						 configuration=results$configuration)
 
 	path <- paste(output_directory, project_name, sep="/")
@@ -105,6 +118,8 @@ write(toJSON(get_feature_locales(specifications$files)),
 	  file=paste(output_directory, "descriptions.json", sep="/"))
 write(toJSON(get_feature_locales(specifications$files, 'units')),
 	  file=paste(output_directory, "units.json", sep="/"))
+write(toJSON(get_feature_locales(specifications$files, 'tags')),
+	  file=paste(output_directory, "tags.json", sep="/"))
 write(toJSON(projects, auto_unbox=T),
 	  file=paste(output_directory, "projects.json", sep="/"))
 

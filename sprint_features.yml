@@ -27,6 +27,9 @@ files:
     descriptions:
         nl: Gesloten sprint
         en: Closed sprint
+    tags:
+        nl: Gesloten
+        en: Closed
     units:
         nl: "%s gesloten sprint"
         en: "%s closed sprint"
@@ -37,6 +40,9 @@ files:
     descriptions:
         nl: Complete sprint
         en: Complete sprint
+    tags:
+        nl: Compleet
+        en: Complete
     units:
         nl: "%s complete sprint"
         en: "%s complete sprint"
