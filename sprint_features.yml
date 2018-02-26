@@ -20,6 +20,26 @@ files:
     units:
         nl: "%s dagen"
         en: "%s days"
+  - filename: 00-sprint-closed.sql
+    table: sprint_close
+    column: sprint_is_closed
+    optional: No
+    descriptions:
+        nl: Gesloten sprint
+        en: Closed sprint
+    units:
+        nl: "%s gesloten sprint"
+        en: "%s closed sprint"
+  - filename: 00-sprint-gathered.sql
+    table: sprint_gathered
+    column: sprint_is_complete
+    optional: No
+    descriptions:
+        nl: Complete sprint
+        en: Complete sprint
+    units:
+        nl: "%s complete sprint"
+        en: "%s complete sprint"
   - filename: 01-number-of-vcs-committers.sql
     table: sprint_vcs_dev_count
     column: number_of_vcs_devs
