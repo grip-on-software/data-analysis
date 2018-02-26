@@ -79,7 +79,7 @@ for (idx in 1:length(results$projects)) {
 	}
 
 	sprint_features <- as.list(results$features[idx,])
-	names(sprint_features) <- results$configuration$features
+	names(sprint_features) <- as.character(results$configuration$features)
 	project_data <- list(project=sprint$quality_display_name,
 						 sprint=sprint_id,
 						 id=sprint$sprint_id,
