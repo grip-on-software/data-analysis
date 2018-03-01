@@ -68,6 +68,9 @@ for (idx in 1:length(results$projects)) {
 						 cache=!is.null(results$analogy_indexes))
 
 	feature_names <- intersect(results$configuration$features, names(features))
+	tag_names <- get_tags(setNames(rep(T, length(features)), names(features)))
+	feature_excludes <- c("project_id", "sprint_num", tag_names)
+	feature_mask <- !(names(features) %in% feature_excludes)
 	if (!is.null(results$analogy_indexes)) {
 		analogies <- mapply(function(analogy, label) {
 			analogy_sprint <- get_sprint(features[analogy,"project_id"],
@@ -80,7 +83,7 @@ for (idx in 1:length(results$projects)) {
 						start_date=as.POSIXct(analogy_sprint$start_date),
 						end_date=as.POSIXct(analogy_sprint$close_date),
 						label=label,
-						features=safe_unbox(features[analogy,feature_names]),
+						features=safe_unbox(features[analogy,feature_mask]),
 						tags=get_tags(features[analogy,])))
 		}, results$analogy_indexes[idx,], results$analogy_labels[idx,],
 		SIMPLIFY=F)
@@ -90,8 +93,12 @@ for (idx in 1:length(results$projects)) {
 	}
 
 	sprint_features <- as.list(results$features[idx,])
-	features_row <- features[features$project_id==project_id& features$sprint_num==sprint_id,]
 	names(sprint_features) <- as.character(results$configuration$features)
+	features_row <- features[features$project_id==project_id & 
+							 features$sprint_num==sprint_id,]
+	all_features <- modifyList(sprint_features,
+							   as.list(features_row[,feature_mask]),
+							   keep.null=T)
 	project_data <- list(project=sprint$quality_display_name,
 						 sprint=sprint_id,
 						 id=sprint$sprint_id,
@@ -103,7 +110,7 @@ for (idx in 1:length(results$projects)) {
 						 risk=results$risks[idx],
 						 metrics=results$metrics,
 						 analogies=analogies,
-						 features=safe_unbox(sprint_features),
+						 features=safe_unbox(all_features),
 						 tags=get_tags(features_row),
 						 configuration=results$configuration)
 
@@ -111,7 +118,7 @@ for (idx in 1:length(results$projects)) {
 	if (!dir.exists(path)) {
 		dir.create(path)
 	}
-	write(toJSON(project_data, auto_unbox=T, null="null"),
+	write(toJSON(project_data, auto_unbox=T, na="null", null="null"),
 		  file=paste(path, "latest.json", sep="/"))
 }
 write(toJSON(get_feature_locales(specifications$files)),
