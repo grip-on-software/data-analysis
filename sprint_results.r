@@ -72,9 +72,15 @@ for (idx in 1:length(results$projects)) {
 	feature_excludes <- c("project_id", "sprint_num", tag_names)
 	feature_mask <- !(names(features) %in% feature_excludes)
 	if (!is.null(results$analogy_indexes)) {
-		analogies <- mapply(function(analogy, label) {
+		analogies <- mapply(function(i) {
+			analogy <- results$analogy_indexes[idx,i]
 			analogy_sprint <- get_sprint(features[analogy,"project_id"],
 										 features[analogy,"sprint_num"])
+			analogy_values <- as.list(results$analogy_values[idx,i,])
+			names(analogy_values) <- as.character(results$configuration$features)
+			analogy_value <- modifyList(analogy_values,
+										as.list(features[analogy,feature_mask]),
+										keep.null=T)
 			return(list(project=analogy_sprint$quality_display_name,
 						project_id=analogy_sprint$project_key,
 						sprint=features[analogy,"sprint_num"],
@@ -82,11 +88,10 @@ for (idx in 1:length(results$projects)) {
 						name=analogy_sprint$name,
 						start_date=as.POSIXct(analogy_sprint$start_date),
 						end_date=as.POSIXct(analogy_sprint$close_date),
-						label=label,
-						features=safe_unbox(features[analogy,feature_mask]),
+						label=results$analogy_labels[idx,i],
+						features=safe_unbox(analogy_value),
 						tags=get_tags(features[analogy,])))
-		}, results$analogy_indexes[idx,], results$analogy_labels[idx,],
-		SIMPLIFY=F)
+		}, 1:length(results$analogy_indexes[idx,]), SIMPLIFY=F)
 	}
 	else {
 		analogies <- NULL
