@@ -86,9 +86,9 @@ sprint_burndown <- function(item, result, output_dir) {
 			else {
 				project_name <- paste('Proj', project, sep='')
 			}
-			sprint_data <- result[result$project_id == project & result$sprint_id == sprint,c('story_points', 'close_date')]
+			sprint_data <- result[result$project_id == project & result$sprint_id == sprint,c('story_points', 'close_date', 'key', 'event_type')]
 			start_points <- sprint_data[1,'story_points']
-			end_time <- sprint_data[is.na(sprint_data$story_points),'close_date']
+			end_time <- sprint_data[sprint_data$event_type=='close','close_date']
 			if (!is.na(start_points) && !identical(end_time, character(0))) {
 				path <- paste(baseDir, project_name, sep="/")
 				if (!dir.exists(path)) {
@@ -107,11 +107,14 @@ sprint_burndown <- function(item, result, output_dir) {
 				points <- cumsum(changes)
 				date <- as.Date(sprint_data$close_date, '%Y-%m-%d')
 				end_date <- as.Date(end_time, '%Y-%m-%d')
+				type <- sprint_data$event_type
 				data <- cbind(as.data.frame(sprint_data$close_date),
-							  as.data.frame(points))
+							  as.data.frame(points),
+							  as.data.frame(sprint_data$event_type))
 
+				max_points <- max(points) - sum(sprint_data[sprint_data$event_type=='scope_remove','story_points'])
 				ideal_line = function(x) {
-					-start_points/(as.numeric(end_date) - as.numeric(date[1])) * (as.numeric(x) - as.numeric(date[1])) + start_points
+					-max_points/(as.numeric(end_date) - as.numeric(date[1])) * (as.numeric(x) - as.numeric(date[1])) + max_points
 				}
 				line_points = ideal_line(date)
 				over_under = points > line_points
@@ -130,7 +133,8 @@ sprint_burndown <- function(item, result, output_dir) {
 				# Output plot
 				if (format == 'pdf') {
 					plot <- ggplot(data, aes(x=date, y=points, group=1)) +
-					geom_point() + geom_line() +
+					geom_point(aes(colour=factor(type))) +
+					geom_line() +
 					geom_segment(aes(x=date[1], y=start_points,
 									 xend=end_date, yend=0), colour='blue') +
 					geom_vline(colour='red', xintercept=as.numeric(end_date)) +
@@ -140,6 +144,7 @@ sprint_burndown <- function(item, result, output_dir) {
 					loginfo("Wrote plot to %s", export_file)
 				} else if (format == 'json') {
 					names(data)[names(data)=='sprint_data$close_date'] <- 'date'
+					names(data)[names(data)=='sprint_data$event_type'] <- 'type'
 
 					write(toJSON(data),file=export_file)
 					loginfo("Wrote data to %s", export_file)
