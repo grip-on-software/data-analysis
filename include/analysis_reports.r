@@ -407,8 +407,7 @@ bigboat_status <- function(item, result, output_dir) {
 	project_ids <- list()
 	project_names <- list()
 
-	for(project in as.list(projects$project_id)) {
-		project_id <- projects[project,'project_id']
+	for(project_id in as.list(projects$project_id)) {
 		project_data <- result[result$project_id == project_id,c('name','checked_date','ok','value','max')]
 
 		if (nrow(project_data) > 0) {
