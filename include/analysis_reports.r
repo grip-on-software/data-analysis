@@ -408,13 +408,14 @@ bigboat_status <- function(item, result, output_dir) {
 	project_names <- list()
 
 	for(project_id in as.list(projects$project_id)) {
+		project_name <- projects[projects$project_id == project_id,'name']
 		project_data <- result[result$project_id == project_id,c('name','checked_date','ok','value','max')]
 
 		if (nrow(project_data) > 0) {
 			project_data$name <- str_replace_all(project_data$name, matches)
 			project_data$checked_date <- as.POSIXct(project_data$checked_date)
 			if (item$patterns[['project_ids']] != '1') {
-				name <- projects[project,'name']
+				name <- project_name
 			}
 			else {
 				name <- paste('Proj', project_id, sep='')
@@ -431,7 +432,7 @@ bigboat_status <- function(item, result, output_dir) {
 				loginfo("No data for project %d", project_id)
 			}
 			else {
-				loginfo("No data for %s", projects[project,'name'])
+				loginfo("No data for %s", project_name)
 			}
 		}
 	}
