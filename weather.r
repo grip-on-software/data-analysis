@@ -13,13 +13,19 @@ output_directory <- get_arg('--output', default='output')
 knmi_file = paste(output_directory, "knmi.nc", sep="/")
 if (!file.exists(knmi_file)) {
 	tryCatch(download.file(config$url, knmi_file, mode="wb"),
-			 error=function(e) { stop(paste("Download problems: ", e)) })
+			 error=function(e) {
+			 	 logwarn(paste("Download problems: ", e))
+				 quit("no", status=0, runLast=F)
+			 })
 }
 
 
 knmi <- list()
 tryCatch(knmi$nc <- nc_open(knmi_file),
-		 error=function(e) { stop(paste("Could not open NetCDF file: ", e)) })
+		 error=function(e) {
+		 	 logwarn(paste("Could not open NetCDF file: ", e))
+			 quit("no", status=0, runLast=F)
+		 })
 
 knmi$lat <- ncvar_get(knmi$nc, 'lat')
 knmi$lon <- ncvar_get(knmi$nc, 'lon')
