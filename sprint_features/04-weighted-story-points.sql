@@ -16,7 +16,7 @@ FROM gros.issue,
 (SELECT
     issue_id, MIN(changelog_id) AS first_changelog_id
     FROM gros.issue
-    WHERE issue.type IN (5,7) --${issue_story}
+    WHERE ${issue_story}
         AND issue.story_points <> 0
         AND issue.sprint_id <> 0
         AND issue.status = 3 -- issue was in progress during this sprint
@@ -26,13 +26,13 @@ FROM gros.issue,
     issue.issue_id, MIN(sprint.sprint_id) AS done_sprint
     FROM gros.issue, gros.sprint
     WHERE issue.sprint_id = sprint.sprint_id
-    AND (issue.resolution = 1 or issue.status = 6)--${issue_done}
+    AND ${issue_done}
     GROUP BY issue.issue_id
 ) AS done_data,
 -- TODO: Weight the maximum points over the last three sprints
 (SELECT
     issue.sprint_id, MAX(issue.story_points) AS max_points FROM gros.issue
-    --WHERE issue.story_points <= sprint_points_normalization
+    --WHERE issue.story_points <= ${sprint_points_normalization}
     GROUP BY issue.sprint_id
 ) AS sprint_points
 WHERE issue.issue_id = points_data.issue_id

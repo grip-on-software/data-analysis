@@ -23,7 +23,7 @@ conditions:
     issue_not_done:
         description: "Issues that are not (yet) done according to the team's definition of done"
         table: issue
-        condition: issue.resolution <> 1 AND issue.status <> 6
+        condition: COALESCE(issue.resolution, 0) <> 1 AND COALESCE(issue.status, 0) <> 6
     issue_overdue:
         description: "Issues that are in a certain state after the sprint ended (use in combination with other conditions)"
         table: issue, sprint, max_issue
