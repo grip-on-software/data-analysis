@@ -32,7 +32,7 @@ FROM gros.issue,
 -- TODO: Weight the maximum points over the last three sprints
 (SELECT
     issue.sprint_id, MAX(issue.story_points) AS max_points FROM gros.issue
-    --WHERE issue.story_points <= ${sprint_points_normalization}
+    --WHERE issue.story_points <= sprint_points_normalization
     GROUP BY issue.sprint_id
 ) AS sprint_points
 WHERE issue.issue_id = points_data.issue_id
