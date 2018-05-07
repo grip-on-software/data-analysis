@@ -134,5 +134,7 @@ write(toJSON(get_feature_locales(specifications$files, 'tags')),
 	  file=paste(output_directory, "tags.json", sep="/"))
 write(toJSON(projects, auto_unbox=T),
 	  file=paste(output_directory, "projects.json", sep="/"))
+write(toJSON(results$configuration, auto_unbox=T),
+	  file=paste(output_directory, "configuration.json", sep="/"))
 
 loginfo('Output all project predictions')
