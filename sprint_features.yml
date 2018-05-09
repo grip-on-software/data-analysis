@@ -66,6 +66,16 @@ files:
     units:
         nl: "%s projectleden"
         en: "%s project members"
+  - filename: 01-number-of-seats.sql
+    table: sprint_seat_count
+    column: number_of_seats
+    default: 0
+    descriptions:
+        nl: Teamgrootte
+        en: Team size
+    units:
+        nl: "%s full-time leden"
+        en: "%s fulltime members"
   - filename: 01-dev-sprint-experience.sql
     table: sprint_experience
     column: dev_sprint_experience
