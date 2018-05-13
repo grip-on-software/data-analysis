@@ -41,6 +41,14 @@ conditions:
         table: issue
         condition: '"type" IN (9, 10, 10301)'
     sprint_closed:
-        descritpion: "Sprints that have been ended or completed"
+        description: "Sprints that have been ended or completed"
         table: sprint
         condition: COALESCE(sprint.complete_date, sprint.end_date) < CURRENT_TIMESTAMP()
+    planned_early:
+        description: "Earliest time for stories that are planned for a sprint"
+        table: sprint
+        condition: sprint.start_date - interval '1' hour
+    planned_late:
+        description: "Latest time for stories that are planned for a sprint"
+        table: sprint
+        condition: sprint.start_date + (sprint.end_date - sprint.start_date)/7
