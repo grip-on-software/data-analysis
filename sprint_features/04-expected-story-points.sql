@@ -35,7 +35,7 @@ SELECT project_id, sprint_id, SUM(story_points) AS initial_story_points FROM (
     AND issue.sprint_id IS NOT NULL
     AND issue.updated <= ${planned_late}
     AND later_issue.updated > ${planned_early}
-    AND later_issue.changelog_id > issue.changelog_id
+    AND later_issue.changelog_id >= issue.changelog_id
     AND (
         newer_issue.issue_id IS NULL
         OR newer_issue.updated > ${planned_late}
