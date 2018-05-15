@@ -111,8 +111,12 @@ if (get_arg('--project', default=F)) {
 			  row.names=F)
 } else {
 	latest_date <- get_arg('--latest-date', default='')
+	days <- get_arg('--days', default=NA)
+	patch <- ifelse(get_arg('--patch', default=F), NA, F)
+
 	result <- get_sprint_features(conn, exclude, NULL, latest_date, core=core,
-								  metrics=get_arg('--metrics', default=F))
+								  metrics=get_arg('--metrics', default=F),
+								  sprint_days=days, sprint_patch=patch)
 	sprint_data <- result$data
 
 	write.arff(sprint_data[,result$colnames],

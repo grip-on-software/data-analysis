@@ -52,3 +52,7 @@ conditions:
         description: "Latest time for stories that are planned for a sprint"
         table: sprint
         condition: sprint.start_date + (sprint.end_date - sprint.start_date)/7
+    sprint_patch:
+        description: "Sprints that have patch names"
+        table: sprint
+        condition: 'false'

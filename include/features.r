@@ -69,7 +69,7 @@ get_features <- function(conn, exclude, items, data, colnames, join_cols) {
 	list(data=data, colnames=colnames, items=items)
 }
 
-get_sprint_features <- function(conn, exclude, variables, latest_date, core=F, metrics=F) {
+get_sprint_features <- function(conn, exclude, variables, latest_date, core=F, metrics=F, sprint_days=NA, sprint_patch=NA) {
 	conditions <- list()
 	if (!missing(latest_date) && latest_date != '') {
 		conditions <- c(conditions,
@@ -79,18 +79,30 @@ get_sprint_features <- function(conn, exclude, variables, latest_date, core=F, m
 	if (core) {
 		conditions <- c(conditions, 'COALESCE(is_support_team, false) = false')
 	}
+	if (!is.na(sprint_days)) {
+		conditions <- c(conditions, "${sprint_close} - sprint.start_date > interval '${sprint_days}' day")
+	}
+	if (!is.na(sprint_patch)) {
+		conditions <- c(conditions, ifelse(sprint_patch, '${sprint_patch}',
+										   'NOT (${sprint_patch})'))
+	}
 	if (length(conditions) != 0) {
 		where_clause <- paste('WHERE', paste(conditions, collapse=' AND '))
 	}
 	else {
 		where_clause <- ''
 	}
-	sprint_data <- dbGetQuery(conn,
-						  	  paste('SELECT sprint.project_id, sprint.sprint_id
-									 FROM gros.sprint
-									 JOIN gros.project
-									 ON project.project_id = sprint.project_id',									 where_clause, 'ORDER BY
-									 sprint.project_id, sprint.start_date'))
+	patterns <- load_definitions('sprint_definitions.yml',
+								 list(sprint_days=sprint_days))
+	sprint_query <- load_query(list(query=paste('SELECT sprint.project_id, sprint.sprint_id
+									 			FROM gros.sprint
+									 			JOIN gros.project
+									 			ON project.project_id = sprint.project_id',
+												where_clause, 'ORDER BY
+									 			sprint.project_id, sprint.start_date')),
+							   patterns)
+
+	sprint_data <- dbGetQuery(conn, sprint_query$query)
 
 	items <- load_queries('sprint_features.yml', 'sprint_definitions.yml',
 						  variables)
@@ -135,7 +147,7 @@ get_recent_sprint_features <- function(conn, features, variables, date, limit) {
 		  	 ON project.project_id = sprint.project_id
 		  	 WHERE sprint.project_id = ${project_id}
 		  	 AND ${sprint_close} < CURRENT_TIMESTAMP()
-			 AND sprint.name NOT LIKE \'Technical%\'
+			 AND NOT (${sprint_patch})
 		  	 ORDER BY sprint.project_id, sprint.start_date DESC
 		  	 LIMIT ${limit}'
 	sprint_data <- data.frame()
