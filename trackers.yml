@@ -1,0 +1,20 @@
+vcs:
+    - file: latest_vcs_versions.json
+    - file: github_update.json
+      json: object
+    - file: gitlab_update.json
+      json: object
+    - file: tfs_update.json
+      json: object
+project:
+    - file: project_sources_update.json
+    - file: project_meta_update.json
+    - file: preflight_date.txt
+jira:
+    - file: jira-updated.txt
+      format: "%Y-%m-%d %H:%M"
+metrics:
+    - file: history_line_count.txt
+    - file: history_record_time.txt
+      format: "%Y-%m-%d %H:%M:%S"
+    - file: metric_options_update.json
