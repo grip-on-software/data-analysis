@@ -9,6 +9,7 @@ source('include/database.r')
 source('include/features.r')
 source('include/log.r')
 source('include/project.r')
+source('include/tracker.r')
 
 sprint_cache <- vector("list")
 get_sprint <- function(project_id, sprint_id, cache=T) {
@@ -117,7 +118,8 @@ for (idx in 1:length(results$projects)) {
 						 analogies=analogies,
 						 features=safe_unbox(all_features),
 						 tags=get_tags(features_row),
-						 configuration=results$configuration)
+						 configuration=results$configuration,
+						 sources=get_tracker_dates(conn, project_id))
 
 	path <- paste(output_directory, project_name, sep="/")
 	if (!dir.exists(path)) {
