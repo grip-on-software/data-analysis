@@ -119,7 +119,7 @@ for (idx in 1:length(results$projects)) {
 						 features=safe_unbox(all_features),
 						 tags=get_tags(features_row),
 						 configuration=results$configuration,
-						 sources=get_tracker_dates(conn, project_id))
+						 sources=get_tracker_dates(conn, project_id, aggregate=max))
 
 	path <- paste(output_directory, project_name, sep="/")
 	if (!dir.exists(path)) {

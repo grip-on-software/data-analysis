@@ -23,7 +23,7 @@ get_source_dates <- function(tracker, contents) {
 	}
 }
 
-get_tracker_dates <- function(conn, project_id, sources='all', with_sources=F) {
+get_tracker_dates <- function(conn, project_id, sources='all', with_sources=F, aggregate=F) {
 	filenames <- unlist(lapply(names(trackers), function(group) {
 		if (sources == 'all' || group %in% sources) {
 			lapply(trackers[[group]], function(tracker) { tracker$file })
@@ -52,6 +52,18 @@ get_tracker_dates <- function(conn, project_id, sources='all', with_sources=F) {
 			}
 			result[[group]] <- dates
 		}
+	}
+	if (!identical(aggregate, FALSE)) {
+		if (isTRUE(aggregate)) {
+			aggregate = min
+		}
+		return(lapply(result, function(dates) {
+  	  	  	if (length(dates) == 0) {
+				return(NA)
+			}
+			return(as.POSIXct(do.call(aggregate, dates),
+							  origin="1970-01-01 00:00:00"))
+		}))
 	}
 	return(result)
 }

@@ -13,8 +13,9 @@ project:
 jira:
     - file: jira-updated.txt
       format: "%Y-%m-%d %H:%M"
-metrics:
+metric_history:
     - file: history_line_count.txt
     - file: history_record_time.txt
       format: "%Y-%m-%d %H:%M:%S"
+metric_options:
     - file: metric_options_update.json
