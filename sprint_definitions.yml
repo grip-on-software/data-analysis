@@ -35,7 +35,7 @@ conditions:
     issue_other:
         description: "Issues that are not stories or subtasks"
         table: issue
-        condition: issue."type" NOT IN (5,7)
+        condition: '"type" NOT IN (5,7)'
     issue_test_case:
         description: "Issues that are test cases"
         table: issue

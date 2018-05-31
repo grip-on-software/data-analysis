@@ -33,6 +33,20 @@ get_source_urls <- function(conn, project_id, sources='all') {
 	return(urls)
 }
 
+get_source_pattern <- function(item, project_urls) {
+	if (is.list(item$source)) {
+		url_names <- paste(names(item$source), 'url', sep='_')
+		index = which(url_names %in% names(project_urls))
+		if (length(index) > 0) {
+			return(item$source[[index[1]]])
+		}
+	}
+	else if (!is.null(item$source)) {
+		return(item$source)
+	}
+	return(NA)
+}
+
 build_source_urls <- function(project_id, project_name, items=list(), patterns=c()) {
 	project_links <- list()
 	project_urls <- get_source_urls(conn, project_id)
@@ -40,8 +54,11 @@ build_source_urls <- function(project_id, project_name, items=list(), patterns=c
 						  project_urls, patterns)
 
 	for (item in items) {
-		source_url <- str_interp(item$source, project_patterns)
-		project_links[[item$column]] <- list(source=unbox(source_url))
+		item_source <- get_source_pattern(item, project_urls)
+		if (!is.na(item_source)) {
+			source_url <- str_interp(item_source, project_patterns)
+			project_links[[item$column]] <- list(source=unbox(source_url))
+		}
 	}
 	return(project_links)
 }

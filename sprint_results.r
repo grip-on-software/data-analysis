@@ -9,6 +9,7 @@ source('include/database.r')
 source('include/features.r')
 source('include/log.r')
 source('include/project.r')
+source('include/sources.r')
 source('include/tracker.r')
 
 sprint_cache <- vector("list")
@@ -17,7 +18,13 @@ get_sprint <- function(project_id, sprint_id, cache=T) {
 		loginfo('Using cached sprints for project %d', project_id)
 		return(sprint_cache[[project_id]][sprint_id,])
 	}
-	query <- 'SELECT project.name AS project_key, project.quality_display_name, sprint.sprint_id, sprint.name, sprint.start_date, ${sprint_close} AS close_date FROM gros.sprint JOIN gros.project ON sprint.project_id = project.project_id WHERE sprint.project_id = ${project_id} ORDER BY sprint.start_date'
+	query <- 'SELECT project.name AS project_key, project.quality_name,
+				project.quality_display_name, sprint.sprint_id, sprint.name,
+				sprint.start_date, ${sprint_close} AS close_date,
+				sprint.board_id FROM gros.sprint
+				JOIN gros.project ON sprint.project_id = project.project_id
+				WHERE sprint.project_id = ${project_id}
+				ORDER BY sprint.start_date'
 	item <- load_query(list(query=query), c(patterns, project_id=project_id))
 	time <- system.time(sprint <- dbGetQuery(conn, item$query))
 	loginfo('Obtained sprints of project %d in %f seconds',
@@ -31,6 +38,7 @@ get_sprint <- function(project_id, sprint_id, cache=T) {
 input_file <- get_arg('--file', default='sprint_labels.json')
 feature_file <- get_arg('--features', default='output/sprint_features.arff')
 output_directory <- get_arg('--output', default='output')
+config_file <- get_arg('--config', default='config.yml')
 project_ids <- get_arg('--project-ids', default='0')
 if (project_ids != '0') {
 	project_ids <- '1'
@@ -44,6 +52,12 @@ sprint_projects <- get_sprint_projects(conn)
 projects <- list()
 patterns <- load_definitions('sprint_definitions.yml')
 specifications <- yaml.load_file('sprint_features.yml')
+config <- yaml.load_file(config_file)
+patterns <- load_definitions('sprint_definitions.yml', config$fields)
+
+dateFormat <- function(date) {
+	format(as.POSIXct(date), format="%Y-%m-%d %H:%M:%S")
+}
 
 get_tags <- function(features_row) {
 	tags <- list()
@@ -127,6 +141,32 @@ for (idx in 1:length(results$projects)) {
 	}
 	write(toJSON(project_data, auto_unbox=T, na="null", null="null"),
 		  file=paste(path, "latest.json", sep="/"))
+
+	source_urls <- get_source_urls(conn, project_id)
+	source_items <- list()
+	for (item in specifications$files) {
+		if (is.list(item$source)) {
+			url_names <- paste(names(item$source), 'url', sep='_')
+			index = which(url_names %in% names(source_urls))
+			if (length(index) > 0) {
+				source_items[[item$column]] <- c(item,
+												 list(source=item$source[[index[1]]]))
+			}
+		}
+		else if (!is.null(item$source)) {
+			source_items[[item$column]] <- item
+		}
+	}
+
+	sprint_patterns <- list(jira_board_id=sprint$board_id,
+							jira_sprint_id=sprint$sprint_id,
+							quality_name=ifelse(is.na(sprint$quality_name), '',
+												sprint$quality_name),
+							sprint_start_date=dateFormat(sprint$start_date),
+							sprint_end_date=dateFormat(sprint$close_date))
+	links <- build_source_urls(project_id, project_name, items=source_items,
+							   patterns=c(patterns, sprint_patterns))
+	write(toJSON(links), file=paste(path, "links.json", sep="/"))
 }
 write(toJSON(get_feature_locales(specifications$files)),
 	  file=paste(output_directory, "descriptions.json", sep="/"))
