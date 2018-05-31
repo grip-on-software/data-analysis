@@ -6,25 +6,8 @@ library(jsonlite)
 source('include/args.r')
 source('include/database.r')
 source('include/features.r')
+source('include/sources.r')
 conn <- connect()
-
-get_source_urls <- function(conn, project_id) {
-	vcs_sources <- c('svn', 'git', 'github', 'gitlab', 'tfs')
-	environments <- dbGetQuery(conn, paste('SELECT source_type, url FROM gros.source_environment WHERE project_id = ', project_id, sep=''))
-	urls <- as.list(sub("/$", "", environments$url))
-	if (length(urls) == 0) {
-		return(urls)
-	}
-	names(urls) <- paste(environments$source_type, 'url', sep='_')
-
-	for (vcs_source in vcs_sources) {
-		if (vcs_source %in% environments$source_type) {
-			urls$vcs_url <- urls[[paste(vcs_source, 'url', sep='_')]]
-		}
-	}
-
-	return(urls)
-}
 
 output_directory <- get_arg('--output', default='output')
 config_file <- get_arg('--config', default='config.yml')
@@ -44,7 +27,9 @@ if (get_arg('--project', default=F)) {
 	names(data) <- result$data[['name']]
 	for (subproject in subprojects$name) {
 		main_project <- subprojects[subprojects$name == subproject,'main_project']
-		data[[main_project]] <- unbox(data[[main_project]] + data[[subproject]])
+		if (main_project %in% data) {
+			data[[main_project]] <- unbox(data[[main_project]] + data[[subproject]])
+		}
 		data[subproject] <- NULL
 	}
 	if (project_ids == '1') {
@@ -66,18 +51,11 @@ if (get_arg('--project', default=F)) {
 	config <- yaml.load_file(config_file)
 	patterns <- load_definitions('sprint_definitions.yml', config$fields)
 	if (project_ids != '1') {
-		links <- mapply(function(project_id, project) {
-			project_links <- list()
-			project_urls <- get_source_urls(conn, project_id)
-			project_patterns <- c(list(jira_key=project),
-								  project_urls, patterns)
-
-			for (item in result$items) {
-				source_url <- str_interp(item$source, project_patterns)
-				project_links[[item$column]] <- list(source=unbox(source_url))
-			}
-			return(project_links)
-		}, result$data[['project_id']], result$data[['name']], SIMPLIFY=F)
+		links <- mapply(build_source_urls,
+						result$data[['project_id']],
+						result$data[['name']],
+						MoreArgs=list(patterns=patterns, items=result$items),
+						SIMPLIFY=F)
 		names(links) <- result$data[['name']]
 	}
 	else {

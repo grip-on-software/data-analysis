@@ -5,6 +5,7 @@ source('include/args.r')
 source('include/database.r')
 source('include/log.r')
 source('include/features.r')
+source('include/sources.r')
 source('include/project.r')
 
 dateFormat <- function(date) {
@@ -98,8 +99,19 @@ exportData <- function(data, item, output_directory) {
 	else {
 		project_names <- paste('Proj', as.list(projects$project_id), sep='')
 	}
+	project_boards <- lapply(project_names, function(project) {
+		result <- data[data$project_name == project,]
+		if ("board_id" %in% colnames(result)) {
+			board_id <- unique(result[!is.na(result$board_id), 'board_id'])
+			if (length(board_id) == 1) {
+				return(safe_unbox(board_id))
+			}
+		}
+		return(safe_unbox(NA))
+	})
+	data[!is.na(project_boards[data$project_name]), 'board_id'] <- NA
 	project_data <- lapply(project_names, function(project) {
-		data[data$project_name == project,]
+		return(data[data$project_name == project,])
 	})
 	if (project_ids != '1') {
 		names(project_data) <- projects$name
@@ -109,6 +121,11 @@ exportData <- function(data, item, output_directory) {
 	}
 	path <- paste(output_directory, paste(item$type, "json", sep="."), sep="/")
 	write(toJSON(project_data), file=path)
+
+	names(project_boards) <- names(project_data)
+	write(toJSON(project_boards),
+		  file=paste(output_directory, "boards.json", sep="/"))
+
 	return(project_data)
 }
 
@@ -117,13 +134,14 @@ min_date <- list()
 max_date <- list()
 types <- list()
 projects_with_data <- list()
+project_boards <- list()
 for (item in items) {
 	loginfo('Executing query for type %s', item$type)
 	time <- system.time(result <- dbGetQuery(conn, item$query))
 	loginfo('Query for type %s took %f seconds', item$type, time['elapsed'])
 	result$date = dateFormat(result$date)
 	result$type = item$type
-	if ("end_date" %in% result) {
+	if ("end_date" %in% colnames(result)) {
 		result$end_date = dateFormat(result$end_date)
 	}
 	project_data <- exportData(result, item, output_directory)
@@ -150,8 +168,21 @@ for (item in items) {
 total_data = list(min_date=safe_unbox(min(unlist(min_date))),
 				  max_date=safe_unbox(max(unlist(max_date))),
 				  update_date=safe_unbox(dateFormat(Sys.time())),
-				  projects=names(projects_with_data))
+				  projects=names(projects_with_data),
+				  boards=project_boards)
 
 write(toJSON(total_data), file=paste(output_directory, "data.json", sep="/"))
 write(toJSON(types), file=paste(output_directory, "types.json", sep="/"))
 exportFeatures(get_arg('--exclude', default='^$'), output_directory)
+
+if (project_ids != '1') {
+	projects_with_data <- modifyList(projects_with_data,
+									 as.list(projects[projects$name %in% names(projects_with_data),'project_id']))
+
+	links <- mapply(function(project_id) {
+						safe_unbox(get_source_urls(conn, project_id, c('jira')))
+					},
+					projects_with_data, SIMPLIFY=F)
+
+	write(toJSON(links), file=paste(output_directory, "links.json", sep="/"))
+}

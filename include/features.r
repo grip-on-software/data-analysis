@@ -1,5 +1,6 @@
 # Utilities for retrieving sprint features.
 
+library(jsonlite)
 source('include/database.r')
 source('include/log.r')
 source('include/project.r')
@@ -7,6 +8,9 @@ source('include/project.r')
 safe_unbox <- function(x) {
 	if (is.vector(x) && length(x) > 1) {
 		return(x)
+	}
+	if (is.vector(x) && length(x) == 0) {
+		return(NA)
 	}
 	if (is.data.frame(x) && nrow(x) == 0) {
 		return(NA)
