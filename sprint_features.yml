@@ -140,7 +140,7 @@ files:
         en: "%s issue updaters"
   - filename: 04-expected-story-points.sql
     table: expected_story_points
-    column: initial_story_points
+    column: num_story_points
     default: 0
     descriptions:
         nl: Geplande storypoints
@@ -152,7 +152,7 @@ files:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=burndownChart&sprint=${jira_sprint_id}"
   - filename: 04-done-story-points.sql
     table: done_story_points
-    column: num_story_points
+    column: done_story_points
     default: 0
     descriptions:
         nl: Afgeronde storypoints

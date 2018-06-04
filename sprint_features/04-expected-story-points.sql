@@ -1,5 +1,5 @@
 -- Number of expected story points
-SELECT project_id, sprint_id, SUM(story_points) AS initial_story_points FROM (
+SELECT project_id, sprint_id, SUM(story_points) AS num_story_points FROM (
     SELECT issue.project_id, issue.sprint_id, issue.issue_id,
         MIN(issue.story_points) AS story_points
     FROM gros.issue
