@@ -99,6 +99,7 @@ for (idx in 1:length(results$projects)) {
 			return(list(project=analogy_sprint$quality_display_name,
 						project_id=analogy_sprint$project_key,
 						sprint=features[analogy,"sprint_num"],
+						board_id=analogy_sprint$board_id,
 						id=analogy_sprint$sprint_id,
 						name=analogy_sprint$name,
 						start_date=as.POSIXct(analogy_sprint$start_date),
