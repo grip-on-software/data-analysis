@@ -122,6 +122,7 @@ for (idx in 1:length(results$projects)) {
 	project_data <- list(project=sprint$quality_display_name,
 						 sprint=sprint_id,
 						 id=sprint$sprint_id,
+						 board_id=sprint$board_id,
 						 name=sprint$name,
 						 start_date=as.POSIXct(sprint$start_date),
 						 end_date=as.POSIXct(sprint$close_date),
