@@ -47,7 +47,7 @@ conditions:
     planned_early:
         description: "Earliest time for stories that are planned for a sprint"
         table: sprint
-        condition: sprint.start_date - interval '1' hour
+        condition: sprint.start_date - interval '1' day
     planned_late:
         description: "Latest time for stories that are planned for a sprint"
         table: sprint
