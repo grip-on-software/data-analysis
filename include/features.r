@@ -81,7 +81,8 @@ get_sprint_features <- function(conn, exclude, variables, latest_date, core=F, m
 							  latest_date, '\' AS TIMESTAMP)', sep=''))
 	}
 	if (core) {
-		conditions <- c(conditions, 'COALESCE(is_support_team, false) = false')
+		conditions <- c(conditions, 'COALESCE(is_support_team, false) = false',
+						'main_project IS NULL')
 	}
 	if (!is.na(sprint_days)) {
 		conditions <- c(conditions, "${sprint_close} - sprint.start_date > interval '${sprint_days}' day")
