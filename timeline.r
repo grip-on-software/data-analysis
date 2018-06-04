@@ -25,17 +25,22 @@ variables <- list(project_ids=project_ids)
 items <- load_queries('sprint_events.yml', 'sprint_definitions.yml', variables)
 
 exportFeatures <- function(exclude, output_directory) {
-	result <- get_sprint_features(conn, exclude, variables)
+	result <- get_sprint_features(conn, exclude, variables,
+								  sprint_days=get_arg('--days', default=NA),
+								  sprint_patch=ifelse(get_arg('--patch', default=F), NA, F))
 	data <- result$data
 	colnames <- result$colnames
 	project_data <- lapply(as.list(projects$project_id), function(project) {
 		project_id <- projects[project,'project_id']
-		sprint_data <- data[data$project_id == project,c('sprint_id', colnames)]
-		result <- lapply(as.list(1:dim(sprint_data)[1]), function(i) {
-			safe_unbox(sprint_data[i,colnames])
-		})
-		names(result) <- sprint_data$sprint_id
-		return(result)
+		if (project_id %in% data$project_id) {
+			sprint_data <- data[data$project_id == project,c('sprint_id', colnames)]
+			result <- lapply(as.list(1:dim(sprint_data)[1]), function(i) {
+				safe_unbox(sprint_data[i,colnames])
+			})
+			names(result) <- sprint_data$sprint_id
+			return(result)
+		}
+		return(NA)
 	})
 	if (project_ids != '1') {
 		names(project_data) <- projects$name
@@ -47,6 +52,7 @@ exportFeatures <- function(exclude, output_directory) {
 		  file=paste(output_directory, "locales.json", sep="/"))
 	write(toJSON(project_data),
 		  file=paste(output_directory, "features.json", sep="/"))
+	return(data)
 }
 
 # Export data to separate per-sprint files.
@@ -135,34 +141,45 @@ max_date <- list()
 types <- list()
 projects_with_data <- list()
 project_boards <- list()
+
+data <- exportFeatures(get_arg('--exclude', default='^$'), output_directory)
+no_features = get_arg('--no-features', default=F)
 for (item in items) {
 	loginfo('Executing query for type %s', item$type)
 	time <- system.time(result <- dbGetQuery(conn, item$query))
 	loginfo('Query for type %s took %f seconds', item$type, time['elapsed'])
-	result$date = dateFormat(result$date)
-	result$type = item$type
-	if ("end_date" %in% colnames(result)) {
-		result$end_date = dateFormat(result$end_date)
+	if (!no_features) {
+		result = result[result$sprint_id %in% data$sprint_id,]
 	}
-	project_data <- exportData(result, item, output_directory)
-	have_data <- lapply(project_data, nrow) > 0
-	projects_with_data <- modifyList(projects_with_data,
-									 as.list(have_data)[have_data])
+	if (nrow(result) > 0) {
+		result$date = dateFormat(result$date)
+		result$type = item$type
+		if ("end_date" %in% colnames(result)) {
+			result$end_date = dateFormat(result$end_date)
+		}
+		project_data <- exportData(result, item, output_directory)
+		have_data <- lapply(project_data, nrow) > 0
+		projects_with_data <- modifyList(projects_with_data,
+									 	 as.list(have_data)[have_data])
 
-	minDate = min(result$date)
-	maxDate = max(result$date, result$end_date)
-	min_date[[item$type]] <- minDate
-	max_date[[item$type]] <- maxDate
+		minDate = min(result$date)
+		maxDate = max(result$date, result$end_date)
+		min_date[[item$type]] <- minDate
+		max_date[[item$type]] <- maxDate
 
-	type <- list(name=safe_unbox(item$type),
-				 locales=safe_unbox(item$descriptions))
-	if (!is.null(item$display)) {
-		type$enabled = safe_unbox(item$display)
+		type <- list(name=safe_unbox(item$type),
+				 	 locales=safe_unbox(item$descriptions))
+		if (!is.null(item$display)) {
+			type$enabled = safe_unbox(item$display)
+		}
+		if (!is.null(item$split)) {
+			type$subchart = safe_unbox(item$split)
+		}
+		types <- c(types, list(type))
 	}
-	if (!is.null(item$split)) {
-		type$subchart = safe_unbox(item$split)
+	else {
+		loginfo(paste('No matching data for', item$type, 'event'))
 	}
-	types <- c(types, list(type))
 }
 
 total_data = list(min_date=safe_unbox(min(unlist(min_date))),
@@ -173,7 +190,6 @@ total_data = list(min_date=safe_unbox(min(unlist(min_date))),
 
 write(toJSON(total_data), file=paste(output_directory, "data.json", sep="/"))
 write(toJSON(types), file=paste(output_directory, "types.json", sep="/"))
-exportFeatures(get_arg('--exclude', default='^$'), output_directory)
 
 if (project_ids != '1') {
 	projects_with_data <- modifyList(projects_with_data,
