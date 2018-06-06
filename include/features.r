@@ -73,7 +73,7 @@ get_features <- function(conn, exclude, items, data, colnames, join_cols) {
 	list(data=data, colnames=colnames, items=items)
 }
 
-get_sprint_features <- function(conn, exclude, variables, latest_date, core=F, metrics=F, sprint_days=NA, sprint_patch=NA) {
+get_sprint_conditions <- function(latest_date='', core=F, sprint_days=NA, sprint_patch=NA) {
 	conditions <- list()
 	if (!missing(latest_date) && latest_date != '') {
 		conditions <- c(conditions,
@@ -91,11 +91,18 @@ get_sprint_features <- function(conn, exclude, variables, latest_date, core=F, m
 		conditions <- c(conditions, ifelse(sprint_patch, '${sprint_patch}',
 										   'NOT (${sprint_patch})'))
 	}
+	return(conditions)
+}
+
+get_sprint_features <- function(conn, exclude, variables, latest_date, core=F, metrics=F, sprint_days=NA, sprint_patch=NA) {
+	conditions <- get_sprint_conditions(latest_date, core, sprint_days, sprint_patch)
 	if (length(conditions) != 0) {
 		where_clause <- paste('WHERE', paste(conditions, collapse=' AND '))
+		sprint_conditions <- paste('AND', paste(conditions, collapse=' AND '))
 	}
 	else {
 		where_clause <- ''
+		sprint_conditions <- ''
 	}
 	patterns <- load_definitions('sprint_definitions.yml',
 								 list(sprint_days=sprint_days))
@@ -110,7 +117,9 @@ get_sprint_features <- function(conn, exclude, variables, latest_date, core=F, m
 	sprint_data <- dbGetQuery(conn, sprint_query$query)
 
 	items <- load_queries('sprint_features.yml', 'sprint_definitions.yml',
-						  variables)
+						  c(variables,
+						  	list(sprint_conditions=str_interp(sprint_conditions,
+															  patterns))))
 	colnames <- c("project_id")
 	join_cols <- c("project_id", "sprint_id")
 	metric_cols <- c("project_id", "sprint_id", "value")

@@ -16,7 +16,8 @@ analysis_definitions <- c(lapply(definitions$fields,
 								 function(define) { define$field }),
 						  list(project_ids=project_ids))
 
-export(load_queries('sprint_features.yml', 'sprint_definitions.yml'),
+export(load_queries('sprint_features.yml', 'sprint_definitions.yml',
+					list(sprint_conditions='')),
 	   'feature', 'table')
 export(load_queries('sprint_events.yml', 'sprint_definitions.yml',
 					list(project_ids=project_ids)),

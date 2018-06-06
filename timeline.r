@@ -24,10 +24,13 @@ output_directory <- get_arg('--output', default='output')
 variables <- list(project_ids=project_ids)
 items <- load_queries('sprint_events.yml', 'sprint_definitions.yml', variables)
 
+sprint_days <- get_arg('--days', default=NA)
+sprint_patch <- ifelse(get_arg('--patch', default=F), NA, F)
+
 exportFeatures <- function(exclude, output_directory) {
 	result <- get_sprint_features(conn, exclude, variables,
-								  sprint_days=get_arg('--days', default=NA),
-								  sprint_patch=ifelse(get_arg('--patch', default=F), NA, F))
+								  sprint_days=sprint_days,
+								  sprint_patch=sprint_patch)
 	data <- result$data
 	colnames <- result$colnames
 	project_data <- lapply(as.list(projects$project_id), function(project) {

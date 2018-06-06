@@ -12,20 +12,39 @@ source('include/project.r')
 source('include/sources.r')
 source('include/tracker.r')
 
+latest_date <- get_arg('--latest-date', default='')
+sprint_days <- get_arg('--days', default=NA)
+sprint_patch <- ifelse(get_arg('--patch', default=F), NA, F)
+core <- get_arg('--core', default=F)
+config_file <- get_arg('--config', default='config.yml')
+
+projects <- list()
+specifications <- yaml.load_file('sprint_features.yml')
+config <- yaml.load_file(config_file)
+patterns <- load_definitions('sprint_definitions.yml', config$fields)
+
 sprint_cache <- vector("list")
 get_sprint <- function(project_id, sprint_id, cache=T) {
 	if (length(sprint_cache) >= project_id && mode(sprint_cache[[project_id]]) == "list") {
 		loginfo('Using cached sprints for project %d', project_id)
 		return(sprint_cache[[project_id]][sprint_id,])
 	}
-	query <- 'SELECT project.name AS project_key, project.quality_name,
-				project.quality_display_name, sprint.sprint_id, sprint.name,
-				sprint.start_date, ${sprint_close} AS close_date,
-				sprint.board_id FROM gros.sprint
-				JOIN gros.project ON sprint.project_id = project.project_id
-				WHERE sprint.project_id = ${project_id}
-				ORDER BY sprint.start_date'
-	item <- load_query(list(query=query), c(patterns, project_id=project_id))
+
+	conditions <- c('sprint.project_id = ${project_id}',
+					get_sprint_conditions(latest_date, core=core,
+										  sprint_days=sprint_days,
+										  sprint_patch=sprint_patch))
+	query <- paste('SELECT project.name AS project_key, project.quality_name,
+
+				   project.quality_display_name, sprint.sprint_id, sprint.name,
+				   sprint.start_date, ${sprint_close} AS close_date,
+				   sprint.board_id FROM gros.sprint
+				   JOIN gros.project ON sprint.project_id = project.project_id
+				   WHERE', paste(conditions, collapse=' AND '),
+				   'ORDER BY sprint.start_date')
+	item <- load_query(list(query=query), c(patterns,
+											project_id=project_id,
+											sprint_days=sprint_days))
 	time <- system.time(sprint <- dbGetQuery(conn, item$query))
 	loginfo('Obtained sprints of project %d in %f seconds',
 			project_id, time['elapsed'])
@@ -38,7 +57,6 @@ get_sprint <- function(project_id, sprint_id, cache=T) {
 input_file <- get_arg('--file', default='sprint_labels.json')
 feature_file <- get_arg('--features', default='output/sprint_features.arff')
 output_directory <- get_arg('--output', default='output')
-config_file <- get_arg('--config', default='config.yml')
 project_ids <- get_arg('--project-ids', default='0')
 if (project_ids != '0') {
 	project_ids <- '1'
@@ -49,11 +67,6 @@ features <- read.arff(feature_file)
 conn <- connect()
 
 sprint_projects <- get_sprint_projects(conn)
-projects <- list()
-patterns <- load_definitions('sprint_definitions.yml')
-specifications <- yaml.load_file('sprint_features.yml')
-config <- yaml.load_file(config_file)
-patterns <- load_definitions('sprint_definitions.yml', config$fields)
 
 dateFormat <- function(date) {
 	format(as.POSIXct(date), format="%Y-%m-%d %H:%M:%S")
