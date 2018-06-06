@@ -1,0 +1,44 @@
+project:
+    nl: Projectbronnen
+    en: Project sources
+    icon: [fas, fa-sitemap]
+metric_history:
+    nl: Kwaliteitsmetrieken
+    en: Quality metrics
+    icon: [fas, fa-chart-area]
+metric_options:
+    nl: Metriekopties
+    en: Metric options
+    icon: [fas, fa-ruler-vertical]
+quality:
+    nl: Kwaliteitsrapportage
+    en: Quality report
+    icon: [fas, fa-chart-pie]
+jenkins:
+    nl: Jenkins
+    en: Jenkins
+    icon: [fab, fa-jenkins]
+jira:
+    nl: Jira
+    en: Jira
+    icon: [fas, fa-chalkboard]
+vcs:
+    nl: Versiebeheer
+    en: Version control
+    icon: [fas, fa-code-branch]
+gitlab:
+    nl: GitLab
+    en: GitLab
+    icon: [fab, fa-gitlab]
+github:
+    nl: GitHub
+    en: GitHub
+    icon: [fab, fa-github]
+tfs:
+    nl: Team Foundation Server
+    en: Team Foundation Server
+    icon: [fab, fa-windows]
+subversion:
+    nl: Subversion
+    en: Subversion
+    icon: [fas, fa-code-branch]

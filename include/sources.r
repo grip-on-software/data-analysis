@@ -58,6 +58,12 @@ build_source_urls <- function(project_id, project_name, items=list(), patterns=c
 		if (!is.na(item_source)) {
 			source_url <- str_interp(item_source, project_patterns)
 			project_links[[item$column]] <- list(source=unbox(source_url))
+			if ("type" %in% names(item)) {
+				project_links[[item$column]]$type <- unbox(item$type)
+			}
+			else if ("groups" %in% names(item)) {
+				project_links[[item$column]]$type <- unbox(item$groups[[1]])
+			}
 		}
 	}
 	return(project_links)

@@ -164,8 +164,8 @@ for (idx in 1:length(results$projects)) {
 			url_names <- paste(names(item$source), 'url', sep='_')
 			index = which(url_names %in% names(source_urls))
 			if (length(index) > 0) {
-				source_items[[item$column]] <- c(item,
-												 list(source=item$source[[index[1]]]))
+				source_items[[item$column]] <- c(item, list(source=item$source[[index[1]]],
+															type=names(item$source)[[index[1]]]))
 			}
 		}
 		else if (!is.null(item$source)) {
@@ -189,6 +189,8 @@ write(toJSON(get_feature_locales(specifications$files, 'units')),
 	  file=paste(output_directory, "units.json", sep="/"))
 write(toJSON(get_feature_locales(specifications$files, 'tags')),
 	  file=paste(output_directory, "tags.json", sep="/"))
+write(toJSON(yaml.load_file("source_types.yml"), auto_unbox=T),
+	  file=paste(output_directory, "sources.json", sep="/"))
 write(toJSON(projects, auto_unbox=T),
 	  file=paste(output_directory, "projects.json", sep="/"))
 write(toJSON(results$configuration, auto_unbox=T),
