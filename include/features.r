@@ -21,6 +21,20 @@ safe_unbox <- function(x) {
 	return(unbox(x))
 }
 
+get_locales <- function(items) {
+	locales <- list()
+	for (type in names(items)) {
+		item <- items[[type]]
+		for (code in names(item)) {
+			if (!(code %in% names(locales))) {
+				locales[[code]] <- list()
+			}
+			locales[[code]][[type]] <- safe_unbox(item[[code]])
+		}
+	}
+	return(locales)
+}
+
 get_feature_locales <- function(items, field='descriptions') {
 	locales <- list()
 	for (item in items) {
@@ -33,7 +47,6 @@ get_feature_locales <- function(items, field='descriptions') {
 									safe_unbox(description)
 								 }, item$column, item[[field]][[code]],
 								 SIMPLIFY=F))
-
 		}
 	}
 	return(locales)

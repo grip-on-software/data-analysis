@@ -70,7 +70,7 @@ if (get_arg('--project', default=F)) {
 		  			 sep="/"))
 	loginfo("Wrote project_features_locales.json")
 
-	write(toJSON(yaml.load_file("source_types.yml"), auto_unbox=T),
+	write(toJSON(get_locales(yaml.load_file("source_types.yml"))),
 		  file=paste(output_directory, "project_features_sources.json",
 		  			 sep="/"))
 	loginfo("Wrote project_features_sources.json")

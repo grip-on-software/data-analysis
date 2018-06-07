@@ -183,13 +183,14 @@ for (idx in 1:length(results$projects)) {
 							   patterns=c(patterns, sprint_patterns))
 	write(toJSON(links), file=paste(path, "links.json", sep="/"))
 }
+
 write(toJSON(get_feature_locales(specifications$files)),
 	  file=paste(output_directory, "descriptions.json", sep="/"))
 write(toJSON(get_feature_locales(specifications$files, 'units')),
 	  file=paste(output_directory, "units.json", sep="/"))
 write(toJSON(get_feature_locales(specifications$files, 'tags')),
 	  file=paste(output_directory, "tags.json", sep="/"))
-write(toJSON(yaml.load_file("source_types.yml"), auto_unbox=T),
+write(toJSON(get_locales(yaml.load_file("source_types.yml"))),
 	  file=paste(output_directory, "sources.json", sep="/"))
 write(toJSON(projects, auto_unbox=T),
 	  file=paste(output_directory, "projects.json", sep="/"))
