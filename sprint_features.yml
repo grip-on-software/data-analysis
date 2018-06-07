@@ -22,6 +22,9 @@ files:
     units:
         nl: "%s dagen"
         en: "%s days"
+    short_units:
+        nl: "%s dagen"
+        en: "%s days"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
   - filename: 00-sprint-closed.sql
@@ -62,6 +65,9 @@ files:
     units:
         nl: "%s developers"
         en: "%s developers"
+    short_units:
+        nl: "%s devs"
+        en: "%s devs"
     source:
         vcs: "${vcs_url}"
   - filename: 01-number-of-jira-updaters.sql
@@ -74,6 +80,9 @@ files:
     units:
         nl: "%s projectleden"
         en: "%s project members"
+    short_units:
+        nl: "%s leden"
+        en: "%s members"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?projectKey=${jira_key}&rapidView=${jira_board_id}&view=planning"
   - filename: 01-number-of-seats.sql
@@ -86,6 +95,9 @@ files:
     units:
         nl: "%s full-time leden"
         en: "%s fulltime members"
+    short_units:
+        nl: "%s fte"
+        en: "%s FTE"
   - filename: 01-dev-sprint-experience.sql
     table: sprint_experience
     column: dev_sprint_experience
@@ -96,6 +108,9 @@ files:
     units:
         nl: "%s sprints ervaring"
         en: "%s sprints of experience"
+    short_units:
+        nl: "%s sprints"
+        en: "%s sprints"
   - filename: 01-new-committers.sql
     table: new_developers
     column: num_new_developers
@@ -331,6 +346,9 @@ files:
     units:
         nl: "%s storypoints per werkdag"
         en: "%s story points per working day"
+    short_units:
+        nl: "%s punten/dag"
+        en: "%s points/day"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
   - filename: 06-sprints-average-velocity.sql
@@ -343,6 +361,9 @@ files:
     units:
         nl: "velocity van %s storypoints over drie sprints"
         en: "velocity of %s story points over three sprints"
+    short_units:
+        nl: "%s punten/sprint"
+        en: "%s points/sprint"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
   - filename: 06-other-issues-done.sql
@@ -377,6 +398,9 @@ files:
     units:
         nl: "gemiddeld %s dagen in progress per story"
         en: "average of %s days in progress per story"
+    short_units:
+        nl: "%s dagen/story"
+        en: "%s days/story"
   - filename: 08-vcs-statistics.sql
     table: vcs_statistics
     column: [num_commits, avg_insertions, avg_deletions, avg_size, avg_files, avg_lines]
@@ -411,6 +435,21 @@ files:
             - "average of %s bytes per commit"
             - "average of %s files per commit"
             - "average of %s lines per commit"
+    short_units:
+        nl:
+            - "%s"
+            - "%s regels/commit"
+            - "%s regels/commit"
+            - "%s bytes/commit"
+            - "%s bestanden/commit"
+            - "%s regels/commit"
+        en:
+            - "%s"
+            - "%s lines/commit"
+            - "%s lines/commit"
+            - "%s bytes/commit"
+            - "%s files/commit"
+            - "%s lines/commit"
   - filename: 09-metric-count.sql
     table: metric_count
     column: num_metrics
@@ -457,8 +496,8 @@ files:
     column: num_early_rank_changes
     default: 0
     descriptions:
-        nl: Rangwijzigingen
-        en: Rank changes
+        nl: Tijdige rangwijzigingen
+        en: Timely rank changes
     units:
         nl: "%s rangwijzigingen voor begin van sprint"
         en: "%s rank changes before start of sprint"
@@ -467,8 +506,8 @@ files:
     column: num_early_storypoint_changes
     default: 0
     descriptions:
-        nl: Storypointwijzigingen
-        en: Story point changes
+        nl: Tijdige storypointwijzigingen
+        en: Timely story point changes
     units:
         nl: "%s wijzigingen aan storypoints voor begin van sprint"
         en: "%s story point changes before start of sprint"
