@@ -225,6 +225,7 @@ story_flow <- function(item, result, output_dir) {
 	nodes <- list()
 	edges <- list()
 	total_stories <- nrow(result)
+	avg_volume <- total_stories / length(changes)
 	colors <- list('1'='blue', # Open
 				   '3'='yellow', # In Progress
 				   '4'='gray', # Reopened
@@ -233,6 +234,7 @@ story_flow <- function(item, result, output_dir) {
 				   '10004'='yellow', # Backlog Approved
 				   '10005'='yellow', # Reviewed
 				   '10006'='yellow') # In Review
+	# from max (bottom) to min (top)
 	ranks <- list(green=c(), yellow=c(), blue=c())
 
 	for (change in changes) {
@@ -272,7 +274,9 @@ story_flow <- function(item, result, output_dir) {
 			nodes[[new_name]] <- new_attrs
 
 			edge_attrs <- list(label=paste('"', round(time_delta), ' days\\n',
-										   volume, ' stories"', sep=""))
+										   volume, ' stories"', sep=""),
+							   labelfontsize=12,
+							   penwidth=1+(volume - avg_volume)/avg_volume)
 
 			edge <- paste(old_name, new_name, sep=" -> ")
 			edges[[edge]] <- edge_attrs
@@ -288,8 +292,15 @@ story_flow <- function(item, result, output_dir) {
 					 "];", sep=""))
 	}
 
-	dot_ranks <- function(rank) {
-		return(paste("{rank = same;",
+	dot_ranks <- function(rank, num) {
+		type <- "same"
+		if (num == 1) {
+			type <- "max"
+		}
+		else if (num == length(ranks)) {
+			type <- "min"
+		}
+		return(paste("{rank = ", type, ";",
 					 paste(levels(factor(rank)), collapse="; "),
 					 "}", sep=""))
 	}
@@ -297,7 +308,7 @@ story_flow <- function(item, result, output_dir) {
 	dot <- c("digraph G {",
 			 paste(names(edges), lapply(edges, dot_attrs)),
 			 paste(names(nodes), lapply(nodes, dot_attrs)),
-			 paste(lapply(ranks, dot_ranks)),
+			 paste(mapply(dot_ranks, ranks, 1:length(ranks))),
 			 "}")
 
 	export_file <- paste(output_dir,
