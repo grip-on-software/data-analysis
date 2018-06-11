@@ -1,6 +1,7 @@
 # Utilities for retrieving sprint features.
 
 library(jsonlite)
+library(yaml)
 source('include/database.r')
 source('include/log.r')
 source('include/project.r')
@@ -161,14 +162,12 @@ get_sprint_features <- function(conn, exclude, variables, latest_date, core=F, m
 	get_features(conn, exclude, items, sprint_data, colnames, join_cols)
 }
 
-get_recent_sprint_features <- function(conn, features, variables, date, limit) {
-	if (missing(limit)) {
-		limit <- 5
-	}
+get_recent_sprint_features <- function(conn, features, variables, date, limit=5, closed=T, sprint_meta=c()) {
 	patterns <- load_definitions('sprint_definitions.yml', variables)
 	projects <- get_recent_projects(conn, date)
 	query = 'SELECT sprint.project_id, project.name AS project_name,
-			 sprint.sprint_id, sprint.name AS sprint_name, sprint.start_date
+			 sprint.sprint_id, sprint.name AS sprint_name, sprint.start_date,
+			 ${sprint_close} AS close_date, sprint.board_id
 		  	 FROM gros.sprint
 		  	 JOIN gros.project
 		  	 ON project.project_id = sprint.project_id
@@ -184,6 +183,7 @@ get_recent_sprint_features <- function(conn, features, variables, date, limit) {
 		sprint_data <- rbind(sprint_data, dbGetQuery(conn, item$query))
 	}
 	sprint_data$start_date <- as.POSIXct(sprint_data$start_date)
+	sprint_data$close_date <- as.POSIXct(sprint_data$close_date)
 
 	data <- yaml.load_file('sprint_features.yml')
 	items <- list()
@@ -193,7 +193,7 @@ get_recent_sprint_features <- function(conn, features, variables, date, limit) {
 		}
 	}
 
-	colnames <- c("project_name", "sprint_name", "start_date")
+	colnames <- c("project_name", sprint_meta)
 	join_cols <- c("project_id", "sprint_id")
 	get_features(conn, '^$', items, sprint_data, colnames, join_cols)
 }
@@ -211,4 +211,19 @@ get_project_features <- function(conn, exclude, variables, core=F) {
 	colnames <- c()
 	join_cols <- c("project_id")
 	get_features(conn, exclude, items, data, colnames, join_cols)
+}
+
+write_feature_metadata <- function(projects, specifications, output_directory) {
+	write(toJSON(get_feature_locales(specifications$files)),
+	  	  file=paste(output_directory, "descriptions.json", sep="/"))
+	write(toJSON(get_feature_locales(specifications$files, 'units')),
+	  	  file=paste(output_directory, "units.json", sep="/"))
+	write(toJSON(get_feature_locales(specifications$files, 'short_units')),
+	  	  file=paste(output_directory, "short_units.json", sep="/"))
+	write(toJSON(get_feature_locales(specifications$files, 'tags')),
+	  	  file=paste(output_directory, "tags.json", sep="/"))
+	write(toJSON(get_locales(yaml.load_file("source_types.yml"))),
+	  	  file=paste(output_directory, "sources.json", sep="/"))
+	write(toJSON(projects, auto_unbox=T),
+	  	  file=paste(output_directory, "projects.json", sep="/"))
 }

@@ -184,18 +184,7 @@ for (idx in 1:length(results$projects)) {
 	write(toJSON(links), file=paste(path, "links.json", sep="/"))
 }
 
-write(toJSON(get_feature_locales(specifications$files)),
-	  file=paste(output_directory, "descriptions.json", sep="/"))
-write(toJSON(get_feature_locales(specifications$files, 'units')),
-	  file=paste(output_directory, "units.json", sep="/"))
-write(toJSON(get_feature_locales(specifications$files, 'short_units')),
-	  file=paste(output_directory, "short_units.json", sep="/"))
-write(toJSON(get_feature_locales(specifications$files, 'tags')),
-	  file=paste(output_directory, "tags.json", sep="/"))
-write(toJSON(get_locales(yaml.load_file("source_types.yml"))),
-	  file=paste(output_directory, "sources.json", sep="/"))
-write(toJSON(projects, auto_unbox=T),
-	  file=paste(output_directory, "projects.json", sep="/"))
+write_feature_metadata(projects, specifications, output_directory)
 write(toJSON(results$configuration, auto_unbox=T),
 	  file=paste(output_directory, "configuration.json", sep="/"))
 
