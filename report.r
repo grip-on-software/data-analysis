@@ -59,21 +59,38 @@ if (interval != '') {
 	run_reports(list(id='all', project_ids=project_ids))
 } else {
 	if (projects_list == 'each') {
-		projects <- get_projects(conn)$project_id
+		projects <- get_projects(conn)
+	}
+	else if (projects_list == 'main') {
+		projects <- get_main_projects(conn)
 	}
 	else {
-		projects <- as.vector(as.numeric(unlist(strsplit(projects_list, ','))))
+		ids <- as.vector(as.numeric(unlist(strsplit(projects_list, ','))))
+		projects <- dbGetQuery(conn, paste('SELECT project_id, name
+										   FROM gros.project
+										   WHERE project_id IN (',
+										   paste(ids, collapse=', '), ')
+										   ORDER BY project_id'))
 	}
-	for (project in projects) {
-		run_reports(list(id=project,
+	if (project_ids != '0') {
+		projects$name <- paste('Proj', projects$project_id, sep='')
+	}
+	mapply(function(project_id, name) {
+		run_reports(list(id=project_id,
+						 name=name,
 						 project_ids=project_ids,
-						 category_conditions=paste('AND project_id =', project)))
+						 category_conditions=paste('AND project_id =',
+						 						   project_id)))
 		if (invert) {
-			run_reports(list(id=paste('not', project, sep='-'),
+			run_reports(list(id=paste('not', project_id, sep='-'),
+							 name=paste('not', name, sep='-'),
 						 	 project_ids=project_ids,
-						 	 category_conditions=paste('AND project_id <>', project)))
+						 	 category_conditions=paste('AND project_id <>',
+							 							project$project_id)))
 		}
-	}
-	write(toJSON(projects),
+	}, projects$project_id, projects$name, SIMPLIFY=F)
+	write(toJSON(projects$project_id),
 		  file=paste(output_directory, 'report_projects.json', sep='/'))
+	write(toJSON(projects$name),
+		  file=paste(output_directory, 'report_project_names.json', sep='/'))
 }

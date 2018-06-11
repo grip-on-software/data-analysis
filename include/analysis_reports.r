@@ -301,7 +301,7 @@ story_flow <- function(item, result, output_dir) {
 			 "}")
 
 	export_file <- paste(output_dir,
-						 paste(paste(item$table, item$patterns[['id']],
+						 paste(paste(item$table, item$patterns[['name']],
 						 			 sep="-"), "dot", sep="."), sep="/")
 	writeLines(dot, export_file)
 	loginfo("Exported graph to %s", export_file)
