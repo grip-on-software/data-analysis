@@ -6,6 +6,7 @@ library(ggplot2)
 library(openssl)
 library(padr)
 library(stringr)
+library(viridis)
 library(zoo)
 source('include/args.r')
 source('include/log.r')
@@ -235,7 +236,9 @@ story_flow <- function(item, result, output_dir) {
 				   '10005'='yellow', # Reviewed
 				   '10006'='yellow') # In Review
 	# from max (bottom) to min (top)
-	ranks <- list(green=c(), yellow=c(), blue=c())
+	ranks <- list(green=c(), gray=c(), yellow=c(), blue=c())
+	max_time <- 150
+	palette <- viridis_pal(alpha=0, end=0.75, option="plasma")(max_time+1)
 
 	for (change in changes) {
 		old_status_id <- as.character(change[1,'old_status'])
@@ -251,36 +254,37 @@ story_flow <- function(item, result, output_dir) {
 		volume <- nrow(change)
 		loginfo('Volume: %d/%d', volume, total_stories)
 		time_delta <- mean(as.numeric(difftime(change$new_date, change$earliest_date, units="days")))
-		if (time_delta >= 1.0 && volume > total_stories/256) {
-			old_name <- paste('"', paste(old_status, old_resolution, sep=" "),
-							  '"', sep='')
-			new_name <- paste('"', paste(new_status, new_resolution, sep=" "),
-							  '"', sep='')
 
-			old_attrs <- list(style='rounded', shape='box')
-			new_attrs <- list(style='rounded', shape='box')
-			if (old_status_id %in% names(colors)) {
-				color <- colors[[old_status_id]]
-				ranks[[color]] <- c(ranks[[color]], old_name)
-				old_attrs$color <- color
-			}
-			if (new_status_id %in% names(colors)) {
-				color <- colors[[new_status_id]]
-				ranks[[color]] <- c(ranks[[color]], new_name)
-				new_attrs$color <- color
-			}
+		old_name <- paste('"', paste(old_status, old_resolution, sep=" "),
+						  '"', sep='')
+		new_name <- paste('"', paste(new_status, new_resolution, sep=" "),
+						  '"', sep='')
 
-			nodes[[old_name]] <- old_attrs
-			nodes[[new_name]] <- new_attrs
-
-			edge_attrs <- list(label=paste('"', round(time_delta), ' days\\n',
-										   volume, ' stories"', sep=""),
-							   labelfontsize=12,
-							   penwidth=1+(volume - avg_volume)/avg_volume)
-
-			edge <- paste(old_name, new_name, sep=" -> ")
-			edges[[edge]] <- edge_attrs
+		old_attrs <- list(style='rounded', shape='box')
+		new_attrs <- list(style='rounded', shape='box')
+		if (old_status_id %in% names(colors)) {
+			color <- colors[[old_status_id]]
+			ranks[[color]] <- c(ranks[[color]], old_name)
+			old_attrs$color <- color
 		}
+		if (new_status_id %in% names(colors)) {
+			color <- colors[[new_status_id]]
+			ranks[[color]] <- c(ranks[[color]], new_name)
+			new_attrs$color <- color
+		}
+
+		nodes[[old_name]] <- old_attrs
+		nodes[[new_name]] <- new_attrs
+
+		edge_attrs <- list(label=paste('"', round(time_delta), ' days\\n',
+									   volume, ' stories"', sep=""),
+						   labelfontsize=10,
+						   fontcolor=paste('"', substr(palette[1+round(min(time_delta,max_time))], 0, 7), '"', sep=""),
+						   penwidth=1+log(1+0.5*(volume - avg_volume)/avg_volume))
+
+		edge <- paste(old_name, new_name, sep=" -> ")
+		edges[[edge]] <- edge_attrs
+
 		loginfo("Old status: %s Old resolution: %s New status: %s New resolution: %s Count: %s Average time: %s",
 				old_status, old_resolution, new_status, new_resolution,
 				volume, time_delta)
@@ -293,6 +297,9 @@ story_flow <- function(item, result, output_dir) {
 	}
 
 	dot_ranks <- function(rank, num) {
+		if (length(rank) == 0) {
+			return("")
+		}
 		type <- "same"
 		if (num == 1) {
 			type <- "max"

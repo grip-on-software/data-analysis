@@ -12,3 +12,4 @@ ncdf4
 stringr
 padr
 zoo
+viridis
