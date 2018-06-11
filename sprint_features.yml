@@ -130,7 +130,9 @@ files:
     units:
         nl: "Stemming van %s"
         en: "Spirit %s"
-    sources: "${quality_url}/${quality_name}"
+    sources:
+        metric_history: "${metric_history_url}/${metric_history_file}"
+        quality: "${quality_url}/${quality_name}"
   - filename: 03-story-watchers.sql
     table: watchers
     column: num_watchers
@@ -459,7 +461,9 @@ files:
     units:
         nl: "%s metrieken"
         en: "%s metrics"
-    source: "${quality_url}/${quality_name}"
+    source:
+        metric_history: "${metric_history_url}/${metric_history_file}"
+        quality: "${quality_url}/${quality_name}"
   - filename: 09-red-metric-count.sql
     table: red_metric_count
     column: num_red_metrics
@@ -469,7 +473,9 @@ files:
     units:
         nl: "%s metrieken die op rood staan"
         en: "%s metrics that are red"
-    source: "${quality_url}/${quality_name}"
+    source:
+        metric_history: "${metric_history_url}/${metric_history_file}"
+        quality: "${quality_url}/${quality_name}"
   - filename: 09-missing-metric-count.sql
     table: missing_metric_count
     column: num_missing_metrics
@@ -479,7 +485,9 @@ files:
     units:
         nl: "%s metrieken met missende bron"
         en: "%s metrics with missing sources"
-    source: "${quality_url}/${quality_name}"
+    source:
+        metric_history: "${metric_history_url}/${metric_history_file}"
+        quality: "${quality_url}/${quality_name}"
   - filename: 10-metric-target-change.sql
     table: metric_target_change
     column: num_metric_target_changes
@@ -490,7 +498,9 @@ files:
     units:
         nl: "%s veranderingen aan metrieknormen"
         en: "%s changes to metric targets"
-    source: "${quality_url}/${quality_name}"
+    source:
+        metric_options: "${metric_options_url}/${metric_options_file}"
+        quality: "${quality_url}/${quality_name}"
   - filename: 11-early-rank-changes.sql
     table: early_rank_changes
     column: num_early_rank_changes

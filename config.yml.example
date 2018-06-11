@@ -6,3 +6,7 @@ db:
 fields:
     jira_url: $JIRA_URL
     vcs_url: $SOURCE_URL
+    jenkins_url: $JENKINS_URL
+    quality_url: $QUALITY_URL
+    metric_history_file: compact-history.json
+    metric_options_file: project_definition.py
