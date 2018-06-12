@@ -141,6 +141,10 @@ if (get_arg('--project', default=F)) {
 			}
 		}
 		write_feature_metadata(projects, specifications, output_dir)
+		write(toJSON(list(default=default_features,
+						  all=features,
+						  meta=sprint_meta)),
+			  file=paste(output_dir, "features.json", sep="/"))
 	}
 	else {
 		write.csv(sprint_data[,result$colnames],
