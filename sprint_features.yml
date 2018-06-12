@@ -344,7 +344,7 @@ files:
     default: 0
     descriptions:
         nl: Gerealiseerde velocity
-        en: Realized elocity
+        en: Realized velocity
     units:
         nl: "%s storypoints per werkdag"
         en: "%s story points per working day"
