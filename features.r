@@ -95,8 +95,8 @@ if (get_arg('--project', default=F)) {
 				  'num_done_stories', 'done_story_points', 'velocity')
 
 	if (split) {
-		sprint_meta <- c('sprint_name', 'sprint_id', 'board_id', 'start_date',
-						 'close_date')
+		sprint_meta <- c('sprint_name', 'sprint_num', 'sprint_id', 'board_id',
+						 'start_date', 'close_date')
 	}
 	else {
 		sprint_meta <- c('sprint_name', 'start_date')
