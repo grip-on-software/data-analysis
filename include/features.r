@@ -162,24 +162,27 @@ get_sprint_features <- function(conn, exclude, variables, latest_date, core=F, m
 	get_features(conn, exclude, items, sprint_data, colnames, join_cols)
 }
 
-get_recent_sprint_features <- function(conn, features, variables, date, limit=5, closed=T, sprint_meta=c()) {
-	patterns <- load_definitions('sprint_definitions.yml', variables)
+get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T, sprint_meta=c(), sprint_conditions='') {
+	patterns <- load_definitions('sprint_definitions.yml')
 	projects <- get_recent_projects(conn, date)
 	query = 'SELECT sprint.project_id, project.name AS project_name,
-			 sprint.sprint_id, sprint.name AS sprint_name, sprint.start_date,
-			 ${sprint_close} AS close_date, sprint.board_id
-		  	 FROM gros.sprint
-		  	 JOIN gros.project
-		  	 ON project.project_id = sprint.project_id
-		  	 WHERE sprint.project_id = ${project_id}
-		  	 AND ${sprint_close} < CURRENT_TIMESTAMP()
-			 AND NOT (${sprint_patch})
-		  	 ORDER BY sprint.project_id, sprint.start_date DESC
-		  	 LIMIT ${limit}'
+			sprint.sprint_id, sprint.name AS sprint_name,
+			sprint.start_date, ${sprint_close} AS close_date,
+			sprint.board_id
+			FROM gros.sprint
+			JOIN gros.project
+			ON project.project_id = sprint.project_id
+			WHERE sprint.project_id = ${project_id}
+			AND ${sprint_close} < CURRENT_TIMESTAMP()
+			${sprint_conditions}
+			ORDER BY sprint.project_id, sprint.start_date DESC
+			LIMIT ${limit}'
 	sprint_data <- data.frame()
+	conditions <- str_interp(sprint_conditions, patterns)
+	variables <- c(patterns, list(sprint_conditions=conditions, limit=limit))
 	for (project in projects$project_id) {
 		item <- load_query(list(query=query),
-						   c(patterns, list(limit=limit, project_id=project)))
+						   c(variables, list(project_id=project)))
 		sprint_data <- rbind(sprint_data, dbGetQuery(conn, item$query))
 	}
 	sprint_data$start_date <- as.POSIXct(sprint_data$start_date)
@@ -189,7 +192,7 @@ get_recent_sprint_features <- function(conn, features, variables, date, limit=5,
 	items <- list()
 	for (item in data$files) {
 		if (length(item$column) == 1 && item$column %in% features) {
-			items <- c(items, list(load_query(item, patterns, data$path)))
+			items <- c(items, list(load_query(item, variables, data$path)))
 		}
 	}
 

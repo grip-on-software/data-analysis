@@ -90,8 +90,8 @@ if (get_arg('--project', default=F)) {
 	split <- get_arg('--split', default=F)
 	closed <- get_arg('--closed', default=F)
 	specifications <- yaml.load_file('sprint_features.yml')
-	features <- c('num_story_points', 'num_stories', 'num_not_done',
-				  'num_removed_stories', 'num_added_stories',
+	features <- c('sprint_num', 'num_story_points', 'num_stories',
+				  'num_not_done', 'num_removed_stories', 'num_added_stories',
 				  'num_done_stories', 'done_story_points', 'velocity')
 
 	if (split) {
@@ -99,7 +99,7 @@ if (get_arg('--project', default=F)) {
 						 'start_date', 'close_date')
 	}
 	else {
-		sprint_meta <- c('sprint_name', 'start_date')
+		sprint_meta <- c('sprint_name', 'sprint_num', 'start_date')
 	}
 	default_features <- c(sprint_meta, 'num_story_points', 'done_story_points',
 						  'velocity')
@@ -109,8 +109,23 @@ if (get_arg('--project', default=F)) {
 		default_features <- c(default_features, 'sprint_is_closed')
 	}
 
-	result <- get_recent_sprint_features(conn, features, list(), limit=recent,
-										 closed=closed, sprint_meta=sprint_meta)
+	core <- get_arg('--core', default=F)
+	sprint_days <- get_arg('--days', default=NA)
+	sprint_patch <- ifelse(get_arg('--patch', default=F), NA, F)
+	conditions <- get_sprint_conditions(latest_date='', core=core,
+										sprint_days=sprint_days,
+										sprint_patch=sprint_patch)
+	if (length(conditions) != 0) {
+		sprint_conditions <- paste('AND', paste(conditions, collapse=' AND '))
+	}
+	else {
+		sprint_conditions <- ''
+	}
+	result <- get_recent_sprint_features(conn, features,
+										 limit=recent,
+										 closed=closed,
+										 sprint_meta=sprint_meta,
+										 sprint_conditions=sprint_conditions)
 	sprint_data <- result$data
 	if (project_ids != '0') {
 		sprint_data$project_name <- paste("Proj", sprint_data$project_id, sep="")
