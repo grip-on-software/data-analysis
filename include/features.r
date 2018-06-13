@@ -166,6 +166,7 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T, 
 	patterns <- load_definitions('sprint_definitions.yml')
 	projects <- get_recent_projects(conn, date)
 	query = 'SELECT sprint.project_id, project.name AS project_name,
+			project.quality_display_name,
 			sprint.sprint_id, sprint.name AS sprint_name,
 			sprint.start_date, ${sprint_close} AS close_date,
 			sprint.board_id
@@ -196,7 +197,7 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T, 
 		}
 	}
 
-	colnames <- c("project_name", sprint_meta)
+	colnames <- c("project_name", "quality_display_name", sprint_meta)
 	join_cols <- c("project_id", "sprint_id")
 	get_features(conn, '^$', items, sprint_data, colnames, join_cols)
 }

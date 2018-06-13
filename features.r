@@ -156,6 +156,12 @@ if (get_arg('--project', default=F)) {
 			}
 		}
 		write_feature_metadata(projects, specifications, output_dir)
+		quality_names <- lapply(projects, function(project) {
+			sprint_data[sprint_data$project_name == project,'quality_display_name'][[1]]
+		})
+		names(quality_names) <- projects
+		write(toJSON(quality_names, auto_unbox=T),
+			  file=paste(output_dir, "quality_names.json", sep="/"))
 		write(toJSON(list(default=default_features,
 						  all=features,
 						  meta=sprint_meta)),
