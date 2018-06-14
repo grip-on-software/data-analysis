@@ -6,16 +6,19 @@ dateFormat <- function(date) {
 	format(as.POSIXct(date), format="%Y-%m-%d %H:%M:%S")
 }
 
-get_source_urls <- function(conn, project_id, sources='all') {
+get_source_urls <- function(conn, project_id, sources='all', web=T) {
 	vcs_sources <- c('svn', 'git', 'github', 'gitlab', 'tfs')
 	conditions = list(project_id=paste('project_id =', project_id))
 	if (sources != 'all') {
 		if ('vcs' %in% sources) {
 			sources <- c(sources, vcs_sources)
 		}
-		conditions$source_type = paste('source_type IN (',
-									   paste(dbQuoteString(conn, sources),
-									   		 collapse=','), ')')
+		conditions$source_type <- paste('source_type IN (',
+										paste(dbQuoteString(conn, sources),
+											  collapse=','), ')')
+	}
+	if (web) {
+		conditions$web <- "(url LIKE 'http://%' OR url LIKE 'https://%')"
 	}
 	environments <- dbGetQuery(conn,
 							   paste('SELECT source_type, url
@@ -30,7 +33,10 @@ get_source_urls <- function(conn, project_id, sources='all') {
 
 	for (vcs_source in vcs_sources) {
 		if (vcs_source %in% environments$source_type) {
-			urls$vcs_url <- urls[[paste(vcs_source, 'url', sep='_')]]
+			url <- urls[[paste(vcs_source, 'url', sep='_')]]
+			if (!("vcs_url" %in% names(urls)) || startsWith(urls$vcs_url, url)) {
+				urls$vcs_url <- url
+			}
 		}
 	}
 
