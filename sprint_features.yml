@@ -133,6 +133,33 @@ files:
     sources:
         metric_history: "${metric_history_url}/${metric_history_file}"
         quality: "${quality_url}/${quality_name}"
+  - filename: 02-lines-of-code-metric.sql
+    table: lines_of_code_metric
+    column: lines_of_code
+    descriptions:
+        nl: Aantal regels code
+        en: Number of lines of code
+    units:
+        nl: "%s regels code"
+        en: "%s regels code"
+    sources:
+        metric_history: "${metric_history_url}/${metric_history_file}"
+        quality: "${quality_url}/${quality_name}"
+  - filename: 02-unittest-line-coverage-metric.sql
+    table: unittest_metric
+    column: unittest_line_coverage
+    descriptions:
+        nl: Unittest line coverage
+        en: Unittest line coverage
+    units:
+        nl: "%s%% unittest line coverage"
+        en: "%s%% unittest line coverage"
+    short_units:
+        nl: "%s%%"
+        en: "%s%%"
+    sources:
+        metric_history: "${metric_history_url}/${metric_history_file}"
+        quality: "${quality_url}/${quality_name}"
   - filename: 03-story-watchers.sql
     table: watchers
     column: num_watchers

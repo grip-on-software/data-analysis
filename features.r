@@ -90,24 +90,26 @@ if (get_arg('--project', default=F)) {
 	split <- get_arg('--split', default=F)
 	closed <- get_arg('--closed', default=F)
 	specifications <- yaml.load_file('sprint_features.yml')
-	features <- c('sprint_num', 'num_story_points', 'num_stories',
-				  'num_not_done', 'num_removed_stories', 'num_added_stories',
-				  'num_done_stories', 'done_story_points', 'velocity')
+	features <- c('sprint_num', 'sprint_days',
+				  'num_story_points', 'num_stories', 'num_not_done',
+				  'num_removed_stories', 'num_added_stories',
+				  'num_done_stories', 'done_story_points', 'velocity',
+				  'lines_of_code', 'unittest_line_coverage')
 
 	if (split) {
 		sprint_meta <- c('sprint_name', 'sprint_num', 'sprint_id', 'board_id',
 						 'start_date', 'close_date')
 	}
 	else {
-		sprint_meta <- c('sprint_name', 'sprint_num', 'start_date')
+		sprint_meta <- c('sprint_name', 'sprint_num', 'start_date', '')
+	}
+
+	if (!closed) {
+		features <- c(features, 'sprint_is_closed', 'sprint_is_complete')
+		sprint_meta <- c(sprint_meta, 'sprint_is_closed', 'sprint_is_complete')
 	}
 	default_features <- c(sprint_meta, 'num_story_points', 'done_story_points',
-						  'velocity')
-
-	if (closed) {
-		features <- c(features, 'sprint_is_closed')
-		default_features <- c(default_features, 'sprint_is_closed')
-	}
+						  'velocity', 'lines_of_code', 'unittest_line_coverage')
 
 	core <- get_arg('--core', default=F)
 	sprint_days <- get_arg('--days', default=NA)

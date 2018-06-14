@@ -165,6 +165,10 @@ get_sprint_features <- function(conn, exclude, variables, latest_date, core=F, m
 get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T, sprint_meta=c(), sprint_conditions='') {
 	patterns <- load_definitions('sprint_definitions.yml')
 	projects <- get_recent_projects(conn, date)
+	if (closed) {
+		sprint_conditions <- paste(sprint_conditions,
+								   'AND ${sprint_close} < CURRENT_TIMESTAMP()')
+	}
 	query = 'SELECT sprint.project_id, project.name AS project_name,
 			project.quality_display_name,
 			sprint.sprint_id, sprint.name AS sprint_name,
@@ -174,7 +178,6 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T, 
 			JOIN gros.project
 			ON project.project_id = sprint.project_id
 			WHERE sprint.project_id = ${project_id}
-			AND ${sprint_close} < CURRENT_TIMESTAMP()
 			${sprint_conditions}
 			ORDER BY sprint.project_id, sprint.start_date DESC
 			LIMIT ${limit}'
