@@ -19,6 +19,9 @@ exclude <- get_arg('--exclude', default='^$')
 core <- get_arg('--core', default=F)
 recent <- get_arg('--recent', default=F)
 
+config <- yaml.load_file(config_file)
+patterns <- load_definitions('sprint_definitions.yml', config$fields)
+
 if (get_arg('--project', default=F)) {
 	result <- get_project_features(conn, exclude, NULL, core=core)
 	subprojects <- get_subprojects(conn)
@@ -49,13 +52,12 @@ if (get_arg('--project', default=F)) {
 		  			 sep="/"))
 	loginfo("Wrote project_features_normalize.json")
 
-	config <- yaml.load_file(config_file)
-	patterns <- load_definitions('sprint_definitions.yml', config$fields)
 	if (project_ids != '1') {
 		links <- mapply(build_source_urls,
 						result$data[['project_id']],
 						result$data[['name']],
-						MoreArgs=list(patterns=patterns, items=result$items),
+						MoreArgs=list(patterns=patterns, items=result$items,
+									  conn=conn),
 						SIMPLIFY=F)
 		names(links) <- result$data[['name']]
 	}
@@ -138,30 +140,38 @@ if (get_arg('--project', default=F)) {
 			dir.create(output_dir)
 		}
 		projects <- levels(factor(sprint_data$project_name))
+		quality_names <- list()
 		for (project in projects) {
 			project_dir = paste(output_dir, project, sep="/")
 			if (!dir.exists(project_dir)) {
 				dir.create(project_dir)
 			}
-			write(toJSON(sprint_data[sprint_data$project_name == project,
-									 default_features], auto_unbox=T),
+			project_data <- sprint_data[sprint_data$project_name == project,]
+			write(toJSON(project_data[,default_features], auto_unbox=T),
 				  file=paste(project_dir, 'default.json', sep='/'))
 
 			for (feature in result$colnames) {
 				if (!(feature %in% default_features)) {
-					write(toJSON(sprint_data[sprint_data$project_name == project,feature],
-								 auto_unbox=T),
+					write(toJSON(project_data[[feature]], auto_unbox=T,
+								 na="null", null="null"),
 						  file=paste(project_dir,
 							  		 paste(feature, 'json', sep='.'),
 									 sep='/'))
 				}
 			}
+
+			project_id <- project_data$project_id[[1]]
+			sprint <- c(project_data[nrow(project_data),sprint_meta],
+						list(quality_name=project_data$quality_name[[1]]))
+			write(toJSON(build_sprint_source_urls(conn, project_id, project,
+												  sprint, # latest sprint
+												  specifications, patterns)),
+		  		  file=paste(project_dir, "links.json", sep="/"))
+
+			quality_names[[project]] <- project_data$quality_display_name[[1]]
 		}
+
 		write_feature_metadata(projects, specifications, output_dir)
-		quality_names <- lapply(projects, function(project) {
-			sprint_data[sprint_data$project_name == project,'quality_display_name'][[1]]
-		})
-		names(quality_names) <- projects
 		write(toJSON(quality_names, auto_unbox=T),
 			  file=paste(output_dir, "quality_names.json", sep="/"))
 		write(toJSON(list(default=default_features,

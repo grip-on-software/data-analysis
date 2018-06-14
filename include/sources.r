@@ -2,6 +2,10 @@
 
 source('include/database.r')
 
+dateFormat <- function(date) {
+	format(as.POSIXct(date), format="%Y-%m-%d %H:%M:%S")
+}
+
 get_source_urls <- function(conn, project_id, sources='all') {
 	vcs_sources <- c('svn', 'git', 'github', 'gitlab', 'tfs')
 	conditions = list(project_id=paste('project_id =', project_id))
@@ -47,9 +51,14 @@ get_source_pattern <- function(item, project_urls) {
 	return(NA)
 }
 
-build_source_urls <- function(project_id, project_name, items=list(), patterns=c()) {
+build_source_urls <- function(project_id, project_name, items=list(), patterns=c(), conn=NA) {
 	project_links <- list()
-	project_urls <- get_source_urls(conn, project_id)
+	if (is.list(conn)) {
+		project_urls <- conn
+	}
+	else {
+		project_urls <- get_source_urls(conn, project_id)
+	}
 	project_patterns <- c(list(jira_key=project_name),
 						  project_urls, patterns)
 
@@ -67,4 +76,33 @@ build_source_urls <- function(project_id, project_name, items=list(), patterns=c
 		}
 	}
 	return(project_links)
+}
+
+build_sprint_source_urls <- function(conn, project_id, project_name, sprint,
+									 specifications, patterns) {
+	source_urls <- get_source_urls(conn, project_id)
+	source_items <- list()
+	for (item in specifications$files) {
+		if (is.list(item$source)) {
+			url_names <- paste(names(item$source), 'url', sep='_')
+			index = which(url_names %in% names(source_urls))
+			if (length(index) > 0) {
+				source_items[[item$column]] <- c(item, list(source=item$source[[index[1]]],
+															type=names(item$source)[[index[1]]]))
+			}
+		}
+		else if (!is.null(item$source)) {
+			source_items[[item$column]] <- item
+		}
+	}
+
+	sprint_patterns <- list(jira_board_id=sprint$board_id,
+							jira_sprint_id=sprint$sprint_id,
+							quality_name=ifelse(is.na(sprint$quality_name), '',
+												sprint$quality_name),
+							sprint_start_date=dateFormat(sprint$start_date),
+							sprint_end_date=dateFormat(sprint$close_date))
+	return(build_source_urls(project_id, project_name, items=source_items,
+							 patterns=c(patterns, sprint_patterns),
+							 conn=source_urls))
 }

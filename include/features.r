@@ -170,7 +170,7 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T, 
 								   'AND ${sprint_close} < CURRENT_TIMESTAMP()')
 	}
 	query = 'SELECT sprint.project_id, project.name AS project_name,
-			project.quality_display_name,
+			project.quality_display_name, project.quality_name,
 			sprint.sprint_id, sprint.name AS sprint_name,
 			sprint.start_date, ${sprint_close} AS close_date,
 			sprint.board_id
