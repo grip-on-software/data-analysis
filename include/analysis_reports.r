@@ -257,7 +257,7 @@ story_flow <- function(item, result, output_dir) {
 		if (is.null(old_status) || is.null(new_status)) {
 			next
 		}
-		if (old_status_id == '1' && old_resolution != '') {
+		if (!(old_status_id %in% c('5','6')) && old_resolution != '') {
 			next
 		}
 
