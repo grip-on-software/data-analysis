@@ -172,6 +172,8 @@ if (get_arg('--project', default=F)) {
 		}
 
 		write_feature_metadata(projects, specifications, output_dir)
+		write(toJSON(list(limit=recent, closed=closed), auto_unbox=T),
+			  file=paste(output_dir, "sprints.json", sep="/"))
 		write(toJSON(quality_names, auto_unbox=T),
 			  file=paste(output_dir, "quality_names.json", sep="/"))
 		write(toJSON(list(default=default_features,
