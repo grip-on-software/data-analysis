@@ -235,10 +235,13 @@ story_flow <- function(item, result, output_dir) {
 				   '10004'='yellow', # Backlog Approved
 				   '10005'='yellow', # Reviewed
 				   '10006'='yellow') # In Review
+	color_names <- list(blue='open', yellow='progress', gray='reopened',
+						green='resolved', darkgreen='closed')
 	# from max (bottom) to min (top)
 	ranks <- list(darkgreen=c(), green=c(), gray=c(), yellow=c(), blue=c())
 	max_time <- 150
-	palette <- viridis_pal(alpha=0, end=0.75, option="plasma")(max_time+1)
+	palette <- substr(viridis_pal(alpha=0, end=0.75, option="plasma")(max_time+1),
+					  0, 7)
 
 	for (change in changes) {
 		old_status_id <- as.character(change[1,'old_status'])
@@ -251,9 +254,16 @@ story_flow <- function(item, result, output_dir) {
 		new_status <- states[[new_status_id]]
 		new_resolution <- resolutions[[new_resolution_id]]
 
+		if (is.null(old_status) || is.null(new_status)) {
+			next
+		}
+		if (old_status_id == '1' && old_resolution != '') {
+			next
+		}
+
 		volume <- nrow(change)
 		loginfo('Volume: %d/%d', volume, total_stories)
-		time_delta <- mean(as.numeric(difftime(change$new_date, change$earliest_date, units="days")))
+		time_delta <- mean(as.numeric(difftime(change$new_date, change$earliest_date, units="days"))*7.0/5)
 
 		old_name <- paste('"', paste(old_status, old_resolution, sep=" "),
 						  '"', sep='')
@@ -278,7 +288,7 @@ story_flow <- function(item, result, output_dir) {
 
 		edge_attrs <- list(label=paste('"', round(time_delta), ' days\\n',
 									   volume, ' stories"', sep=""),
-						   fontcolor=paste('"', substr(palette[1+round(min(time_delta,max_time))], 0, 7), '"', sep=""),
+						   fontcolor=paste('"', palette[1+round(min(time_delta,max_time))], '"', sep=""),
 						   penwidth=1+log(1+0.5*(volume - avg_volume)/avg_volume))
 
 		edge <- paste(old_name, new_name, sep=" -> ")
@@ -329,6 +339,10 @@ story_flow <- function(item, result, output_dir) {
 				 "%.png: %.dot",
 				 "\tdot -Tpng $< -o $@"),
 			   paste(output_dir, "Makefile", sep="/"))
+	write(toJSON(palette),
+		  file=paste(output_dir, "story_flow_palette.json", sep="/"))
+	write(toJSON(color_names, auto_unbox=T),
+		  file=paste(output_dir, "story_flow_states.json", sep="/"))
 }
 
 long_waiting_commits <- function(item, result, output_dir) {
