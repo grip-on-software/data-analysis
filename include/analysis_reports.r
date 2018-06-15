@@ -231,12 +231,12 @@ story_flow <- function(item, result, output_dir) {
 				   '3'='yellow', # In Progress
 				   '4'='gray', # Reopened
 				   '5'='green', # Resolved
-				   '6'='green', # Closed
+				   '6'='darkgreen', # Closed
 				   '10004'='yellow', # Backlog Approved
 				   '10005'='yellow', # Reviewed
 				   '10006'='yellow') # In Review
 	# from max (bottom) to min (top)
-	ranks <- list(green=c(), gray=c(), yellow=c(), blue=c())
+	ranks <- list(darkgreen=c(), green=c(), gray=c(), yellow=c(), blue=c())
 	max_time <- 150
 	palette <- viridis_pal(alpha=0, end=0.75, option="plasma")(max_time+1)
 
@@ -278,7 +278,6 @@ story_flow <- function(item, result, output_dir) {
 
 		edge_attrs <- list(label=paste('"', round(time_delta), ' days\\n',
 									   volume, ' stories"', sep=""),
-						   labelfontsize=10,
 						   fontcolor=paste('"', substr(palette[1+round(min(time_delta,max_time))], 0, 7), '"', sep=""),
 						   penwidth=1+log(1+0.5*(volume - avg_volume)/avg_volume))
 
