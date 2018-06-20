@@ -46,9 +46,10 @@ if (!exists('INC_PROJECT_R')) {
 	}
 
 	get_recent_projects <- function(conn, date) {
+		# Retrieve projects that have had a sprint recently
 		if (missing(date)) {
-			# Since the beginning of this year
-			date <- as.Date(paste(format(Sys.Date(), "%Y"), "01", "01", sep="-"))
+			# Within the last three months
+			date <- Sys.Date() - as.difftime(12, units="weeks")
 		}
 		query <- paste('SELECT project.project_id, project.name
 					   FROM gros.sprint
