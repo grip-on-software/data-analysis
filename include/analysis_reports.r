@@ -321,7 +321,7 @@ story_flow <- function(item, result, output_dir) {
 					 "}", sep=""))
 	}
 
-	dot <- c("digraph G {",
+	dot <- c(paste("digraph", item$patterns[['name']], "{"),
 			 paste(names(edges), lapply(edges, dot_attrs)),
 			 paste(names(nodes), lapply(nodes, dot_attrs)),
 			 paste(mapply(dot_ranks, ranks, 1:length(ranks))),
