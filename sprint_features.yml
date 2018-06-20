@@ -558,3 +558,23 @@ files:
     units:
         nl: "%s overige wijzigingen aan issues voor begin van sprint"
         en: "%s other issue changes before start of sprint"
+  - filename: 11-backlog-sprint.sql
+    table: backlog_sprint
+    column: backlog_size
+    default: 0
+    descriptions:
+        nl: Issues op sprintbacklog
+        en: Issues on sprint backlog
+    units:
+        nl: "%s issues voor de sprint op de backlog"
+        en: "%s issues for the sprint on the backlog"
+  - filename: 11-backlog-ready-status.sql
+    table: backlog_ready_status
+    column: backlog_ready_status
+    default: 0
+    descriptions:
+        nl: Issues met readystatus op sprintbacklog
+        en: Issues with ready status on sprint backlog
+    units:
+        nl: "%s issues met readystatus voor de sprint op de backlog"
+        en: "%s issues with ready status for the sprint on the backlog"
