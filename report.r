@@ -8,6 +8,7 @@ source('include/analysis_reports.r')
 
 conn <- connect()
 
+# 'each', 'main', empty or a comma-separated list of projects
 projects_list <- get_arg('--projects', default='')
 invert <- get_arg('--invert', default=F)
 
@@ -20,6 +21,27 @@ output_directory <- get_arg('--output', default='output')
 project_ids <- get_arg('--project-ids', default='0')
 if (project_ids != '0') {
 	project_ids = '1'
+}
+
+project_metadata <- get_arg('--project-metadata', default='recent,core,main')
+meta_keys <- strsplit(project_metadata, ',')[[1]]
+metadata <- vector("list", length(meta_keys))
+names(metadata) <- meta_keys
+metadata[] <- T
+fields <- c('project_id', 'name', 'quality_display_name')
+
+write_projects_metadata <- function(conn, fields, metadata, projects=NA,
+									project_ids='0', output_directory='output') {
+	if (is.na(projects)) {
+		projects <- get_projects_meta(conn, fields=fields, metadata=metadata)
+	}
+	if (project_ids != '0') {
+		projects$name <- paste('Proj', projects$project_id, sep='')
+		projects$quality_display_name <- NULL
+	}
+	projects$project_id <- NULL
+	write(toJSON(projects, auto_unbox=T),
+		  file=paste(output_directory, 'projects_meta.json', sep='/'))
 }
 
 run_reports <- function(definitions) {
@@ -57,20 +79,19 @@ if (interval != '') {
 	})
 } else if (projects_list == '') {
 	run_reports(list(id='all', project_ids=project_ids))
+	if (length(metadata) > 0) {
+		write_projects_metadata(conn, fields, metadata, projects=NA,
+								project_ids=project_ids,
+								output_directory=output_directory)
+	}
 } else {
-	if (projects_list == 'each') {
-		projects <- get_projects(conn)
+	projects <- get_projects_meta(conn, fields=fields, metadata=metadata)
+	if (projects_list == 'main') {
+		projects <- projects[projects$main,]
 	}
-	else if (projects_list == 'main') {
-		projects <- get_main_projects(conn)
-	}
-	else {
+	else if (projects_list != 'each') {
 		ids <- as.vector(as.numeric(unlist(strsplit(projects_list, ','))))
-		projects <- dbGetQuery(conn, paste('SELECT project_id, name
-										   FROM gros.project
-										   WHERE project_id IN (',
-										   paste(ids, collapse=', '), ')
-										   ORDER BY project_id'))
+		projects <- projects[projects$project_id %in% ids,]
 	}
 	if (project_ids != '0') {
 		projects$name <- paste('Proj', projects$project_id, sep='')
@@ -94,3 +115,4 @@ if (interval != '') {
 	write(toJSON(projects$name),
 		  file=paste(output_directory, 'report_project_names.json', sep='/'))
 }
+

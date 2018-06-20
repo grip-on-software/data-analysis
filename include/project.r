@@ -3,6 +3,59 @@
 if (!exists('INC_PROJECT_R')) {
 	INC_PROJECT_R <- T
 
+	get_projects_meta <- function(conn, fields=c('project_id', 'name'),
+								  metadata=list(), by='project_id') {
+		joins <- list()
+		aliases <- list()
+		groups <- c()
+		must_group <- F
+
+		if (!is.null(metadata$recent)) {
+			if (isTRUE(metadata$recent)) {
+				# Within the last three months
+				date <- Sys.Date() - as.difftime(12, units="weeks")
+			}
+			else {
+				date <- as.Date(metadata$recent)
+			}
+			aliases$recent <- paste('MAX(start_date) >= CAST(', date, ' AS TIMESTAMP)', sep='\'')
+			joins$sprint <- 'sprint.project_id = project.project_id'
+			must_group <- T
+		}
+		if (!is.null(metadata$core)) {
+			aliases$core <- 'COALESCE(is_support_team, false)'
+			groups <- c(groups, 'is_support_team')
+		}
+		if (!is.null(metadata$main)) {
+			aliases$main <- 'CASE WHEN main_project IS NULL THEN true ELSE false END'
+			groups <- c(groups, 'main_project')
+		}
+
+		if (length(joins) > 0) {
+			fields <- paste('project', fields, sep='.')
+			groups <- paste('project', groups, sep='.')
+			by <- paste('project', by, sep='.')
+		}
+		group_by <- ''
+		if (must_group) {
+			group_by <- paste('GROUP BY', paste(c(fields, groups),
+												collapse=', '))
+		}
+		fields <- c(fields, mapply(function(alias, expression) {
+			paste(expression, 'AS', alias)
+ 	 	}, names(aliases), aliases))
+
+		query <- paste('SELECT', paste(fields, collapse=', '),
+					   'FROM gros.project',
+					   paste(mapply(function(table, cond) {
+					         paste('JOIN', paste('gros', table, sep='.'),
+							 	   'ON', cond)
+					   }, names(joins), joins), collapse=' '),
+					   group_by,
+					   'ORDER BY', paste(by, collapse=', '))
+		dbGetQuery(conn, query)
+	}
+
 	get_projects <- function(conn, by='project_id') {
 		dbGetQuery(conn, paste('SELECT project_id, name FROM gros.project
 							   ORDER BY', by))
