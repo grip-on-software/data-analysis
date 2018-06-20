@@ -19,6 +19,7 @@ get_source_urls <- function(conn, project_id, sources='all', web=T) {
 	}
 	if (web) {
 		conditions$web <- "(url LIKE 'http://%' OR url LIKE 'https://%')"
+		conditions$specified <- "url <> 'http://unspecified'"
 	}
 	environments <- dbGetQuery(conn,
 							   paste('SELECT source_type, url
