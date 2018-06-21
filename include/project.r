@@ -23,7 +23,7 @@ if (!exists('INC_PROJECT_R')) {
 			must_group <- T
 		}
 		if (!is.null(metadata$core)) {
-			aliases$core <- 'COALESCE(is_support_team, false)'
+			aliases$core <- 'NOT COALESCE(is_support_team, false)'
 			groups <- c(groups, 'is_support_team')
 		}
 		if (!is.null(metadata$main)) {
