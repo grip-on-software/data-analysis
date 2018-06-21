@@ -38,6 +38,10 @@ write_projects_metadata <- function(conn, fields, metadata, projects=NA,
 	if (project_ids != '0') {
 		projects$name <- paste('Proj', projects$project_id, sep='')
 		projects$quality_display_name <- NULL
+		projects <- projects[order(projects$project_id),]
+	}
+	else {
+		projects <- projects[order(projects$name),]
 	}
 	projects$project_id <- NULL
 	write(toJSON(projects, auto_unbox=T),
