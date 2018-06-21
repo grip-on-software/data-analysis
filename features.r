@@ -22,6 +22,10 @@ recent <- get_arg('--recent', default=F)
 config <- yaml.load_file(config_file)
 patterns <- load_definitions('sprint_definitions.yml', config$fields)
 
+project_metadata <- get_arg('--project-metadata', default='recent,core,main')
+metadata <- get_meta_keys(project_metadata)
+fields <- c('project_id', 'name', 'quality_display_name')
+
 if (get_arg('--project', default=F)) {
 	result <- get_project_features(conn, exclude, NULL, core=core)
 	subprojects <- get_subprojects(conn)
@@ -85,6 +89,10 @@ if (get_arg('--project', default=F)) {
 	write(toJSON(groups),
 		  file=paste(output_directory, "project_features_groups.json", sep="/"))
 	loginfo("Wrote project_features_groups.json")
+
+	write_projects_metadata(conn, fields, metadata, projects=NA,
+							project_ids=project_ids,
+							output_directory=output_directory)
 } else if (recent) {
 	if (isTRUE(recent)) {
 		recent <- 5
@@ -180,6 +188,9 @@ if (get_arg('--project', default=F)) {
 						  all=features,
 						  meta=sprint_meta)),
 			  file=paste(output_dir, "features.json", sep="/"))
+		write_projects_metadata(conn, fields, metadata, projects=NA,
+								project_ids=project_ids,
+								output_directory=output_dir)
 	}
 	else {
 		write.csv(sprint_data[,result$colnames],
@@ -201,4 +212,3 @@ if (get_arg('--project', default=F)) {
 			   file=paste(output_directory, "sprint_features.arff", sep="/"),
 			   relation="sprint_data")
 }
-

@@ -24,29 +24,8 @@ if (project_ids != '0') {
 }
 
 project_metadata <- get_arg('--project-metadata', default='recent,core,main')
-meta_keys <- strsplit(project_metadata, ',')[[1]]
-metadata <- vector("list", length(meta_keys))
-names(metadata) <- meta_keys
-metadata[] <- T
+metadata <- get_meta_keys(project_metadata)
 fields <- c('project_id', 'name', 'quality_display_name')
-
-write_projects_metadata <- function(conn, fields, metadata, projects=NA,
-									project_ids='0', output_directory='output') {
-	if (is.na(projects)) {
-		projects <- get_projects_meta(conn, fields=fields, metadata=metadata)
-	}
-	if (project_ids != '0') {
-		projects$name <- paste('Proj', projects$project_id, sep='')
-		projects$quality_display_name <- NULL
-		projects <- projects[order(projects$project_id),]
-	}
-	else {
-		projects <- projects[order(projects$name),]
-	}
-	projects$project_id <- NULL
-	write(toJSON(projects, auto_unbox=T),
-		  file=paste(output_directory, 'projects_meta.json', sep='/'))
-}
 
 run_reports <- function(definitions) {
 	items <- get_analysis_reports(definitions)

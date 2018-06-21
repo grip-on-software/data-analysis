@@ -113,4 +113,32 @@ if (!exists('INC_PROJECT_R')) {
 					   ORDER BY project.project_id', sep='')
 		dbGetQuery(conn, query)
 	}
+
+	get_meta_keys <- function(project_metadata) {
+		meta_keys <- strsplit(project_metadata, ',')[[1]]
+		metadata <- vector("list", length(meta_keys))
+		names(metadata) <- meta_keys
+		metadata[] <- T
+		return(metadata)
+	}
+
+	write_projects_metadata <- function(conn, fields, metadata, projects=NA,
+										project_ids='0',
+										output_directory='output') {
+		if (is.na(projects)) {
+			projects <- get_projects_meta(conn, fields=fields, 
+										  metadata=metadata)
+		}
+		if (project_ids != '0') {
+			projects$name <- paste('Proj', projects$project_id, sep='')
+			projects$quality_display_name <- NULL
+			projects <- projects[order(projects$project_id),]
+		}
+		else {
+			projects <- projects[order(projects$name),]
+		}
+		projects$project_id <- NULL
+		write(toJSON(projects, auto_unbox=T),
+		  	  file=paste(output_directory, 'projects_meta.json', sep='/'))
+	}
 }
