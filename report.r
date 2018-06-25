@@ -64,12 +64,10 @@ if (interval != '') {
 	})
 } else if (projects_list == '') {
 	run_reports(list(id='all', project_ids=project_ids))
-	if (length(metadata) > 0) {
-		write_projects_metadata(conn, fields, metadata, projects=NA,
-								project_ids=project_ids,
-								project_sources=project_sources,
-								output_directory=output_directory)
-	}
+	write_projects_metadata(conn, fields, metadata, projects=NA,
+							project_ids=project_ids,
+							project_sources=project_sources,
+							output_directory=output_directory)
 } else {
 	projects <- get_projects_meta(conn, fields=fields, metadata=metadata)
 	if (projects_list == 'main') {

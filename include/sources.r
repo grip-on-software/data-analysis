@@ -34,6 +34,9 @@ get_source_urls <- function(conn, project_id, sources='all', web=T, one=F) {
 									 paste(conditions, collapse=' AND '),
 									 'ORDER BY', order))
 	lapply(split(environments, environments$project_id), function(project) {
+		if (one) {
+			project <- project[!duplicated(project$source_type),]
+		}
 		urls <- as.list(sub("/$", "", project$url))
 		if (length(urls) == 0) {
 			names(urls) <- list()

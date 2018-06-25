@@ -34,9 +34,9 @@ if (!exists('INC_PROJECT_R')) {
 		}
 
 		if (length(joins) > 0) {
-			fields <- paste('project', fields, sep='.')
-			groups <- paste('project', groups, sep='.')
-			by <- paste('project', by, sep='.')
+			fields <- sprintf('project.%s', fields)
+			groups <- sprintf('project.%s', groups)
+			by <- sprintf('project.%s', by)
 		}
 		group_by <- ''
 		if (must_group) {
