@@ -96,6 +96,10 @@ if (interval != '') {
 							 							project$project_id)))
 		}
 	}, projects$project_id, projects$name, SIMPLIFY=F)
+	write_projects_metadata(conn, fields, metadata, projects=projects,
+							project_ids=project_ids,
+							project_sources=project_sources,
+							output_directory=output_directory)
 	write(toJSON(projects$project_id),
 		  file=paste(output_directory, 'report_projects.json', sep='/'))
 	write(toJSON(projects$name),
