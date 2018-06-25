@@ -27,6 +27,8 @@ project_metadata <- get_arg('--project-metadata', default='recent,core,main')
 metadata <- get_meta_keys(project_metadata)
 fields <- c('project_id', 'name', 'quality_display_name')
 
+project_sources <- strsplit(get_arg('--project-sources', default=''), ',')[[1]]
+
 run_reports <- function(definitions) {
 	items <- get_analysis_reports(definitions)
 
@@ -65,6 +67,7 @@ if (interval != '') {
 	if (length(metadata) > 0) {
 		write_projects_metadata(conn, fields, metadata, projects=NA,
 								project_ids=project_ids,
+								project_sources=project_sources,
 								output_directory=output_directory)
 	}
 } else {

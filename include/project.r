@@ -1,6 +1,8 @@
 # Utilities for retrieving lists of projects.
 
 if (!exists('INC_PROJECT_R')) {
+	source('include/sources.r')
+
 	INC_PROJECT_R <- T
 
 	get_projects_meta <- function(conn, fields=c('project_id', 'name'),
@@ -122,13 +124,35 @@ if (!exists('INC_PROJECT_R')) {
 		return(metadata)
 	}
 
+	write_projects_sources <- function(conn, projects, sources=NA,
+									   output_directory='output') {
+		urls <- get_source_urls(conn, projects$project_id,
+								sources=sources,
+								one=length(sources) == 1 && sources != 'all')
+		if (project_ids != '0') {
+			names(urls) <- paste('Proj', names(sources), sep='')
+		}
+		else {
+			names(urls) <- projects[projects$project_id %in% names(urls),'name']
+		}
+
+		write(toJSON(urls, auto_unbox=T),
+			  file=paste(output_directory, "projects_sources.json", sep="/"))
+	}
+
 	write_projects_metadata <- function(conn, fields, metadata, projects=NA,
-										project_ids='0',
+										project_ids='0', project_sources=c(),
 										output_directory='output') {
 		if (is.na(projects)) {
 			projects <- get_projects_meta(conn, fields=fields, 
 										  metadata=metadata)
 		}
+
+		if (length(project_sources) > 0) {
+			write_projects_sources(conn, projects, sources=project_sources,
+								   output_directory=output_directory)
+		}
+
 		if (project_ids != '0') {
 			projects$name <- paste('Proj', projects$project_id, sep='')
 			projects$quality_display_name <- NULL

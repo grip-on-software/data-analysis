@@ -6,9 +6,10 @@ dateFormat <- function(date) {
 	format(as.POSIXct(date), format="%Y-%m-%d %H:%M:%S")
 }
 
-get_source_urls <- function(conn, project_id, sources='all', web=T) {
+get_source_urls <- function(conn, project_id, sources='all', web=T, one=F) {
 	vcs_sources <- c('svn', 'git', 'github', 'gitlab', 'tfs')
-	conditions = list(project_id=paste('project_id =', project_id))
+	conditions = list(project_id=paste('project_id IN (',
+									   paste(project_id, collapse=','), ')'))
 	if (sources != 'all') {
 		if ('vcs' %in% sources) {
 			sources <- c(sources, vcs_sources)
@@ -21,27 +22,39 @@ get_source_urls <- function(conn, project_id, sources='all', web=T) {
 		conditions$web <- "(url LIKE 'http://%' OR url LIKE 'https://%')"
 		conditions$specified <- "url <> 'http://unspecified'"
 	}
+
+	order <- 'project_id, source_type, url'
+	if (one && length(project_id) == 1 && 'vcs' %in% sources) {
+		order <- paste(order, 'LIMIT 1')
+	}
 	environments <- dbGetQuery(conn,
-							   paste('SELECT source_type, url
+							   paste('SELECT project_id, source_type, url
 							   		 FROM gros.source_environment
 									 WHERE',
-									 paste(conditions, collapse=' AND ')))
-	urls <- as.list(sub("/$", "", environments$url))
-	if (length(urls) == 0) {
-		return(urls)
-	}
-	names(urls) <- paste(environments$source_type, 'url', sep='_')
+									 paste(conditions, collapse=' AND '),
+									 'ORDER BY', order))
+	lapply(split(environments, environments$project_id), function(project) {
+		urls <- as.list(sub("/$", "", project$url))
+		if (length(urls) == 0) {
+			names(urls) <- list()
+			return(urls)
+		}
+		names(urls) <- paste(project$source_type, 'url', sep='_')
 
-	for (vcs_source in vcs_sources) {
-		if (vcs_source %in% environments$source_type) {
-			url <- urls[[paste(vcs_source, 'url', sep='_')]]
-			if (!("vcs_url" %in% names(urls)) || startsWith(urls$vcs_url, url)) {
-				urls$vcs_url <- url
+		for (vcs_source in vcs_sources) {
+			if (vcs_source %in% project$source_type) {
+				url <- urls[[paste(vcs_source, 'url', sep='_')]]
+				if (!("vcs_url" %in% names(urls)) || startsWith(urls$vcs_url, url)) {
+					urls$vcs_url <- url
+				}
 			}
 		}
-	}
+		if (one && "vcs_url" %in% names(urls)) {
+			urls <- list(vcs_url=urls$vcs_url)
+		}
 
-	return(urls)
+		return(urls)
+	})
 }
 
 get_source_pattern <- function(item, project_urls) {
