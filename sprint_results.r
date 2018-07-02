@@ -62,6 +62,10 @@ if (project_ids != '0') {
 	project_ids <- '1'
 }
 
+project_metadata <- get_arg('--project-metadata', default='recent,core,main')
+metadata <- get_meta_keys(project_metadata)
+fields <- c('project_id', 'name', 'quality_display_name')
+
 results <- read_json(input_file, simplifyVector=T)
 features <- read.arff(feature_file)
 conn <- connect()
@@ -158,6 +162,9 @@ for (idx in 1:length(results$projects)) {
 		  file=paste(path, "links.json", sep="/"))
 }
 
+write_projects_metadata(conn, fields, metadata, projects=NA,
+						project_ids=project_ids,
+						output_directory=output_directory)
 write_feature_metadata(projects, specifications, output_directory)
 write(toJSON(results$configuration, auto_unbox=T),
 	  file=paste(output_directory, "configuration.json", sep="/"))
