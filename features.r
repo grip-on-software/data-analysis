@@ -15,6 +15,7 @@ project_ids <- get_arg('--project-ids', default='0')
 if (project_ids != '0') {
 	project_ids = '1'
 }
+features <- get_arg('--features', default=NA)
 exclude <- get_arg('--exclude', default='^$')
 core <- get_arg('--core', default=F)
 recent <- get_arg('--recent', default=F)
@@ -27,7 +28,7 @@ metadata <- get_meta_keys(project_metadata)
 fields <- c('project_id', 'name', 'quality_display_name')
 
 if (get_arg('--project', default=F)) {
-	result <- get_project_features(conn, exclude, NULL, core=core)
+	result <- get_project_features(conn, features, exclude, NULL, core=core)
 	subprojects <- get_subprojects(conn)
 
 	df <- result$data[,result$colnames]
@@ -100,11 +101,16 @@ if (get_arg('--project', default=F)) {
 	split <- get_arg('--split', default=F)
 	closed <- get_arg('--closed', default=F)
 	specifications <- yaml.load_file('sprint_features.yml')
-	features <- c('sprint_num', 'sprint_days',
-				  'num_story_points', 'num_stories', 'num_not_done',
-				  'num_removed_stories', 'num_added_stories',
-				  'num_done_stories', 'done_story_points', 'velocity',
-				  'lines_of_code', 'unittest_line_coverage')
+	if (is.na(features)) {
+		features <- c('sprint_num', 'sprint_days',
+				  	  'num_story_points', 'num_stories', 'num_not_done',
+				  	  'num_removed_stories', 'num_added_stories',
+				  	  'num_done_stories', 'done_story_points', 'velocity',
+				  	  'lines_of_code', 'unittest_line_coverage')
+	}
+	else {
+		features <- strsplit(features, ",")[[1]]
+	}
 
 	if (split) {
 		sprint_meta <- c('sprint_name', 'sprint_num', 'sprint_id', 'board_id',
@@ -202,9 +208,10 @@ if (get_arg('--project', default=F)) {
 	latest_date <- get_arg('--latest-date', default='')
 	days <- get_arg('--days', default=NA)
 	patch <- ifelse(get_arg('--patch', default=F), NA, F)
+	metrics <- get_arg('--metrics', default=F)
 
-	result <- get_sprint_features(conn, exclude, NULL, latest_date, core=core,
-								  metrics=get_arg('--metrics', default=F),
+	result <- get_sprint_features(conn, features, exclude, NULL, latest_date,
+								  core=core, metrics=metrics,
 								  sprint_days=days, sprint_patch=patch)
 	sprint_data <- result$data
 

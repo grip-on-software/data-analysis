@@ -27,8 +27,8 @@ items <- load_queries('sprint_events.yml', 'sprint_definitions.yml', variables)
 sprint_days <- get_arg('--days', default=NA)
 sprint_patch <- ifelse(get_arg('--patch', default=F), NA, F)
 
-exportFeatures <- function(exclude, output_directory) {
-	result <- get_sprint_features(conn, exclude, variables,
+exportFeatures <- function(features, exclude, output_directory) {
+	result <- get_sprint_features(conn, features, exclude, variables,
 								  sprint_days=sprint_days,
 								  sprint_patch=sprint_patch)
 	data <- result$data
@@ -145,7 +145,9 @@ types <- list()
 projects_with_data <- list()
 project_boards <- list()
 
-data <- exportFeatures(get_arg('--exclude', default='^$'), output_directory)
+features <- get_arg('--features', default=NA)
+exclude <- get_arg('--exclude', default='^$')
+data <- exportFeatures(feautres, exclude, output_directory)
 no_features = get_arg('--no-features', default=F)
 for (item in items) {
 	loginfo('Executing query for type %s', item$type)

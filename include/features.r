@@ -53,9 +53,15 @@ get_feature_locales <- function(items, field='descriptions') {
 	return(locales)
 }
 
-get_features <- function(conn, exclude, items, data, colnames, join_cols) {
+get_features <- function(conn, features, exclude, items, data, colnames, join_cols) {
+	if (is.na(features)) {
+		features <- unlist(sapply(items, function(item) { item$column }))
+	}
+	else if (length(features) == 1) {
+		features <- strsplit(features, ",")[[1]]
+	}
 	for (item in items) {
-		if (missing(exclude) || length(grep(exclude, item$table)) == 0) {
+		if (all(item$column %in% features) && length(grep(exclude, item$table)) == 0) {
 			if (!is.null(item$result)) {
 				result <- item$result
 			}
@@ -108,7 +114,9 @@ get_sprint_conditions <- function(latest_date='', core=F, sprint_days=NA, sprint
 	return(conditions)
 }
 
-get_sprint_features <- function(conn, exclude, variables, latest_date, core=F, metrics=F, sprint_days=NA, sprint_patch=NA) {
+get_sprint_features <- function(conn, features, exclude, variables, latest_date,
+								core=F, metrics=F, sprint_days=NA,
+								sprint_patch=NA) {
 	conditions <- get_sprint_conditions(latest_date, core, sprint_days, sprint_patch)
 	if (length(conditions) != 0) {
 		where_clause <- paste('WHERE', paste(conditions, collapse=' AND '))
@@ -159,7 +167,7 @@ get_sprint_features <- function(conn, exclude, variables, latest_date, core=F, m
 		}
 	}
 
-	get_features(conn, exclude, items, sprint_data, colnames, join_cols)
+	get_features(conn, features, exclude, items, sprint_data, colnames, join_cols)
 }
 
 get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T, sprint_meta=c(), sprint_conditions='') {
@@ -202,10 +210,10 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T, 
 
 	colnames <- c("project_name", "quality_display_name", sprint_meta)
 	join_cols <- c("project_id", "sprint_id")
-	get_features(conn, '^$', items, sprint_data, colnames, join_cols)
+	get_features(conn, features, '^$', items, sprint_data, colnames, join_cols)
 }
 
-get_project_features <- function(conn, exclude, variables, core=F) {
+get_project_features <- function(conn, features, exclude, variables, core=F) {
 	if (core) {
 		data <- get_core_projects(conn, by='name')
 	}
@@ -217,7 +225,7 @@ get_project_features <- function(conn, exclude, variables, core=F) {
 					  	  variables)
 	colnames <- c()
 	join_cols <- c("project_id")
-	get_features(conn, exclude, items, data, colnames, join_cols)
+	get_features(conn, features, exclude, items, data, colnames, join_cols)
 }
 
 write_feature_metadata <- function(projects, specifications, output_directory) {
