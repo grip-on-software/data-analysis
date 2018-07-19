@@ -54,11 +54,13 @@ get_feature_locales <- function(items, field='descriptions') {
 }
 
 get_features <- function(conn, features, exclude, items, data, colnames, join_cols) {
-	if (is.na(features)) {
-		features <- unlist(sapply(items, function(item) { item$column }))
-	}
-	else if (length(features) == 1) {
-		features <- strsplit(features, ",")[[1]]
+	if (length(features) == 1) {
+		if (is.na(features)) {
+			features <- unlist(sapply(items, function(item) { item$column }))
+		}
+		else {
+			features <- strsplit(features, ",")[[1]]
+		}
 	}
 	for (item in items) {
 		if (all(item$column %in% features) && length(grep(exclude, item$table)) == 0) {
@@ -170,7 +172,7 @@ get_sprint_features <- function(conn, features, exclude, variables, latest_date,
 	get_features(conn, features, exclude, items, sprint_data, colnames, join_cols)
 }
 
-get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T, sprint_meta=c(), sprint_conditions='') {
+get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T, sprint_meta=c(), sprint_conditions='', old=F) {
 	patterns <- load_definitions('sprint_definitions.yml')
 	projects <- get_recent_projects(conn, date)
 	if (closed) {
@@ -181,21 +183,34 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T, 
 			project.quality_display_name, project.quality_name,
 			sprint.sprint_id, sprint.name AS sprint_name,
 			sprint.start_date, ${sprint_close} AS close_date,
-			sprint.board_id
+			sprint.board_id, ${old} AS "old"
 			FROM gros.sprint
 			JOIN gros.project
 			ON project.project_id = sprint.project_id
 			WHERE sprint.project_id = ${project_id}
 			${sprint_conditions}
 			ORDER BY sprint.project_id, sprint.start_date DESC
-			LIMIT ${limit}'
+			${pager} ${limit}'
 	sprint_data <- data.frame()
 	conditions <- str_interp(sprint_conditions, patterns)
 	variables <- c(patterns, list(sprint_conditions=conditions, limit=limit))
 	for (project in projects$project_id) {
+
 		item <- load_query(list(query=query),
-						   c(variables, list(project_id=project)))
+						   c(variables, list(project_id=project,
+						   					 old='FALSE',
+						   					 pager='LIMIT')))
+		print(item$query)
 		sprint_data <- rbind(sprint_data, dbGetQuery(conn, item$query))
+
+		if (old) {
+			item <- load_query(list(query=query),
+							   c(variables, list(project_id=project,
+							   					 old='TRUE',
+							   					 pager='OFFSET')))
+			print(item$query)
+			sprint_data <- rbind(sprint_data, dbGetQuery(conn, item$query))
+		}
 	}
 	sprint_data$start_date <- as.POSIXct(sprint_data$start_date)
 	sprint_data$close_date <- as.POSIXct(sprint_data$close_date)

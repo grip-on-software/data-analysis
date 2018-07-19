@@ -99,6 +99,7 @@ if (get_arg('--project', default=F)) {
 		recent <- 5
 	}
 	split <- get_arg('--split', default=F)
+	old <- get_arg('--old', default=F)
 	closed <- get_arg('--closed', default=F)
 	specifications <- yaml.load_file('sprint_features.yml')
 	if (is.na(features)) {
@@ -106,7 +107,8 @@ if (get_arg('--project', default=F)) {
 				  	  'num_story_points', 'num_stories', 'num_not_done',
 				  	  'num_removed_stories', 'num_added_stories',
 				  	  'num_done_stories', 'done_story_points', 'velocity',
-				  	  'lines_of_code', 'unittest_line_coverage')
+				  	  'lines_of_code', 'unittest_line_coverage',
+					  'dev_sprint_experience')
 	}
 	else {
 		features <- strsplit(features, ",")[[1]]
@@ -143,7 +145,8 @@ if (get_arg('--project', default=F)) {
 										 limit=recent,
 										 closed=closed,
 										 sprint_meta=sprint_meta,
-										 sprint_conditions=sprint_conditions)
+										 sprint_conditions=sprint_conditions,
+										 old=old)
 	sprint_data <- result$data
 	if (project_ids != '0') {
 		sprint_data$project_name <- paste("Proj", sprint_data$project_id, sep="")
@@ -155,14 +158,21 @@ if (get_arg('--project', default=F)) {
 		}
 		projects <- levels(factor(sprint_data$project_name))
 		quality_names <- list()
+
+		old_sprint_data <- sprint_data[sprint_data$old,]
+		sprint_data <- sprint_data[!sprint_data$old,]
+
 		for (project in projects) {
 			project_dir = paste(output_dir, project, sep="/")
 			if (!dir.exists(project_dir)) {
 				dir.create(project_dir)
 			}
 			project_data <- sprint_data[sprint_data$project_name == project,]
+			old_project_data <- old_sprint_data[old_sprint_data$project_name == project,]
 			write(toJSON(project_data[,default_features], auto_unbox=T),
 				  file=paste(project_dir, 'default.json', sep='/'))
+			write(toJSON(old_project_data, auto_unbox=T),
+				  file=paste(project_dir, 'old.json', sep='/'))
 
 			for (feature in result$colnames) {
 				if (!(feature %in% default_features)) {
@@ -186,7 +196,7 @@ if (get_arg('--project', default=F)) {
 		}
 
 		write_feature_metadata(projects, specifications, output_dir)
-		write(toJSON(list(limit=recent, closed=closed), auto_unbox=T),
+		write(toJSON(list(limit=recent, closed=closed, old=old), auto_unbox=T),
 			  file=paste(output_dir, "sprints.json", sep="/"))
 		write(toJSON(quality_names, auto_unbox=T),
 			  file=paste(output_dir, "quality_names.json", sep="/"))
