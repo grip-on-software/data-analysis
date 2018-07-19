@@ -146,6 +146,8 @@ if (get_arg('--project', default=F)) {
 										 closed=closed,
 										 sprint_meta=sprint_meta,
 										 sprint_conditions=sprint_conditions,
+										 project_fields=fields,
+										 project_meta=metadata,
 										 old=old)
 	sprint_data <- result$data
 	if (project_ids != '0') {
@@ -157,7 +159,6 @@ if (get_arg('--project', default=F)) {
 			dir.create(output_dir)
 		}
 		projects <- levels(factor(sprint_data$project_name))
-		quality_names <- list()
 
 		old_sprint_data <- sprint_data[sprint_data$old,]
 		sprint_data <- sprint_data[!sprint_data$old,]
@@ -191,20 +192,17 @@ if (get_arg('--project', default=F)) {
 												  sprint, # latest sprint
 												  specifications, patterns)),
 		  		  file=paste(project_dir, "links.json", sep="/"))
-
-			quality_names[[project]] <- project_data$quality_display_name[[1]]
 		}
 
 		write_feature_metadata(projects, specifications, output_dir)
 		write(toJSON(list(limit=recent, closed=closed, old=old), auto_unbox=T),
 			  file=paste(output_dir, "sprints.json", sep="/"))
-		write(toJSON(quality_names, auto_unbox=T),
-			  file=paste(output_dir, "quality_names.json", sep="/"))
 		write(toJSON(list(default=default_features,
 						  all=features,
 						  meta=sprint_meta)),
 			  file=paste(output_dir, "features.json", sep="/"))
-		write_projects_metadata(conn, fields, metadata, projects=NA,
+		write_projects_metadata(conn, fields, metadata,
+								projects=result$projects,
 								project_ids=project_ids,
 								output_directory=output_dir)
 	}

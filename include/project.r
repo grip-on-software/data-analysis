@@ -147,6 +147,9 @@ if (!exists('INC_PROJECT_R')) {
 			projects <- get_projects_meta(conn, fields=fields, 
 										  metadata=metadata)
 		}
+		else {
+			projects <- projects[,c(fields, names(metadata))]
+		}
 
 		if (length(project_sources) > 0) {
 			write_projects_sources(conn, projects, sources=project_sources,

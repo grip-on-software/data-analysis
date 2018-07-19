@@ -172,9 +172,22 @@ get_sprint_features <- function(conn, features, exclude, variables, latest_date,
 	get_features(conn, features, exclude, items, sprint_data, colnames, join_cols)
 }
 
-get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T, sprint_meta=c(), sprint_conditions='', old=F) {
+get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T, 
+									   sprint_meta=c(), sprint_conditions='', 
+									   project_fields=c('project_id'),
+									   project_meta=list(), old=F) {
 	patterns <- load_definitions('sprint_definitions.yml')
-	projects <- get_recent_projects(conn, date)
+	if (!missing(date)) {
+		project_meta$recent <- date
+	}
+	projects <- get_projects_meta(conn, fields=project_fields,
+								  metadata=c(project_meta,
+								  			 list(main=T, recent=T)))
+	projects <- projects[projects$main,]
+	if (!old) {
+		projects <- projects[projects$recent,]
+	}
+
 	if (closed) {
 		sprint_conditions <- paste(sprint_conditions,
 								   'AND ${sprint_close} < CURRENT_TIMESTAMP()')
@@ -200,7 +213,6 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T, 
 						   c(variables, list(project_id=project,
 						   					 old='FALSE',
 						   					 pager='LIMIT')))
-		print(item$query)
 		sprint_data <- rbind(sprint_data, dbGetQuery(conn, item$query))
 
 		if (old) {
@@ -208,7 +220,6 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T, 
 							   c(variables, list(project_id=project,
 							   					 old='TRUE',
 							   					 pager='OFFSET')))
-			print(item$query)
 			sprint_data <- rbind(sprint_data, dbGetQuery(conn, item$query))
 		}
 	}
@@ -225,7 +236,10 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T, 
 
 	colnames <- c("project_name", "quality_display_name", sprint_meta)
 	join_cols <- c("project_id", "sprint_id")
-	get_features(conn, features, '^$', items, sprint_data, colnames, join_cols)
+	result <- get_features(conn, features, '^$', items, sprint_data, colnames,
+						   join_cols)
+	result$projects <- projects
+	return(result)
 }
 
 get_project_features <- function(conn, features, exclude, variables, core=F) {
