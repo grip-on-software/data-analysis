@@ -147,7 +147,7 @@ project_boards <- list()
 
 features <- get_arg('--features', default=NA)
 exclude <- get_arg('--exclude', default='^$')
-data <- exportFeatures(feautres, exclude, output_directory)
+data <- exportFeatures(features, exclude, output_directory)
 no_features = get_arg('--no-features', default=F)
 for (item in items) {
 	loginfo('Executing query for type %s', item$type)
