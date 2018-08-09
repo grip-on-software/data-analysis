@@ -5,5 +5,6 @@ FROM (gros.sprint
 ), gros.sprint AS sprint2
 WHERE sprint.project_id = sprint2.project_id
 AND sprint.sprint_id >= sprint2.sprint_id
-${sprint_conditions}
+${s(sprint_conditions)}
+${s(sprint_conditions, sprint='sprint2')}
 GROUP BY sprint.project_id, sprint.sprint_id

@@ -99,7 +99,7 @@ get_sprint_conditions <- function(latest_date='', core=F, sprint_days=NA, sprint
 	conditions <- list()
 	if (!missing(latest_date) && latest_date != '') {
 		conditions <- c(conditions,
-						paste('sprint.start_date <= CAST(\'',
+						paste('${t("sprint")}.start_date <= CAST(\'',
 							  latest_date, '\' AS TIMESTAMP)', sep=''))
 	}
 	if (core) {
@@ -110,8 +110,8 @@ get_sprint_conditions <- function(latest_date='', core=F, sprint_days=NA, sprint
 		conditions <- c(conditions, "${sprint_close} - sprint.start_date > interval '${sprint_days}' day")
 	}
 	if (!is.na(sprint_patch)) {
-		conditions <- c(conditions, ifelse(sprint_patch, '${sprint_patch}',
-										   'NOT (${sprint_patch})'))
+		conditions <- c(conditions, ifelse(sprint_patch, '${s(sprint_patch)}',
+										   'NOT (${s(sprint_patch)})'))
 	}
 	return(conditions)
 }
@@ -142,8 +142,7 @@ get_sprint_features <- function(conn, features, exclude, variables, latest_date,
 
 	items <- load_queries('sprint_features.yml', 'sprint_definitions.yml',
 						  c(variables,
-						  	list(sprint_conditions=str_interp(sprint_conditions,
-															  patterns))))
+						  	list(sprint_conditions=sprint_conditions)))
 	colnames <- c("project_id")
 	join_cols <- c("project_id", "sprint_id")
 	metric_cols <- c("project_id", "sprint_id", "value")
@@ -201,12 +200,12 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T,
 			JOIN gros.project
 			ON project.project_id = sprint.project_id
 			WHERE sprint.project_id = ${project_id}
-			${sprint_conditions}
+			${s(sprint_conditions)}
 			ORDER BY sprint.project_id, sprint.start_date DESC
 			${pager} ${limit}'
 	sprint_data <- data.frame()
-	conditions <- str_interp(sprint_conditions, patterns)
-	variables <- c(patterns, list(sprint_conditions=conditions, limit=limit))
+	variables <- c(patterns, list(sprint_conditions=sprint_conditions,
+								  limit=limit))
 	for (project in projects$project_id) {
 
 		item <- load_query(list(query=query),

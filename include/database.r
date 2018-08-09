@@ -36,9 +36,17 @@ if (!exists('INC_DATABASE_R')) {
 					  		 function(define) { define$condition }),
 					  variables)
 		recursive_str_interp <- function(string, ...) {
-			str_interp(string, c(patterns, list(...)))
+			str_interp(string, c(as.list(parent.frame()), patterns, list(...)))
 		}
-		patterns <- c(patterns, list(s=recursive_str_interp))
+		var_str_interp <- function(variable, ...) {
+			variables <- c(as.list(parent.frame()), list(...))
+			if (!is.null(variables[[variable]])) {
+				return(variables[[variable]])
+			}
+			get0(variable, ifnotfound=variable)
+		}
+		patterns <- c(patterns, list(s=recursive_str_interp,
+									 t=var_str_interp))
 
 		return(patterns)
 	}
