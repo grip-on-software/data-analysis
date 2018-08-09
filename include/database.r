@@ -43,7 +43,7 @@ if (!exists('INC_DATABASE_R')) {
 			if (!is.null(variables[[variable]])) {
 				return(variables[[variable]])
 			}
-			get0(variable, ifnotfound=variable)
+			return(variable)
 		}
 		patterns <- c(patterns, list(s=recursive_str_interp,
 									 t=var_str_interp))
