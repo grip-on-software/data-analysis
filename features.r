@@ -172,10 +172,10 @@ if (get_arg('--project', default=F)) {
 			old_project_data <- old_sprint_data[old_sprint_data$project_name == project,]
 			write(toJSON(project_data[,default_features], auto_unbox=T),
 				  file=paste(project_dir, 'default.json', sep='/'))
-			write(toJSON(old_project_data, auto_unbox=T),
+			write(toJSON(old_project_data[,unique(c(sprint_meta,features))], auto_unbox=T),
 				  file=paste(project_dir, 'old.json', sep='/'))
 
-			for (feature in result$colnames) {
+			for (feature in features) {
 				if (!(feature %in% default_features)) {
 					write(toJSON(project_data[[feature]], auto_unbox=T,
 								 na="null", null="null"),

@@ -33,7 +33,7 @@ get_source_urls <- function(conn, project_id, sources='all', web=T, one=F) {
 									 WHERE',
 									 paste(conditions, collapse=' AND '),
 									 'ORDER BY', order))
-	lapply(split(environments, environments$project_id), function(project) {
+	projects <- lapply(split(environments, environments$project_id), function(project) {
 		if (one) {
 			project <- project[!duplicated(project$source_type),]
 		}
@@ -58,6 +58,11 @@ get_source_urls <- function(conn, project_id, sources='all', web=T, one=F) {
 
 		return(urls)
 	})
+
+	if (length(project_id) == 1 && length(projects) == 1) {
+		return(projects[[as.character(project_id)]])
+	}
+	return(projects)
 }
 
 get_source_pattern <- function(item, project_urls) {
