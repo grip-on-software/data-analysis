@@ -1,7 +1,11 @@
 -- Number of expected story points
 SELECT project_id, sprint_id, SUM(story_points) AS num_story_points FROM (
-    SELECT issue.project_id, issue.sprint_id, issue.issue_id,
-        MIN(issue.story_points) AS story_points
+	SELECT project_id, sprint_id, issue_id, story_points FROM (
+    SELECT issue.project_id, issue.sprint_id, issue.issue_id, issue.story_points,
+        ROW_NUMBER() OVER (
+            PARTITION BY issue.project_id, issue.sprint_id, issue.issue_id
+            ORDER BY issue.project_id, issue.sprint_id, issue.issue_id, issue.changelog_id DESC
+        ) AS rev_row
     FROM gros.issue
     JOIN gros.sprint
         ON issue.project_id = sprint.project_id
@@ -28,6 +32,8 @@ SELECT project_id, sprint_id, SUM(story_points) AS num_story_points FROM (
             AND (
                 older_issue.sprint_id IS NULL
                 OR older_issue.sprint_id <> issue.sprint_id
+				OR older_issue.story_points IS NULL
+				OR older_issue.story_points <> issue.story_points
             )
         )
     )
@@ -36,7 +42,7 @@ SELECT project_id, sprint_id, SUM(story_points) AS num_story_points FROM (
     AND issue.updated <= ${planned_late}
     AND (
 		later_issue.updated > ${planned_early}
-		OR later_issue.changelog_id = issue.changelog_id
+		OR later_issue.updated - issue.updated < ${planned_late} - sprint.start_date
 	)
     AND later_issue.changelog_id >= issue.changelog_id
     AND (
@@ -45,6 +51,7 @@ SELECT project_id, sprint_id, SUM(story_points) AS num_story_points FROM (
         OR newer_issue.sprint_id = later_issue.sprint_id
     )
     AND subtask.id_parent IS NULL
-    GROUP BY issue.project_id, issue.sprint_id, issue.issue_id
 ) AS initial_stories
+WHERE rev_row = 1
+) AS expected_stories
 GROUP BY project_id, sprint_id
