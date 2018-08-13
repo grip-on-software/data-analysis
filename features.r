@@ -103,12 +103,7 @@ if (get_arg('--project', default=F)) {
 	closed <- get_arg('--closed', default=F)
 	specifications <- yaml.load_file('sprint_features.yml')
 	if (is.na(features)) {
-		features <- c('sprint_num', 'sprint_days',
-				  	  'num_story_points', 'num_stories', 'num_not_done',
-				  	  'num_removed_stories', 'num_added_stories',
-				  	  'num_done_stories', 'done_story_points', 'velocity',
-				  	  'lines_of_code', 'unittest_line_coverage',
-					  'dev_sprint_experience')
+		features <- unlist(sapply(specifications$files, function(item) { item$column }))
 	}
 	else {
 		features <- strsplit(features, ",")[[1]]
@@ -123,7 +118,6 @@ if (get_arg('--project', default=F)) {
 	}
 
 	if (!closed) {
-		features <- c(features, 'sprint_is_closed', 'sprint_is_complete')
 		sprint_meta <- c(sprint_meta, 'sprint_is_closed', 'sprint_is_complete')
 	}
 	default_features <- c(sprint_meta, 'num_story_points', 'done_story_points',

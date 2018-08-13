@@ -228,7 +228,7 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T,
 	data <- yaml.load_file('sprint_features.yml')
 	items <- list()
 	for (item in data$files) {
-		if (length(item$column) == 1 && item$column %in% features) {
+		if (all(item$column %in% features)) {
 			items <- c(items, list(load_query(item, variables, data$path)))
 		}
 	}
