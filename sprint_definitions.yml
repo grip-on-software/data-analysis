@@ -45,11 +45,15 @@ conditions:
         table: sprint
         condition: COALESCE(sprint.complete_date, sprint.end_date) < CURRENT_TIMESTAMP()
     planned_early:
-        description: "Earliest time for stories that are planned for a sprint"
+        description: "Earliest time for stories that are planned for a sprint to start work on"
         table: sprint
         condition: sprint.start_date - interval '1' day
+    planned_end:
+        description: "Latest time for stories to be planned for a sprint"
+        table: sprint
+        condition: sprint.start_date + interval '1' day
     planned_late:
-        description: "Latest time for stories that are planned for a sprint"
+        description: "Latest time for stories that are planned for a sprint to have been worked on"
         table: sprint
         condition: sprint.start_date + (sprint.end_date - sprint.start_date)/7
     sprint_patch:
