@@ -10,6 +10,7 @@ get_source_urls <- function(conn, project_id, sources='all', web=T, one=F) {
 	vcs_sources <- c('svn', 'git', 'github', 'gitlab', 'tfs')
 	conditions = list(project_id=paste('project_id IN (',
 									   paste(project_id, collapse=','), ')'))
+	default_urls <- config$fields[endsWith(names(config$fields), '_url')]
 	if (sources != 'all') {
 		if ('vcs' %in% sources) {
 			sources <- c(sources, vcs_sources)
@@ -17,6 +18,7 @@ get_source_urls <- function(conn, project_id, sources='all', web=T, one=F) {
 		conditions$source_type <- paste('source_type IN (',
 										paste(dbQuoteString(conn, sources),
 											  collapse=','), ')')
+		default_urls <- default_urls[names(default_urls) %in% paste(sources, 'url', sep='_')]
 	}
 	if (web) {
 		conditions$web <- "(url LIKE 'http://%' OR url LIKE 'https://%')"
@@ -37,12 +39,14 @@ get_source_urls <- function(conn, project_id, sources='all', web=T, one=F) {
 		if (one) {
 			project <- project[!duplicated(project$source_type),]
 		}
-		urls <- as.list(sub("/$", "", project$url))
-		if (length(urls) == 0) {
-			names(urls) <- list()
-			return(urls)
+		project_urls <- as.list(sub("/$", "", project$url))
+		if (length(project_urls) == 0) {
+			names(project_urls) <- list()
 		}
-		names(urls) <- paste(project$source_type, 'url', sep='_')
+		else {
+			names(project_urls) <- paste(project$source_type, 'url', sep='_')
+		}
+		urls <- modifyList(default_urls, project_urls)
 
 		for (vcs_source in vcs_sources) {
 			if (vcs_source %in% project$source_type) {

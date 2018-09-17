@@ -131,8 +131,8 @@ files:
         nl: "Stemming van %s"
         en: "Spirit %s"
     sources:
-        metric_history: "${metric_history_url}/${metric_history_file}"
         quality: "${quality_url}/${quality_name}"
+        metric_history: "${metric_history_url}/${metric_history_file}"
   - filename: 02-lines-of-code-metric.sql
     table: lines_of_code_metric
     column: lines_of_code
@@ -143,8 +143,8 @@ files:
         nl: "%s regels code"
         en: "%s regels code"
     sources:
-        metric_history: "${metric_history_url}/${metric_history_file}"
         quality: "${quality_url}/${quality_name}"
+        metric_history: "${metric_history_url}/${metric_history_file}"
   - filename: 02-unittest-line-coverage-metric.sql
     table: unittest_metric
     column: unittest_line_coverage
@@ -158,8 +158,8 @@ files:
         nl: "%s%%"
         en: "%s%%"
     sources:
-        metric_history: "${metric_history_url}/${metric_history_file}"
         quality: "${quality_url}/${quality_name}"
+        metric_history: "${metric_history_url}/${metric_history_file}"
   - filename: 03-story-watchers.sql
     table: watchers
     column: num_watchers
@@ -489,8 +489,8 @@ files:
         nl: "%s metrieken"
         en: "%s metrics"
     source:
-        metric_history: "${metric_history_url}/${metric_history_file}"
         quality: "${quality_url}/${quality_name}"
+        metric_history: "${metric_history_url}/${metric_history_file}"
   - filename: 09-red-metric-count.sql
     table: red_metric_count
     column: num_red_metrics
@@ -501,8 +501,8 @@ files:
         nl: "%s metrieken die op rood staan"
         en: "%s metrics that are red"
     source:
-        metric_history: "${metric_history_url}/${metric_history_file}"
         quality: "${quality_url}/${quality_name}"
+        metric_history: "${metric_history_url}/${metric_history_file}"
   - filename: 09-missing-metric-count.sql
     table: missing_metric_count
     column: num_missing_metrics
@@ -513,8 +513,8 @@ files:
         nl: "%s metrieken met missende bron"
         en: "%s metrics with missing sources"
     source:
-        metric_history: "${metric_history_url}/${metric_history_file}"
         quality: "${quality_url}/${quality_name}"
+        metric_history: "${metric_history_url}/${metric_history_file}"
   - filename: 10-metric-target-change.sql
     table: metric_target_change
     column: num_metric_target_changes
@@ -526,7 +526,7 @@ files:
         nl: "%s veranderingen aan metrieknormen"
         en: "%s changes to metric targets"
     source:
-        metric_options: "${metric_options_url}/${metric_options_file}"
+        metric_options: "${metric_options_url}/blob/master/${metric_options_file}"
         quality: "${quality_url}/${quality_name}"
   - filename: 11-early-rank-changes.sql
     table: early_rank_changes
