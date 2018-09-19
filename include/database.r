@@ -10,9 +10,17 @@ if (!exists('INC_DATABASE_R')) {
 	library(yaml)
 	source('include/args.r')
 
+	config <- NULL
+	get_config <- function() {
+		if (is.null(config)) {
+			config_file <- get_arg('--config', default='config.yml')
+			config <<- yaml.load_file(config_file)
+		}
+		return(config)
+	}
+
 	connect <- function() {
-		config_file <- get_arg('--config', default='config.yml')
-		config <- yaml.load_file(config_file)
+		config <- get_config()
 		dbConnect(MonetDB.R(), host=config$db$host, dbname=config$db$dbname,
 				  user=config$db$user, password=config$db$password)
 	}

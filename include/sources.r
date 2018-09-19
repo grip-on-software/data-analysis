@@ -10,6 +10,7 @@ get_source_urls <- function(conn, project_id, sources='all', web=T, one=F) {
 	vcs_sources <- c('svn', 'git', 'github', 'gitlab', 'tfs')
 	conditions = list(project_id=paste('project_id IN (',
 									   paste(project_id, collapse=','), ')'))
+	config <- get_config()
 	default_urls <- config$fields[endsWith(names(config$fields), '_url')]
 	if (sources != 'all') {
 		if ('vcs' %in% sources) {

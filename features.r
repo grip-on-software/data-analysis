@@ -10,7 +10,6 @@ source('include/sources.r')
 conn <- connect()
 
 output_directory <- get_arg('--output', default='output')
-config_file <- get_arg('--config', default='config.yml')
 project_ids <- get_arg('--project-ids', default='0')
 if (project_ids != '0') {
 	project_ids = '1'
@@ -20,7 +19,7 @@ exclude <- get_arg('--exclude', default='^$')
 core <- get_arg('--core', default=F)
 recent <- get_arg('--recent', default=F)
 
-config <- yaml.load_file(config_file)
+config <- get_config()
 patterns <- load_definitions('sprint_definitions.yml', config$fields)
 
 project_metadata <- get_arg('--project-metadata', default='recent,core,main')

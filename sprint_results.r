@@ -16,11 +16,10 @@ latest_date <- get_arg('--latest-date', default='')
 sprint_days <- get_arg('--days', default=NA)
 sprint_patch <- ifelse(get_arg('--patch', default=F), NA, F)
 core <- get_arg('--core', default=F)
-config_file <- get_arg('--config', default='config.yml')
 
 projects <- list()
 specifications <- yaml.load_file('sprint_features.yml')
-config <- yaml.load_file(config_file)
+config <- get_config()
 patterns <- load_definitions('sprint_definitions.yml', config$fields)
 
 sprint_cache <- vector("list")
