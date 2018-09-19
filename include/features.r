@@ -53,6 +53,47 @@ get_feature_locales <- function(items, field='descriptions') {
 	return(locales)
 }
 
+get_combined_features <- function(items, data, colnames, join_cols, combine=T) {
+	new_data <- data.frame()
+	projects <- factor(data[,join_cols[[1]]])
+	project_data <- split(data, projects)
+	if (isTRUE(combine)) {
+		combine <- 10
+	}
+	intervals <- lapply(project_data, function(project) {
+		end <- nrow(project)
+		combn(round(seq(1, end, length.out=max(2, min(combine, end)))), 2)
+	})
+	n <- sum(as.numeric(lapply(intervals, function(interval) { ncol(interval) })))
+	new_data <- data.frame(project_id=rep(NA, n))
+	colnames <- c(colnames, 'sprint_start', 'sprint_end')
+	new_data[,colnames] <- rep(list(rep(NA, n)), length(colnames))
+	i <- 0
+	for (project in levels(projects)) {
+		new_data[seq(i, i+ncol(intervals[[project]])),'project_id'] <- as.numeric(project)
+		for (interval in 1:ncol(intervals[[project]])) {
+			i <- i + 1
+			range <- seq(intervals[[project]][1,interval],
+						 intervals[[project]][2,interval])
+			new_data[i,'sprint_start'] <- intervals[[project]][1,interval]
+			new_data[i,'sprint_end'] <- intervals[[project]][2,interval]
+			for (item in items) {
+				cols <- item$column %in% colnames
+				if (any(cols)) {
+					new_data[i,item$column[cols]] <- mapply(function(column, combiner) {
+						column_data <- project_data[[project]][range,column]
+						if (column %in% colnames && !all(is.na(column_data))) {
+							return(do.call(combiner, list(column_data)))
+						}
+						data.frame(NA)
+					}, item$column, item$combine)[cols]
+				}
+			}
+		}
+	}
+	return(list(data=new_data, colnames=colnames, items=items))
+}
+
 get_features <- function(conn, features, exclude, items, data, colnames, join_cols) {
 	if (length(features) == 1) {
 		if (is.na(features)) {
@@ -118,7 +159,7 @@ get_sprint_conditions <- function(latest_date='', core=F, sprint_days=NA, sprint
 
 get_sprint_features <- function(conn, features, exclude, variables, latest_date,
 								core=F, metrics=F, sprint_days=NA,
-								sprint_patch=NA) {
+								sprint_patch=NA, combine=F) {
 	conditions <- get_sprint_conditions(latest_date, core, sprint_days, sprint_patch)
 	if (length(conditions) != 0) {
 		where_clause <- paste('WHERE', paste(conditions, collapse=' AND '))
@@ -168,7 +209,11 @@ get_sprint_features <- function(conn, features, exclude, variables, latest_date,
 		}
 	}
 
-	get_features(conn, features, exclude, items, sprint_data, colnames, join_cols)
+	result <- get_features(conn, features, exclude, items, sprint_data, colnames, join_cols)
+	if (combine) {
+		return(get_combined_features(result$items, result$data, result$colnames, join_cols))
+	}
+	return(result)
 }
 
 get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T, 

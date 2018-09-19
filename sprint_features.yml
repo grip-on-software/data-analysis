@@ -4,6 +4,7 @@ files:
     table: sprint_num
     column: sprint_num
     optional: No
+    combine: min
     descriptions:
         nl: Sprintnummer
         en: Sprint number
@@ -16,6 +17,7 @@ files:
     table: sprint
     column: sprint_days
     optional: No
+    combine: sum
     descriptions:
         nl: Sprintlengte
         en: Sprint length
@@ -31,6 +33,7 @@ files:
     table: sprint_close
     column: sprint_is_closed
     optional: No
+    combine: min
     descriptions:
         nl: Gesloten sprint
         en: Closed sprint
@@ -46,6 +49,7 @@ files:
     table: sprint_gathered
     column: sprint_is_complete
     optional: No
+    combine: min
     descriptions:
         nl: Complete sprint
         en: Complete sprint
@@ -59,6 +63,7 @@ files:
     table: sprint_vcs_dev_count
     column: number_of_vcs_devs
     default: 0
+    combine: mean
     descriptions:
         nl: Developer teamgrootte
         en: Development team size
@@ -74,6 +79,7 @@ files:
     table: sprint_jira_dev_count
     column: number_of_jira_devs
     default: 0
+    combine: mean
     descriptions:
         nl: Project teamgrootte
         en: Project team size
@@ -89,6 +95,7 @@ files:
     table: sprint_seat_count
     column: number_of_seats
     default: 0
+    combine: mean
     descriptions:
         nl: Teamgrootte
         en: Team size
@@ -102,6 +109,7 @@ files:
     table: sprint_experience
     column: dev_sprint_experience
     default: 0
+    combine: mean
     descriptions:
         nl: Teamervaring
         en: Team experience
@@ -115,6 +123,7 @@ files:
     table: new_developers
     column: num_new_developers
     default: 0
+    combine: sum
     descriptions:
         nl: Nieuwe developers
         en: New developers
@@ -124,6 +133,7 @@ files:
   - filename: 02-team-spirit-metric.sql
     table: team_spirit_metric
     column: team_spirit
+    combine: mean
     descriptions:
         nl: Teamstemming
         en: Team spirit
@@ -136,6 +146,7 @@ files:
   - filename: 02-lines-of-code-metric.sql
     table: lines_of_code_metric
     column: lines_of_code
+    combine: mean
     descriptions:
         nl: Aantal regels code
         en: Number of lines of code
@@ -148,6 +159,7 @@ files:
   - filename: 02-unittest-line-coverage-metric.sql
     table: unittest_metric
     column: unittest_line_coverage
+    combine: mean
     descriptions:
         nl: Unittest line coverage
         en: Unittest line coverage
@@ -164,6 +176,7 @@ files:
     table: watchers
     column: num_watchers
     default: 0
+    combine: mean
     descriptions:
         nl: Issue-watchers
         en: Issue watchers
@@ -176,6 +189,7 @@ files:
     table: updaters
     column: avg_updaters
     default: 0
+    combine: mean
     descriptions:
         nl: Issue-updaters
         en: Issue updaters
@@ -186,6 +200,7 @@ files:
     table: expected_story_points
     column: num_story_points
     default: 0
+    combine: sum
     descriptions:
         nl: Geplande storypoints
         en: Planned story points
@@ -198,6 +213,7 @@ files:
     table: done_story_points
     column: done_story_points
     default: 0
+    combine: sum
     descriptions:
         nl: Afgeronde storypoints
         en: Done story points
@@ -210,6 +226,7 @@ files:
     table: weighted_story_points
     column: num_weighted_points
     default: 0
+    combine: sum
     descriptions:
         nl: Gewogen storypoints
         en: Weighted story points
@@ -220,6 +237,7 @@ files:
     table: attachments
     column: num_attachments
     default: 0
+    combine: sum
     descriptions:
         nl: Bijlagen
         en: Attachments
@@ -232,6 +250,7 @@ files:
     table: labels
     column: num_labels
     default: 0
+    combine: sum
     descriptions:
         nl: Labels
         en: Labels
@@ -244,6 +263,7 @@ files:
     table: impediments
     column: num_impediments
     default: 0
+    combine: sum
     descriptions:
         nl: Impediments
         en: Impediments
@@ -256,6 +276,7 @@ files:
     table: rank_changes
     column: num_late_rank_changes
     default: 0
+    combine: sum
     descriptions:
         nl: Late rangwijzigingen
         en: Late rank changes
@@ -266,6 +287,7 @@ files:
     table: not_done
     column: num_not_done
     default: 0
+    combine: sum
     descriptions:
         nl: Niet afgeronde stories
         en: Unfinished stories
@@ -278,6 +300,7 @@ files:
     table: added_stories
     column: num_added_stories
     default: 0
+    combine: sum
     descriptions:
         nl: Toegevoegde stories
         en: Added stories
@@ -290,6 +313,7 @@ files:
     table: removed_stories
     column: num_removed_stories
     default: 0
+    combine: sum
     descriptions:
         nl: Weggehaalde stories
         en: Removed stories
@@ -302,6 +326,7 @@ files:
     table: stories
     column: num_stories
     default: 0
+    combine: sum
     descriptions:
         nl: User stories
         en: User stories
@@ -314,6 +339,7 @@ files:
     table: done_stories
     column: num_done_stories
     default: 0
+    combine: sum
     descriptions:
         nl: Afgeronde stories
         en: Done stories
@@ -326,6 +352,7 @@ files:
     table: issue_links
     column: num_links
     default: 0
+    combine: sum
     descriptions:
         nl: Issue-links
         en: Issue links
@@ -338,6 +365,7 @@ files:
     table: issue_comments
     column: num_comments
     default: 0
+    combine: sum
     descriptions:
         nl: Commentaren
         en: Comments
@@ -350,6 +378,7 @@ files:
     table: issue_changes
     column: avg_changes
     default: 0
+    combine: mean
     descriptions:
         nl: Wijzigingen per issue
         en: Changes per issue
@@ -359,6 +388,7 @@ files:
   - filename: 05-issue-change-pivot.sql
     table: issue_change_pivot
     column: avg_change_day
+    combine: mean
     descriptions:
         nl: Middelpunt van issuewijzigingen
         en: Midpoint of issue changes
@@ -369,6 +399,7 @@ files:
     table: sprint_velocity
     column: velocity
     default: 0
+    combine: mean
     descriptions:
         nl: Gerealiseerde velocity
         en: Realized velocity
@@ -384,6 +415,7 @@ files:
     table: sprint_three_velocity
     column: avg_velocity
     default: 0
+    combine: mean
     descriptions:
         nl: Gemiddelde velocity
         en: Average velocity
@@ -399,6 +431,7 @@ files:
     table: other_done_issues
     column: other_done_issues
     default: 0
+    combine: sum
     descriptions:
         nl: Afgeronde niet-story issues
         en: Done non-story issues
@@ -411,6 +444,7 @@ files:
     table: concurrent_in_progress_stories
     column: avg_concurrent_progress
     default: 0
+    combine: mean
     descriptions:
         nl: Gelijktijdige stories in progress
         en: Concurrent stories in progress
@@ -421,6 +455,7 @@ files:
     table: duration_in_progress_stories
     column: avg_duration_progress
     default: 0
+    combine: mean
     descriptions:
         nl: Looptijd stories in progress
         en: Duration of stories in progress
@@ -433,6 +468,7 @@ files:
   - filename: 08-vcs-statistics.sql
     table: vcs_statistics
     column: [num_commits, avg_insertions, avg_deletions, avg_size, avg_files, avg_lines]
+    combine: [sum, mean, mean, mean, mean, mean]
     default: 0
     descriptions:
         nl:
@@ -482,6 +518,7 @@ files:
   - filename: 09-metric-count.sql
     table: metric_count
     column: num_metrics
+    combine: max
     descriptions:
         nl: Metrieken
         en: Metrics
@@ -494,6 +531,7 @@ files:
   - filename: 09-red-metric-count.sql
     table: red_metric_count
     column: num_red_metrics
+    combine: max
     descriptions:
         nl: Rode metrieken
         en: Red metrics
@@ -506,6 +544,7 @@ files:
   - filename: 09-missing-metric-count.sql
     table: missing_metric_count
     column: num_missing_metrics
+    combine: max
     descriptions:
         nl: Metrieken met missende bronnen
         en: Metrics with missing sources
@@ -519,6 +558,7 @@ files:
     table: metric_target_change
     column: num_metric_target_changes
     default: 0
+    combine: sum
     descriptions:
         nl: Veranderde metrieknormen
         en: Changed metric targets
@@ -532,6 +572,7 @@ files:
     table: early_rank_changes
     column: num_early_rank_changes
     default: 0
+    combine: sum
     descriptions:
         nl: Tijdige rangwijzigingen
         en: Timely rank changes
@@ -542,6 +583,7 @@ files:
     table: early_storypoint_changes
     column: num_early_storypoint_changes
     default: 0
+    combine: sum
     descriptions:
         nl: Tijdige storypointwijzigingen
         en: Timely story point changes
@@ -552,6 +594,7 @@ files:
     table: early_changes
     column: num_early_changes
     default: 0
+    combine: sum
     descriptions:
         nl: Vroege issuewijzigingen
         en: Early issue changes
@@ -562,6 +605,7 @@ files:
     table: backlog_sprint
     column: backlog_size
     default: 0
+    combine: max
     descriptions:
         nl: Issues op sprintbacklog
         en: Issues on sprint backlog
@@ -572,6 +616,7 @@ files:
     table: backlog_ready_status
     column: backlog_ready_status
     default: 0
+    combine: max
     descriptions:
         nl: Issues met readystatus op sprintbacklog
         en: Issues with ready status on sprint backlog
