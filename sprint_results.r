@@ -157,7 +157,6 @@ for (idx in 1:length(results$projects)) {
 		  file=paste(path, "latest.json", sep="/"))
 
 	source_urls <- get_source_urls(conn, project_id)
-	print(source_urls)
 	write(toJSON(build_project_source_urls(source_urls, project_id, project_name,
 										   list(quality_name=sprint$quality_name)),
 				 auto_unbox=T), file=paste(path, "sources.json", sep="/"))
