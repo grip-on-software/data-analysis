@@ -26,6 +26,10 @@ vcs:
     nl: Versiebeheer
     en: Version control
     icon: [fas, fa-code-branch]
+git:
+    nl: Git
+    en: Git
+    icon: [fab, fa-git-square]
 gitlab:
     nl: GitLab
     en: GitLab

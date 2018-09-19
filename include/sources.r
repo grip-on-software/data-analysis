@@ -47,7 +47,7 @@ get_source_urls <- function(conn, project_id, sources='all', web=T, one=F) {
 		else {
 			names(project_urls) <- paste(project$source_type, 'url', sep='_')
 		}
-		urls <- modifyList(default_urls, project_urls)
+		urls <- modifyList(default_urls[names(default_urls) != 'vcs_url'], project_urls)
 
 		for (vcs_source in vcs_sources) {
 			if (vcs_source %in% project$source_type) {
@@ -111,9 +111,48 @@ build_source_urls <- function(project_id, project_name, items=list(), patterns=c
 	return(project_links)
 }
 
+build_project_source_urls <- function(conn, project_id, project_name, patterns,
+									  sources='all') {
+	metric_options_url <- "${metric_options_url}/blob/master/${metric_options_file}"
+	quality_url <- "${quality_url}/${quality_name}"
+	config <- get_config()
+	default_urls <- config$fields[endsWith(names(config$fields), '_url')]
+	source_types <- names(yaml.load_file('source_types.yml'))
+	types <- unique(c(names(default_urls), paste(source_types, 'url', sep='_')))
+	plain_urls <- as.list(paste("${", types, "}", sep=""))
+	names(plain_urls) <- types
+	urls <- modifyList(plain_urls, list(project_url=metric_options_url,
+				 						quality_url=quality_url,
+				 						metric_history_url=quality_url,
+				 						metric_options_url=metric_options_url,
+				 						jira_url="${jira_url}/browse/${project_name}"))
+	if (is.list(conn)) {
+		source_urls <- conn
+	}
+	else {
+		source_urls <- get_source_urls(conn, project_id, sources=sources)
+	}
+
+	project_links <- list()
+	for (name in names(source_urls)) {
+		if (name %in% names(urls)) {
+			type <- gsub('_url$', '', name)
+			project_links[[type]] <- str_interp(urls[[name]],
+												c(list(project_name=project_name),
+												  source_urls, patterns, config$fields))
+		}
+	}
+	return(project_links)
+}
+
 build_sprint_source_urls <- function(conn, project_id, project_name, sprint,
 									 specifications, patterns) {
-	source_urls <- get_source_urls(conn, project_id)
+	if (is.list(conn)) {
+		source_urls <- conn
+	}
+	else {
+		source_urls <- get_source_urls(conn, project_id)
+	}
 	source_items <- list()
 	for (item in specifications$files) {
 		if (is.list(item$source)) {
