@@ -211,7 +211,8 @@ get_sprint_features <- function(conn, features, exclude, variables, latest_date,
 
 	result <- get_features(conn, features, exclude, items, sprint_data, colnames, join_cols)
 	if (combine) {
-		return(get_combined_features(result$items, result$data, result$colnames, join_cols))
+		return(get_combined_features(result$items, result$data, result$colnames, join_cols,
+									 combine=combine))
 	}
 	return(result)
 }
