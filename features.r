@@ -167,7 +167,7 @@ if (get_arg('--project', default=F)) {
 			}
 			project_data <- sprint_data[sprint_data$project_name == project,]
 			old_project_data <- old_sprint_data[old_sprint_data$project_name == project,]
-			write(toJSON(project_data[,default_features], auto_unbox=T),
+			write(toJSON(project_data[,default_features]),
 				  file=paste(project_dir, 'default.json', sep='/'))
 			write(toJSON(old_project_data[,unique(c(sprint_meta,features))], auto_unbox=T),
 				  file=paste(project_dir, 'old.json', sep='/'))
@@ -200,7 +200,7 @@ if (get_arg('--project', default=F)) {
 				}, project)
 				return(feature_details)
 			})
-			write(toJSON(project_details, auto_unbox=T),
+			write(toJSON(project_details),
 				  file=paste(project_dir, "details.json", sep="/"))
 			write(toJSON(build_sprint_source_urls(conn, project_id, project,
 												  sprint, # latest sprint
