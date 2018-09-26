@@ -103,6 +103,7 @@ get_features <- function(conn, features, exclude, items, data, colnames, join_co
 			features <- strsplit(features, ",")[[1]]
 		}
 	}
+	details <- list()
 	for (item in items) {
 		if (all(item$column %in% features) && length(grep(exclude, item$table)) == 0) {
 			if (!is.null(item$result)) {
@@ -113,6 +114,25 @@ get_features <- function(conn, features, exclude, items, data, colnames, join_co
 				time <- system.time(result <- dbGetQuery(conn, item$query))
 				loginfo('Query for table %s took %f seconds', item$table,
 						time['elapsed'])
+			}
+			if (!is.null(item$summarize)) {
+				group_cols <- lapply(result[,item$summarize$group], factor)
+				groups <- split(result, as.list(group_cols), drop=T)
+				result <- do.call("rbind", lapply(groups, function(group) {
+					group_result <- data.frame(group[1,item$summarize$group])
+					group_result[,item$column] <- mapply(function(operation, field) {
+						do.call(operation, as.list(group[,field]))
+					}, item$summarize$operation, item$summarize$field)
+					return(group_result)
+				}))
+				details[[item$column[1]]] <- lapply(groups, function(group) {
+					group_details <- data.frame(group[1,item$summarize$group])
+					group_details[,item$summarize$details] <- lapply(group[,item$summarize$details], function(detail) {
+						return(list(detail))
+					})
+					return(group_details)
+				})
+				names(details[[item$column[1]]]) <- NULL
 			}
 			data <- merge(data, result, by=join_cols, all.x=T)
 			if (!is.null(item$default)) {
@@ -133,7 +153,7 @@ get_features <- function(conn, features, exclude, items, data, colnames, join_co
 			colnames <- c(colnames, item$column)
 		}
 	}
-	list(data=data, colnames=colnames, items=items)
+	list(data=data, details=details, colnames=colnames, items=items)
 }
 
 get_sprint_conditions <- function(latest_date='', core=F, sprint_days=NA, sprint_patch=NA) {

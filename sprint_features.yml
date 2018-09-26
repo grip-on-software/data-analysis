@@ -200,6 +200,11 @@ files:
     table: expected_story_points
     column: num_story_points
     default: 0
+    summarize:
+        operation: sum
+        field: story_points
+        group: [project_id, sprint_id]
+        details: [key, story_points]
     combine: sum
     descriptions:
         nl: Geplande storypoints

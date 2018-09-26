@@ -1,7 +1,6 @@
 -- Number of expected story points
-SELECT project_id, sprint_id, SUM(story_points) AS num_story_points FROM (
-	SELECT project_id, sprint_id, issue_id, story_points FROM (
-    SELECT issue.project_id, issue.sprint_id, issue.issue_id, issue.story_points,
+SELECT project_id, sprint_id, key, story_points FROM (
+    SELECT issue.project_id, issue.sprint_id, issue.issue_id, issue.key, issue.story_points,
         ROW_NUMBER() OVER (
             PARTITION BY issue.project_id, issue.sprint_id, issue.issue_id
             ORDER BY issue.project_id, issue.sprint_id, issue.issue_id, issue.changelog_id DESC
@@ -53,5 +52,3 @@ SELECT project_id, sprint_id, SUM(story_points) AS num_story_points FROM (
     AND subtask.id_parent IS NULL
 ) AS initial_stories
 WHERE rev_row = 1
-) AS expected_stories
-GROUP BY project_id, sprint_id

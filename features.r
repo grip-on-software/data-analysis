@@ -101,8 +101,9 @@ if (get_arg('--project', default=F)) {
 	old <- get_arg('--old', default=F)
 	closed <- get_arg('--closed', default=F)
 	specifications <- yaml.load_file('sprint_features.yml')
+	all_features <- unlist(sapply(specifications$files, function(item) { item$column }))
 	if (is.na(features)) {
-		features <- unlist(sapply(specifications$files, function(item) { item$column }))
+		features <- all_features 
 	}
 	else {
 		features <- strsplit(features, ",")[[1]]
@@ -119,8 +120,10 @@ if (get_arg('--project', default=F)) {
 	if (!closed) {
 		sprint_meta <- c(sprint_meta, 'sprint_is_closed', 'sprint_is_complete')
 	}
-	default_features <- c(sprint_meta, 'num_story_points', 'done_story_points',
-						  'velocity', 'lines_of_code', 'unittest_line_coverage')
+	meta_features <- sprint_meta[sprint_meta %in% all_features]
+	default <- c(sprint_meta, 'num_story_points', 'done_story_points',
+				  'velocity', 'lines_of_code', 'unittest_line_coverage')
+	default_features <- default[default %in% c(sprint_meta, features)]
 
 	core <- get_arg('--core', default=F)
 	sprint_days <- get_arg('--days', default=NA)
@@ -134,7 +137,8 @@ if (get_arg('--project', default=F)) {
 	else {
 		sprint_conditions <- ''
 	}
-	result <- get_recent_sprint_features(conn, features,
+	result <- get_recent_sprint_features(conn,
+										 unique(c(meta_features, features)),
 										 limit=recent,
 										 closed=closed,
 										 sprint_meta=sprint_meta,
@@ -181,6 +185,23 @@ if (get_arg('--project', default=F)) {
 			project_id <- project_data$project_id[[1]]
 			sprint <- c(project_data[nrow(project_data),sprint_meta],
 						list(quality_name=project_data$quality_name[[1]]))
+
+			project_details <- lapply(result$details, function(details) {
+				project <- Filter(function(detail) {
+					return(detail$project_id == project_id && detail$sprint_id %in% sprint_data$sprint_id)
+				}, details)
+				feature_details <- Map(function(detail) {
+					detail$project_id <- NULL
+					detail$sprint_id <- NULL
+					return(unbox(detail))
+				}, project)
+				names(feature_details) <- Map(function(detail) {
+					return(detail$sprint_id)
+				}, project)
+				return(feature_details)
+			})
+			write(toJSON(project_details, auto_unbox=T),
+				  file=paste(project_dir, "details.json", sep="/"))
 			write(toJSON(build_sprint_source_urls(conn, project_id, project,
 												  sprint, # latest sprint
 												  specifications, patterns)),
