@@ -124,6 +124,21 @@ if (!exists('INC_PROJECT_R')) {
 		return(metadata)
 	}
 
+	get_project_intervals <- function(conn, count=4) {
+		query <- 'SELECT project_id, MIN(start_date) AS first,
+				  MAX(COALESCE(complete_date, end_date)) AS last
+				  FROM gros.sprint GROUP BY project_id'
+		range <- dbGetQuery(conn, query)
+		intervals <- mapply(function(project_id, first, last) {
+								seq.Date(first, last, length.out=4)
+							},
+							as.character(range$project_id),
+							as.Date(range$first), as.Date(range$last),
+							USE.NAMES=T)
+
+		return(intervals)
+	}
+
 	write_projects_sources <- function(conn, projects, sources=NA,
 									   output_directory='output') {
 		urls <- get_source_urls(conn, projects$project_id,
