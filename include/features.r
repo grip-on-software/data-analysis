@@ -83,7 +83,7 @@ get_combined_features <- function(items, data, colnames, join_cols, combine=T) {
 					new_data[i,item$column[cols]] <- mapply(function(column, combiner) {
 						column_data <- project_data[[project]][range,column]
 						if (column %in% colnames && !all(is.na(column_data))) {
-							return(do.call(combiner, list(column_data)))
+							return(do.call(combiner, list(column_data, na.rm=T)))
 						}
 						data.frame(NA)
 					}, item$column, item$combine)[cols]
@@ -121,7 +121,7 @@ get_features <- function(conn, features, exclude, items, data, colnames, join_co
 				result <- do.call("rbind", lapply(groups, function(group) {
 					group_result <- data.frame(group[1,item$summarize$group])
 					group_result[,item$column] <- mapply(function(operation, field) {
-						do.call(operation, as.list(group[,field]))
+						do.call(operation, c(as.list(group[,field]), list(na.rm=T)))
 					}, item$summarize$operation, item$summarize$field)
 					return(group_result)
 				}))
