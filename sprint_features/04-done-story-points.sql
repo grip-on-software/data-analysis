@@ -1,5 +1,5 @@
 -- Number of done story points
-SELECT done_stories.project_id, done_stories.sprint_id, SUM(issue.story_points) AS done_story_points FROM
+SELECT done_stories.project_id, done_stories.sprint_id, issue.key, issue.story_points FROM
 	gros.issue,
 	(SELECT DISTINCT issue.project_id, issue.sprint_id, issue.issue_id, max_issue.changelog_id
 		FROM gros.issue, gros.sprint,
@@ -14,4 +14,3 @@ SELECT done_stories.project_id, done_stories.sprint_id, SUM(issue.story_points) 
 	) AS done_stories
 WHERE issue.issue_id = done_stories.issue_id
 AND issue.changelog_id = done_stories.changelog_id
-GROUP BY done_stories.project_id, done_stories.sprint_id
