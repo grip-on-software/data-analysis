@@ -9,8 +9,8 @@ SELECT done_stories.project_id, done_stories.sprint_id, issue.key, issue.story_p
 		AND ${issue_done}
 		--AND NOT ${issue_overdue}
 		AND issue.updated > sprint.start_date
-		AND issue.type = 7
-		AND issue.sprint_id <> 0
+		AND issue.story_points IS NOT NULL
+		AND issue.sprint_id IS NOT NULL
 	) AS done_stories
 WHERE issue.issue_id = done_stories.issue_id
 AND issue.changelog_id = done_stories.changelog_id
