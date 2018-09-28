@@ -145,7 +145,8 @@ if (get_arg('--project', default=F)) {
 										 sprint_conditions=sprint_conditions,
 										 project_fields=fields,
 										 project_meta=metadata,
-										 old=old)
+										 old=old,
+										 details=split)
 	sprint_data <- result$data
 	if (project_ids != '0') {
 		sprint_data$project_name <- paste("Proj", sprint_data$project_id, sep="")
@@ -158,14 +159,14 @@ if (get_arg('--project', default=F)) {
 		projects <- levels(factor(sprint_data$project_name))
 
 		old_sprint_data <- sprint_data[sprint_data$old,]
-		sprint_data <- sprint_data[!sprint_data$old,]
+		new_sprint_data <- sprint_data[!sprint_data$old,]
 
 		for (project in projects) {
 			project_dir = paste(output_dir, project, sep="/")
 			if (!dir.exists(project_dir)) {
 				dir.create(project_dir)
 			}
-			project_data <- sprint_data[sprint_data$project_name == project,]
+			project_data <- new_sprint_data[new_sprint_data$project_name == project,]
 			old_project_data <- old_sprint_data[old_sprint_data$project_name == project,]
 			write(toJSON(project_data[,default_features]),
 				  file=paste(project_dir, 'default.json', sep='/'))
@@ -232,14 +233,20 @@ if (get_arg('--project', default=F)) {
 	patch <- ifelse(get_arg('--patch', default=F), NA, F)
 	metrics <- get_arg('--metrics', default=F)
 	combine <- get_arg('--combine', default=F)
+	details <- get_arg('--details', default=F)
 
 	result <- get_sprint_features(conn, features, exclude, NULL, latest_date,
 								  core=core, metrics=metrics,
 								  sprint_days=days, sprint_patch=patch,
-								  combine=combine)
+								  combine=combine, details=details)
 	sprint_data <- result$data
 
 	write.arff(sprint_data[,result$colnames],
 			   file=paste(output_directory, "sprint_features.arff", sep="/"),
 			   relation="sprint_data")
+
+	if (details) {
+		write(toJSON(result$details),
+			  file=paste(output_directory, "details.json", sep="/"))
+	}
 }

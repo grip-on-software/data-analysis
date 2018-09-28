@@ -94,7 +94,7 @@ get_combined_features <- function(items, data, colnames, join_cols, combine=T) {
 	return(list(data=new_data, colnames=colnames, items=items))
 }
 
-get_features <- function(conn, features, exclude, items, data, colnames, join_cols) {
+get_features <- function(conn, features, exclude, items, data, colnames, join_cols, details=F) {
 	if (length(features) == 1) {
 		if (is.na(features)) {
 			features <- unlist(sapply(items, function(item) { item$column }))
@@ -103,7 +103,9 @@ get_features <- function(conn, features, exclude, items, data, colnames, join_co
 			features <- strsplit(features, ",")[[1]]
 		}
 	}
-	details <- list()
+	if (isTRUE(details)) {
+		details <- list()
+	}
 	for (item in items) {
 		if (all(item$column %in% features) && length(grep(exclude, item$table)) == 0) {
 			if (!is.null(item$result)) {
@@ -116,23 +118,27 @@ get_features <- function(conn, features, exclude, items, data, colnames, join_co
 						time['elapsed'])
 			}
 			if (!is.null(item$summarize)) {
-				group_cols <- lapply(result[,item$summarize$group], factor)
+				group_names <- item$summarize$group
+				group_cols <- lapply(result[,group_names], factor)
 				groups <- split(result, as.list(group_cols), drop=T)
 				result <- do.call("rbind", lapply(groups, function(group) {
-					group_result <- data.frame(group[1,item$summarize$group])
+					group_result <- data.frame(group[1,group_names])
 					group_result[,item$column] <- mapply(function(operation, field) {
 						do.call(operation, c(as.list(group[,field]), list(na.rm=T)))
 					}, item$summarize$operation, item$summarize$field)
 					return(group_result)
 				}))
-				details[[item$column[1]]] <- lapply(groups, function(group) {
-					group_details <- data.frame(group[1,item$summarize$group])
-					group_details[,item$summarize$details] <- lapply(group[,item$summarize$details], function(detail) {
-						return(list(detail))
+
+				if (is.list(details)) {
+					details[[item$column[1]]] <- lapply(groups, function(group) {
+						group_details <- data.frame(group[1,group_names])
+						group_details[,item$summarize$details] <- lapply(group[,item$summarize$details], function(detail) {
+							return(list(detail))
+						})
+						return(group_details)
 					})
-					return(group_details)
-				})
-				names(details[[item$column[1]]]) <- NULL
+					names(details[[item$column[1]]]) <- NULL
+				}
 			}
 			data <- merge(data, result, by=join_cols, all.x=T)
 			if (!is.null(item$default)) {
@@ -179,7 +185,7 @@ get_sprint_conditions <- function(latest_date='', core=F, sprint_days=NA, sprint
 
 get_sprint_features <- function(conn, features, exclude, variables, latest_date,
 								core=F, metrics=F, sprint_days=NA,
-								sprint_patch=NA, combine=F) {
+								sprint_patch=NA, combine=F, details=F) {
 	conditions <- get_sprint_conditions(latest_date, core, sprint_days, sprint_patch)
 	if (length(conditions) != 0) {
 		where_clause <- paste('WHERE', paste(conditions, collapse=' AND '))
@@ -229,9 +235,11 @@ get_sprint_features <- function(conn, features, exclude, variables, latest_date,
 		}
 	}
 
-	result <- get_features(conn, features, exclude, items, sprint_data, colnames, join_cols)
+	result <- get_features(conn, features, exclude, items, sprint_data,
+						   colnames, join_cols, details=details)
 	if (combine) {
-		return(get_combined_features(result$items, result$data, result$colnames, join_cols,
+		return(get_combined_features(result$items, result$data,
+									 result$colnames, join_cols,
 									 combine=combine))
 	}
 	return(result)
@@ -240,7 +248,7 @@ get_sprint_features <- function(conn, features, exclude, variables, latest_date,
 get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T, 
 									   sprint_meta=c(), sprint_conditions='', 
 									   project_fields=c('project_id'),
-									   project_meta=list(), old=F) {
+									   project_meta=list(), old=F, details=F) {
 	patterns <- load_definitions('sprint_definitions.yml')
 	if (!missing(date)) {
 		project_meta$recent <- date
@@ -302,7 +310,7 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T,
 	colnames <- c("project_name", "quality_display_name", sprint_meta)
 	join_cols <- c("project_id", "sprint_id")
 	result <- get_features(conn, features, '^$', items, sprint_data, colnames,
-						   join_cols)
+						   join_cols, details=details)
 	result$projects <- projects
 	return(result)
 }
