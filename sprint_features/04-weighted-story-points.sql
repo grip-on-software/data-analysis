@@ -26,7 +26,7 @@ FROM gros.issue,
     issue.issue_id, MIN(sprint.sprint_id) AS done_sprint
     FROM gros.issue, gros.sprint
     WHERE issue.sprint_id = sprint.sprint_id
-    AND ${issue_done}
+    AND ${s(issue_done)}
     GROUP BY issue.issue_id
 ) AS done_data,
 -- TODO: Weight the maximum points over the last three sprints

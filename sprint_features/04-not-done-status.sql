@@ -6,7 +6,7 @@ SELECT project_id, sprint_id, COUNT(*) AS num_not_done FROM
 		AND issue.changelog_id = max_issue.changelog_id
 		AND issue.sprint_id = sprint.sprint_id
 		AND issue.updated > sprint.start_date
-		AND ${issue_not_done} AND ${issue_overdue}
+		AND ${s(issue_not_done)} AND ${issue_overdue}
 		AND issue.type = 7
 	) AS not_done
 GROUP BY project_id, sprint_id

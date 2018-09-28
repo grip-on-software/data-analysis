@@ -19,7 +19,7 @@ AND issue.issue_id = maxdata.issue_id AND issue.changelog_id = max_changelog_id
 --AND issue.sprint_id = weekdata.sprint_id
 AND issue.updated BETWEEN weekdata.third_sprint_start AND weekdata.end_date
 -- Resolved before the end of the sprint (Fixed or Closed)
-AND ${issue_done}
+AND ${s(issue_done)}
 --AND issue.updated < sprint.end_date
 GROUP BY issue.project_id, weekdata.sprint_id, sprint_days
 ORDER BY issue.project_id, weekdata.sprint_id;

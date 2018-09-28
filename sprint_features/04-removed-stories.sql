@@ -7,5 +7,5 @@ WHERE issue.type = 7
 AND issue.sprint_id <> 0
 AND issue.sprint_id <> new_issue.sprint_id
 AND issue.updated > sprint.start_date
-AND ${issue_not_done}
+AND ${s(issue_not_done)}
 GROUP BY issue.project_id, issue.sprint_id

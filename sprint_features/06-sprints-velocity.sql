@@ -6,6 +6,6 @@ FROM gros.issue LEFT OUTER JOIN gros.sprint ON issue.project_id = sprint.project
 WHERE issue.issue_id = maxdata.issue_id AND issue.changelog_id = max_changelog_id
 AND issue.sprint_id = weekdata.sprint_id
 -- Resolved at the end of the sprint
-AND ${issue_done}
+AND ${s(issue_done)}
 GROUP BY issue.project_id, issue.sprint_id, sprint_days
 ORDER BY issue.project_id, issue.sprint_id;
