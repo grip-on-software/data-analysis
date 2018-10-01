@@ -47,7 +47,8 @@ SELECT project_id, sprint_id, key, story_points FROM (
     AND (
         newer_issue.issue_id IS NULL
         OR newer_issue.updated > ${planned_late}
-        OR newer_issue.sprint_id = later_issue.sprint_id
+        OR (newer_issue.sprint_id = later_issue.sprint_id
+			AND NOT (${sprint_closed}))
     )
     AND subtask.id_parent IS NULL
 ) AS initial_stories
