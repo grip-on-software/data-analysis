@@ -246,11 +246,12 @@ if (get_arg('--project', default=F)) {
 	metrics <- get_arg('--metrics', default=F)
 	combine <- get_arg('--combine', default=F)
 	details <- get_arg('--details', default=F)
+	time <- get_arg('--time', default=F)
 
 	result <- get_sprint_features(conn, features, exclude, NULL, latest_date,
 								  core=core, metrics=metrics,
 								  sprint_days=days, sprint_patch=patch,
-								  combine=combine, details=details)
+								  combine=combine, details=details, time=time)
 	sprint_data <- result$data
 
 	write.arff(sprint_data[,result$colnames],

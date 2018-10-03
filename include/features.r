@@ -94,13 +94,13 @@ get_combined_features <- function(items, data, colnames, join_cols, combine=T) {
 	return(list(data=new_data, colnames=colnames, items=items))
 }
 
-get_features <- function(conn, features, exclude, items, data, colnames, join_cols, details=F) {
+get_features <- function(conn, features, exclude, items, data, colnames, join_cols, details=F, required=c()) {
 	if (length(features) == 1) {
 		if (is.na(features)) {
 			features <- unlist(sapply(items, function(item) { item$column }))
 		}
 		else {
-			features <- strsplit(features, ",")[[1]]
+			features <- unique(c(required, strsplit(features, ",")[[1]]))
 		}
 	}
 	if (isTRUE(details)) {
@@ -159,7 +159,7 @@ get_features <- function(conn, features, exclude, items, data, colnames, join_co
 			colnames <- c(colnames, item$column)
 		}
 	}
-	list(data=data, details=details, colnames=colnames, items=items)
+	list(data=data, details=details, colnames=unique(colnames), items=items)
 }
 
 get_sprint_conditions <- function(latest_date='', core=F, sprint_days=NA, sprint_patch=NA) {
@@ -185,7 +185,7 @@ get_sprint_conditions <- function(latest_date='', core=F, sprint_days=NA, sprint
 
 get_sprint_features <- function(conn, features, exclude, variables, latest_date,
 								core=F, metrics=F, sprint_days=NA,
-								sprint_patch=NA, combine=F, details=F) {
+								sprint_patch=NA, combine=F, details=F, time=F) {
 	conditions <- get_sprint_conditions(latest_date, core, sprint_days, sprint_patch)
 	if (length(conditions) != 0) {
 		where_clause <- paste('WHERE', paste(conditions, collapse=' AND '))
@@ -197,8 +197,16 @@ get_sprint_features <- function(conn, features, exclude, variables, latest_date,
 	}
 	patterns <- load_definitions('sprint_definitions.yml',
 								 list(sprint_days=sprint_days))
-	sprint_query <- load_query(list(query=paste('SELECT sprint.project_id, sprint.sprint_id
-									 			FROM gros.sprint
+
+	fields <- c('sprint.project_id', 'sprint.sprint_id')
+	colnames <- c("project_id", "sprint_num")
+	if (time) {
+		fields <- c(fields, 'CAST(sprint.start_date AS DATE) - date \'1970-01-01\' AS time')
+		colnames <- c(colnames, 'time')
+	}
+	sprint_query <- load_query(list(query=paste('SELECT',
+												paste(fields, collapse=', '),
+									 			'FROM gros.sprint
 									 			JOIN gros.project
 									 			ON project.project_id = sprint.project_id',
 												where_clause, 'ORDER BY
@@ -210,7 +218,6 @@ get_sprint_features <- function(conn, features, exclude, variables, latest_date,
 	items <- load_queries('sprint_features.yml', 'sprint_definitions.yml',
 						  c(variables,
 						  	list(sprint_conditions=sprint_conditions)))
-	colnames <- c("project_id")
 	join_cols <- c("project_id", "sprint_id")
 	metric_cols <- c("project_id", "sprint_id", "value")
 
@@ -236,7 +243,8 @@ get_sprint_features <- function(conn, features, exclude, variables, latest_date,
 	}
 
 	result <- get_features(conn, features, exclude, items, sprint_data,
-						   colnames, join_cols, details=details)
+						   colnames, join_cols, details=details,
+						   required=c("sprint_num"))
 	if (combine) {
 		return(get_combined_features(result$items, result$data,
 									 result$colnames, join_cols,
