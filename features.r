@@ -7,6 +7,7 @@ source('include/args.r')
 source('include/database.r')
 source('include/features.r')
 source('include/sources.r')
+source('include/tracker.r')
 conn <- connect()
 
 output_directory <- get_arg('--output', default='output')
@@ -203,10 +204,21 @@ if (get_arg('--project', default=F)) {
 			})
 			write(toJSON(project_details),
 				  file=paste(project_dir, "details.json", sep="/"))
-			write(toJSON(build_sprint_source_urls(conn, project_id, project,
+
+			source_urls <- get_source_urls(conn, project_id)
+			write(toJSON(build_sprint_source_urls(source_urls, project_id,
+												  project,
 												  sprint, # latest sprint
 												  specifications, patterns)),
 		  		  file=paste(project_dir, "links.json", sep="/"))
+
+			dates <- get_tracker_dates(conn, project_id, aggregate=max)
+			urls <- build_project_source_urls(source_urls, project_id, project,
+											  sprint)
+			write(toJSON(mapply(function(date, url) {
+					list(date=unbox(date), url=unbox(url))
+				  }, dates, urls[names(dates)], USE.NAMES=T, SIMPLIFY=F)),
+				  file=paste(project_dir, "sources.json", sep="/"))
 		}
 
 		write_feature_metadata(projects, specifications, output_dir)
