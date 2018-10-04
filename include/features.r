@@ -323,7 +323,7 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T,
 	result$projects <- projects
 
 	if (prediction != '') {
-		data <- fromJSON(prediction)
+		data <- fromJSON(url(prediction))
 		predictions <- do.call("rbind", mapply(function(labels, projects, sprints) {
 			data.frame(project_id=projects, sprint_num=sprints, prediction=labels)
 		}, data$labels, data$projects, data$sprints, SIMPLIFY=F, USE.NAMES=F))
