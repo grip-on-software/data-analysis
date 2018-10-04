@@ -101,6 +101,7 @@ if (get_arg('--project', default=F)) {
 	split <- get_arg('--split', default=F)
 	old <- get_arg('--old', default=F)
 	closed <- get_arg('--closed', default=F)
+	prediction <- get_arg('--prediction', default='')
 	specifications <- yaml.load_file('sprint_features.yml')
 	all_features <- unlist(sapply(specifications$files, function(item) { item$column }))
 	if (is.na(features)) {
@@ -125,6 +126,16 @@ if (get_arg('--project', default=F)) {
 	default <- c(sprint_meta, 'num_story_points', 'done_story_points',
 				  'velocity', 'lines_of_code', 'unittest_line_coverage')
 	default_features <- default[default %in% c(sprint_meta, features)]
+	extra_features <- features[!(features %in% default_features)]
+	if (prediction != '') {
+		prediction <- str_interp(prediction, config$fields) 
+		extra_features <- c(extra_features, 'prediction')
+		specification <- list(column="prediction",
+							  descriptions=list(nl="Voorspelling",
+												en="Prediction"))
+		specifications$files$prediction <- specification
+	}
+	old_features <- unique(c(sprint_meta,default_features,extra_features))
 
 	core <- get_arg('--core', default=F)
 	sprint_days <- get_arg('--days', default=NA)
@@ -147,7 +158,8 @@ if (get_arg('--project', default=F)) {
 										 project_fields=fields,
 										 project_meta=metadata,
 										 old=old,
-										 details=split)
+										 details=split,
+										 prediction=prediction)
 	sprint_data <- result$data
 	if (project_ids != '0') {
 		sprint_data$project_name <- paste("Proj", sprint_data$project_id, sep="")
@@ -171,17 +183,15 @@ if (get_arg('--project', default=F)) {
 			old_project_data <- old_sprint_data[old_sprint_data$project_name == project,]
 			write(toJSON(project_data[,default_features]),
 				  file=paste(project_dir, 'default.json', sep='/'))
-			write(toJSON(old_project_data[,unique(c(sprint_meta,features))], auto_unbox=T),
+			write(toJSON(old_project_data[,old_features], auto_unbox=T),
 				  file=paste(project_dir, 'old.json', sep='/'))
 
-			for (feature in features) {
-				if (!(feature %in% default_features)) {
-					write(toJSON(project_data[[feature]], auto_unbox=T,
-								 na="null", null="null"),
-						  file=paste(project_dir,
-							  		 paste(feature, 'json', sep='.'),
-									 sep='/'))
-				}
+			for (feature in extra_features) {
+				write(toJSON(project_data[[feature]], auto_unbox=T,
+							 na="null", null="null"),
+					  file=paste(project_dir,
+							  	 paste(feature, 'json', sep='.'),
+								 sep='/'))
 			}
 
 			project_id <- project_data$project_id[[1]]
@@ -225,7 +235,7 @@ if (get_arg('--project', default=F)) {
 		write(toJSON(list(limit=recent, closed=closed, old=old), auto_unbox=T),
 			  file=paste(output_dir, "sprints.json", sep="/"))
 		write(toJSON(list(default=default_features,
-						  all=features,
+						  all=c(default_features, extra_features),
 						  meta=sprint_meta)),
 			  file=paste(output_dir, "features.json", sep="/"))
 		write_projects_metadata(conn, fields, metadata,

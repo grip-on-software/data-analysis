@@ -256,7 +256,8 @@ get_sprint_features <- function(conn, features, exclude, variables, latest_date,
 get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T, 
 									   sprint_meta=c(), sprint_conditions='', 
 									   project_fields=c('project_id'),
-									   project_meta=list(), old=F, details=F) {
+									   project_meta=list(), old=F, details=F,
+									   prediction='') {
 	patterns <- load_definitions('sprint_definitions.yml')
 	if (!missing(date)) {
 		project_meta$recent <- date
@@ -318,8 +319,17 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T,
 	colnames <- c("project_name", "quality_display_name", sprint_meta)
 	join_cols <- c("project_id", "sprint_id")
 	result <- get_features(conn, features, '^$', items, sprint_data, colnames,
-						   join_cols, details=details)
+						   join_cols, details=details, required=c("sprint_num"))
 	result$projects <- projects
+
+	if (prediction != '') {
+		data <- fromJSON(prediction)
+		predictions <- do.call("rbind", mapply(function(labels, projects, sprints) {
+			data.frame(project_id=projects, sprint_num=sprints, prediction=labels)
+		}, data$labels, data$projects, data$sprints, SIMPLIFY=F, USE.NAMES=F))
+		result$data <- merge(result$data, predictions,
+							 by=c("project_id", "sprint_num"), all.x=T)
+	}
 	return(result)
 }
 

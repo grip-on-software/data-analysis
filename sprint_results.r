@@ -66,6 +66,10 @@ metadata <- get_meta_keys(project_metadata)
 fields <- c('project_id', 'name', 'quality_display_name')
 
 results <- read_json(input_file, simplifyVector=T)
+if (is.list(results$projects)) {
+	logwarn("Results is a multiple-run output which we cannot parse.")
+	quit("no", status=0, runLast=F)
+}
 features <- read.arff(feature_file)
 conn <- connect()
 
