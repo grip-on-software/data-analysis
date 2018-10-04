@@ -4,10 +4,10 @@ SELECT start_issue.project_id, start_issue.sprint_id,
 	MIN(issue.updated) AS close_date, 'completed' AS event_type
 FROM gros.issue AS start_issue
 JOIN gros.issue AS issue ON start_issue.issue_id = issue.issue_id
-	AND start_issue.changelog_id < issue.changelog_id AND ${issue_done}
+	AND start_issue.changelog_id < issue.changelog_id AND ${s(issue_done)}
 JOIN gros.sprint ON start_issue.project_id = sprint.project_id
 	AND start_issue.sprint_id = sprint.sprint_id
-WHERE issue.type = 7 AND ${issue_done}
+WHERE issue.type = 7 AND ${s(issue_done)}
 	AND start_issue.updated > sprint.start_date
 	AND start_issue.story_points IS NOT NULL 
 GROUP BY start_issue.project_id, start_issue.sprint_id, start_issue.key,

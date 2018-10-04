@@ -13,7 +13,7 @@ FROM
                 GROUP BY issue_id, sprint_id) AS max_data
             WHERE issue.sprint_id = sprint.sprint_id
             AND issue.issue_id = max_data.issue_id
-            AND ${issue_not_done}
+            AND ${s(issue_not_done)}
             AND issue.changelog_id = max_changelog_id AND ${sprint_closed}
             GROUP BY issue.issue_id, max_changelog_id) AS not_done_data,
     (SELECT issue.sprint_id, MAX(issue.story_points) AS max_points FROM gros.issue
@@ -38,7 +38,7 @@ FULL OUTER JOIN
         GROUP BY issue_id) AS points_data,
     (SELECT issue.issue_id, MIN(sprint.sprint_id) AS done_sprint FROM gros.issue, gros.sprint
 		WHERE issue.sprint_id = sprint.sprint_id
-		AND ${issue_done}
+		AND ${s(issue_done)}
         GROUP BY issue.issue_id) AS done_data,
     (SELECT issue.sprint_id, MAX(issue.story_points) AS max_points FROM gros.issue
         WHERE issue.story_points <= ${sprint_points_normalization}
