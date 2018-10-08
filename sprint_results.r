@@ -162,9 +162,16 @@ for (idx in 1:length(results$projects)) {
 	write(toJSON(build_project_source_urls(source_urls, project_id,
 										   project_name, source_patterns),
 				 auto_unbox=T), file=paste(path, "sources.json", sep="/"))
-	write(toJSON(build_sprint_source_urls(source_urls, project_id, project_name,
-										  sprint, specifications, patterns)),
-		  file=paste(path, "links.json", sep="/"))
+
+	source_data <- toJSON(build_sprint_source_urls(source_urls, project_id
+												   project_name, sprint,
+												   specifications, patterns))
+	write(source_data, file=paste(path,
+								  paste("links", sprint_id, "json", sep="."),
+								  sep="/"))
+	if (all(sprint_id <= project_sprints)) {
+		write(source_data, file=paste(path, "links.json", sep="/"))
+	}
 }
 
 write_projects_metadata(conn, fields, metadata, projects=NA,
