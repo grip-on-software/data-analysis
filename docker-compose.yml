@@ -1,7 +1,0 @@
-version: '2'
-services:
-    agent:
-        build:
-            context: .
-            dockerfile: Dockerfile.dashboard
-        image: "$DOCKER_REGISTRY/gros-data-analysis-dashboard"
