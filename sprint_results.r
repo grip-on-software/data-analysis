@@ -22,35 +22,28 @@ specifications <- yaml.load_file('sprint_features.yml')
 config <- get_config()
 patterns <- load_definitions('sprint_definitions.yml', config$fields)
 
-sprint_cache <- vector("list")
-get_sprint <- function(project_id, sprint_id, cache=T) {
-	if (length(sprint_cache) >= project_id && mode(sprint_cache[[project_id]]) == "list") {
-		loginfo('Using cached sprints for project %d', project_id)
-		return(sprint_cache[[project_id]][sprint_id,])
-	}
-
-	conditions <- c('sprint.project_id = ${project_id}',
-					get_sprint_conditions(latest_date, core=core,
-										  sprint_days=sprint_days,
-										  sprint_patch=sprint_patch))
-	query <- paste('SELECT project.name AS project_key, project.quality_name,
-
-				   project.quality_display_name, sprint.sprint_id, sprint.name,
+get_sprints <- function(conn) {
+	conditions <- get_sprint_conditions(latest_date, core=core,
+										sprint_days=sprint_days,
+										sprint_patch=sprint_patch)
+	query <- paste('SELECT project.project_id, project.name AS project_key,
+				   project.quality_name, project.quality_display_name,
+				   sprint.sprint_id, sprint.name,
 				   sprint.start_date, ${sprint_close} AS close_date,
 				   sprint.board_id FROM gros.sprint
 				   JOIN gros.project ON sprint.project_id = project.project_id
 				   WHERE', paste(conditions, collapse=' AND '),
-				   'ORDER BY sprint.start_date')
-	item <- load_query(list(query=query), c(patterns,
-											project_id=project_id,
-											sprint_days=sprint_days))
+				   'ORDER BY project.project_id, sprint.start_date')
+	item <- load_query(list(query=query), c(patterns, sprint_days=sprint_days))
 	time <- system.time(sprint <- dbGetQuery(conn, item$query))
-	loginfo('Obtained sprints of project %d in %f seconds',
-			project_id, time['elapsed'])
-	if (cache) {
-		sprint_cache[[project_id]] <<- sprint
-	}
-	return(sprint[sprint_id,])
+	loginfo('Obtained sprints in %f seconds', time['elapsed'])
+	return(sprint)
+}
+
+conn <- connect()
+sprint_cache <- get_sprints(conn)
+get_sprint <- function(project_id, sprint_id) {
+	return(sprint_cache[sprint_cache$project_id == project_id,][sprint_id,])
 }
 
 input_file <- get_arg('--file', default='sprint_labels.json')
@@ -71,7 +64,6 @@ if (is.list(results$projects)) {
 	quit("no", status=0, runLast=F)
 }
 features <- read.arff(feature_file)
-conn <- connect()
 
 sprint_projects <- get_sprint_projects(conn)
 
@@ -87,6 +79,7 @@ get_tags <- function(features_row) {
 
 for (idx in 1:length(results$projects)) {
 	project_id <- results$projects[idx]
+	project_sprints <- results$sprints[results$projects == project_id]
 	if (project_ids != '1') {
 		project_name <- sprint_projects[sprint_projects$project_id == project_id,'name']
 	}
@@ -95,8 +88,7 @@ for (idx in 1:length(results$projects)) {
 	}
 	projects <- c(projects, project_name)
 	sprint_id = results$sprints[idx]
-	sprint <- get_sprint(project_id, sprint_id,
-						 cache=!is.null(results$analogy_indexes))
+	sprint <- get_sprint(project_id, sprint_id)
 
 	feature_names <- intersect(results$configuration$features, names(features))
 	tag_names <- get_tags(setNames(rep(T, length(features)), names(features)))
@@ -157,12 +149,18 @@ for (idx in 1:length(results$projects)) {
 	if (!dir.exists(path)) {
 		dir.create(path)
 	}
-	write(toJSON(project_data, auto_unbox=T, na="null", null="null"),
-		  file=paste(path, "latest.json", sep="/"))
+	data <- toJSON(project_data, auto_unbox=T, na="null", null="null")
+	if (all(sprint_id <= project_sprints)) {
+		write(data, file=paste(path, "latest.json", sep="/"))
+		write(toJSON(sort(project_sprints)),
+			  file=paste(path, "sprints.json", sep="/"))
+	}
+	write(data, file=paste(path, paste(sprint_id, "json", sep="."), sep="/"))
 
 	source_urls <- get_source_urls(conn, project_id)
-	write(toJSON(build_project_source_urls(source_urls, project_id, project_name,
-										   list(quality_name=sprint$quality_name)),
+	source_patterns <- list(quality_name=sprint$quality_name)
+	write(toJSON(build_project_source_urls(source_urls, project_id,
+										   project_name, source_patterns),
 				 auto_unbox=T), file=paste(path, "sources.json", sep="/"))
 	write(toJSON(build_sprint_source_urls(source_urls, project_id, project_name,
 										  sprint, specifications, patterns)),
@@ -172,7 +170,7 @@ for (idx in 1:length(results$projects)) {
 write_projects_metadata(conn, fields, metadata, projects=NA,
 						project_ids=project_ids,
 						output_directory=output_directory)
-write_feature_metadata(projects, specifications, output_directory)
+write_feature_metadata(unique(projects), specifications, output_directory)
 write(toJSON(results$configuration, auto_unbox=T),
 	  file=paste(output_directory, "configuration.json", sep="/"))
 
