@@ -29,18 +29,12 @@ pipeline {
         stage('Build') {
             steps {
                 updateGitlabCommitStatus name: env.JOB_NAME, state: 'running'
-                sh 'docker build -t $DOCKER_REGISTRY/gros-data-analysis .'
-            }
-        }
-        stage('Compose') {
-            steps {
-                sh 'docker-compose build'
+                sh 'docker build -t $DOCKER_REGISTRY/gros-data-analysis-dashboard .'
             }
         }
         stage('Push') {
             when { branch 'master' }
             steps {
-                sh 'docker push $DOCKER_REGISTRY/gros-data-analysis:latest'
                 sh 'docker push $DOCKER_REGISTRY/gros-data-analysis-dashboard:latest'
             }
         }
