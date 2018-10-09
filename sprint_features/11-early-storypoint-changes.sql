@@ -9,5 +9,5 @@ WHERE issue.issue_id = max_issue.issue_id AND issue.changelog_id <= max_issue.ch
 AND max_issue.sprint_id = sprint.sprint_id
 AND issue.story_points IS NOT NULL
 AND (issue.changelog_id = 0 OR issue.story_points <> prev_issue.story_points)
-AND issue.updated < sprint.start_date
+AND issue.updated < ${planned_early}
 GROUP BY issue.project_id, max_issue.sprint_id

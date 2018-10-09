@@ -7,7 +7,7 @@ SELECT project_id, sprint_id, COUNT(*) AS num_done_stories FROM
 		AND issue.issue_id = max_issue.issue_id
 		AND ${s(issue_done)}
 		--AND NOT ${issue_overdue}
-		AND issue.updated > sprint.start_date
+		AND issue.updated > ${sprint_open}
 		AND issue.type = 7
 		AND issue.sprint_id <> 0
 	) AS done_stories

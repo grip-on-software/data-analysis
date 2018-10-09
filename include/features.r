@@ -201,7 +201,7 @@ get_sprint_features <- function(conn, features, exclude, variables, latest_date,
 	fields <- c('sprint.project_id', 'sprint.sprint_id')
 	colnames <- c("project_id", "sprint_num")
 	if (time) {
-		fields <- c(fields, 'CAST(sprint.start_date AS DATE) - date \'1970-01-01\' AS time')
+		fields <- c(fields, 'CAST(${sprint_open} AS DATE) - date \'1970-01-01\' AS time')
 		colnames <- c(colnames, 'time')
 	}
 	sprint_query <- load_query(list(query=paste('SELECT',
@@ -284,7 +284,7 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T,
 			ON project.project_id = sprint.project_id
 			WHERE sprint.project_id = ${project_id}
 			${s(sprint_conditions)}
-			ORDER BY sprint.project_id, sprint.start_date DESC
+			ORDER BY sprint.project_id, ${sprint_open} DESC
 			${pager} ${limit}'
 	sprint_data <- data.frame()
 	variables <- c(patterns, list(sprint_conditions=sprint_conditions,

@@ -6,6 +6,6 @@ ON issue.issue_id = old_issue.issue_id AND issue.changelog_id = old_issue.change
 WHERE issue.type = 7
 AND old_issue.sprint_id <> 0 AND issue.sprint_id <> 0
 AND issue.sprint_id <> old_issue.sprint_id
-AND issue.updated > sprint.start_date
+AND issue.updated > ${planned_end}
 AND ${s(issue_not_done)}
 GROUP BY issue.project_id, issue.sprint_id

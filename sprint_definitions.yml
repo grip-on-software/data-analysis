@@ -11,6 +11,10 @@ fields:
         description: "Velocity of a sprint (or average of multiple sprints in aggregate queries)"
         table: issue
         field: CAST(SUM(issue.story_points) AS float)/(CASE WHEN sprint_days <> 0 THEN CEIL(sprint_days/7.0*5) ELSE 1 END)
+    sprint_open:
+        description: "The open date of a sprint"
+        table: sprint
+        field: COALESCE(sprint.start_date, NOW())
     sprint_close:
         description: "The close date of a sprint"
         table: sprint
@@ -47,11 +51,11 @@ conditions:
     planned_early:
         description: "Earliest time for stories that are planned for a sprint to start work on"
         table: sprint
-        condition: sprint.start_date - interval '1' day
+        condition: COALESCE(sprint.start_date, NOW()) - interval '1' day
     planned_end:
         description: "Latest time for stories to be planned for a sprint"
         table: sprint
-        condition: sprint.start_date + interval '1' day
+        condition: COALESCE(sprint.start_date, NOW()) + interval '1' day
     planned_late:
         description: "Latest time for stories that are planned for a sprint to have been worked on"
         table: sprint

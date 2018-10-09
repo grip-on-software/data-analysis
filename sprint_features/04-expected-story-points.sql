@@ -41,8 +41,8 @@ SELECT project_id, sprint_id, key, story_points FROM (
     AND issue.updated <= ${planned_late}
     AND (
 		later_issue.updated > ${planned_early}
-		OR later_issue.updated - issue.updated < ${planned_late} - sprint.start_date
-		OR (later_issue.updated < sprint.start_date
+		OR later_issue.updated - issue.updated < ${planned_late} - ${sprint_open}
+		OR (later_issue.updated < ${sprint_open}
 			AND (newer_issue.issue_id IS NULL OR newer_issue.updated > ${planned_late})
 		)
 	)
