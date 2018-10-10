@@ -92,7 +92,8 @@ for (idx in 1:length(results$projects)) {
 
 	feature_names <- intersect(results$configuration$features, names(features))
 	tag_names <- get_tags(setNames(rep(T, length(features)), names(features)))
-	feature_excludes <- c("project_id", "sprint_num", tag_names)
+	feature_excludes <- c("project_id", "sprint_num", "time", "sprint_is_open",
+						  tag_names)
 	feature_mask <- !(names(features) %in% feature_excludes)
 	if (!is.null(results$analogy_indexes)) {
 		analogies <- mapply(function(i) {
