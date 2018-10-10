@@ -47,7 +47,7 @@ conditions:
     sprint_closed:
         description: "Sprints that have been ended or completed"
         table: sprint
-        condition: COALESCE(sprint.complete_date, sprint.end_date) < CURRENT_TIMESTAMP()
+        condition: COALESCE(COALESCE(sprint.complete_date, sprint.end_date), NOW()) < NOW()
     planned_early:
         description: "Earliest time for stories that are planned for a sprint to start work on"
         table: sprint
