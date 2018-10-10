@@ -130,6 +130,7 @@ for (idx in 1:length(results$projects)) {
 							   as.list(features_row[,feature_mask]),
 							   keep.null=T)
 	project_data <- list(project=sprint$quality_display_name,
+						 project_id=sprint$project_key,
 						 sprint=sprint_id,
 						 id=sprint$sprint_id,
 						 board_id=sprint$board_id,
