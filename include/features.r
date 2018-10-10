@@ -283,6 +283,7 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T,
 			JOIN gros.project
 			ON project.project_id = sprint.project_id
 			WHERE sprint.project_id = ${project_id}
+			AND sprint.start_date IS NOT NULL
 			${s(sprint_conditions)}
 			ORDER BY sprint.project_id, ${sprint_open} DESC
 			${pager} ${limit}'
