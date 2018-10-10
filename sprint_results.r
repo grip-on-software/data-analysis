@@ -123,13 +123,13 @@ for (idx in 1:length(results$projects)) {
 	}
 
 	sprint_features <- as.list(results$features[idx,])
+	results$configuration$features <- results$configuration$features[!(results$configuration$features %in% feature_excludes)]
 	names(sprint_features) <- as.character(results$configuration$features)
 	features_row <- features[features$project_id==project_id & 
 							 features$sprint_num==sprint_id,]
 	all_features <- modifyList(sprint_features,
 							   as.list(features_row[,feature_mask]),
 							   keep.null=T)
-	results$configuration$features <- results$configuration$features[!(results$configuration$features %in% feature_excludes)]
 	project_data <- list(project=sprint$quality_display_name,
 						 project_id=sprint$project_key,
 						 sprint=sprint_id,
