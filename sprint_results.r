@@ -77,12 +77,6 @@ get_tags <- function(features_row) {
 	return(tags)
 }
 
-feature_names <- intersect(results$configuration$features, names(features))
-tag_names <- get_tags(setNames(rep(T, length(features)), names(features)))
-feature_excludes <- c("project_id", "sprint_num", "time", "sprint_is_open",
-					  tag_names)
-feature_mask <- !(names(features) %in% feature_excludes)
-results$configuration$features <- results$configuration$features[!(results$configuration$features %in% feature_excludes)]
 for (idx in 1:length(results$projects)) {
 	project_id <- results$projects[idx]
 	project_sprints <- results$sprints[results$projects == project_id]
@@ -96,6 +90,10 @@ for (idx in 1:length(results$projects)) {
 	sprint_id = results$sprints[idx]
 	sprint <- get_sprint(project_id, sprint_id)
 
+	feature_names <- intersect(results$configuration$features, names(features))
+	tag_names <- get_tags(setNames(rep(T, length(features)), names(features)))
+	feature_excludes <- c("project_id", "sprint_num", tag_names)
+	feature_mask <- !(names(features) %in% feature_excludes)
 	if (!is.null(results$analogy_indexes)) {
 		analogies <- mapply(function(i) {
 			analogy <- results$analogy_indexes[idx,i]
