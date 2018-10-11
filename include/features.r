@@ -210,7 +210,7 @@ get_sprint_features <- function(conn, features, exclude, variables, latest_date,
 									 			JOIN gros.project
 									 			ON project.project_id = sprint.project_id',
 												where_clause, 'ORDER BY
-									 			sprint.project_id, sprint.start_date')),
+									 			sprint.project_id, ${sprint_open}, sprint.name')),
 							   patterns)
 
 	sprint_data <- dbGetQuery(conn, sprint_query$query)
@@ -285,7 +285,7 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T,
 			WHERE sprint.project_id = ${project_id}
 			AND sprint.start_date IS NOT NULL
 			${s(sprint_conditions)}
-			ORDER BY sprint.project_id, ${sprint_open} DESC
+			ORDER BY sprint.project_id, ${sprint_open}, sprint.name DESC
 			${pager} ${limit}'
 	sprint_data <- data.frame()
 	variables <- c(patterns, list(sprint_conditions=sprint_conditions,
