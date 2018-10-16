@@ -285,7 +285,7 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T,
 			WHERE sprint.project_id = ${project_id}
 			AND sprint.start_date IS NOT NULL
 			${s(sprint_conditions)}
-			ORDER BY sprint.project_id, ${sprint_open}, sprint.name DESC
+			ORDER BY sprint.project_id, ${sprint_open} DESC, sprint.name DESC
 			${pager} ${limit}'
 	sprint_data <- data.frame()
 	variables <- c(patterns, list(sprint_conditions=sprint_conditions,
