@@ -129,11 +129,13 @@ if (get_arg('--project', default=F)) {
 	extra_features <- features[!(features %in% default_features)]
 	if (prediction != '') {
 		prediction <- str_interp(prediction, config$fields) 
-		extra_features <- c(extra_features, 'prediction')
-		specification <- list(column="prediction",
-							  descriptions=list(nl="Voorspelling",
-												en="Prediction"))
-		specifications$files$prediction <- specification
+		if (prediction != '') {
+			extra_features <- c(extra_features, 'prediction')
+			specification <- list(column="prediction",
+							  	  descriptions=list(nl="Voorspelling",
+													en="Prediction"))
+			specifications$files$prediction <- specification
+		}
 	}
 	old_features <- unique(c(sprint_meta,default_features,extra_features))
 
