@@ -45,6 +45,19 @@ files:
         en: "%s closed sprint"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
+  - expression: "1 - sprint_is_closed"
+    column: sprint_is_open
+    optional: No
+    combine: max
+    descriptions:
+        nl: Open sprint
+        en: Open sprint
+    tags:
+        nl: Open
+        en: Open
+    units:
+        nl: "%s open sprint"
+        en: "%s open sprint"
   - filename: 00-sprint-gathered.sql
     table: sprint_gathered
     column: sprint_is_complete
@@ -105,6 +118,19 @@ files:
     short_units:
         nl: "%s fte"
         en: "%s FTE"
+  - expression: "ifelse(number_of_vcs_devs > 0, number_of_vcs_devs, mean(c(number_of_jira_devs, number_of_seats)))"
+    column: number_of_devs
+    default: 0
+    combine: mean
+    descriptions:
+        nl: Aantal developers
+        en: Number of developers
+    units:
+        nl: "%s developers"
+        en: "%s developers"
+    short_units:
+        nl: "%s devs"
+        en: "%s devs"
   - filename: 01-dev-sprint-experience.sql
     table: sprint_experience
     column: dev_sprint_experience
@@ -232,6 +258,16 @@ files:
         en: "%s done story points"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
+  - expression: "done_story_points - num_story_points"
+    column: over_expectation
+    default: 0
+    combine: sum
+    descriptions:
+        nl: Toegevoegde verwachting
+        en: Added expectation
+    units:
+        nl: "%s toegevoegde storypoints"
+        en: "%s added story points"
   - filename: 04-weighted-story-points.sql
     table: weighted_story_points
     column: num_weighted_points
@@ -437,6 +473,19 @@ files:
         en: "%s points/sprint"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
+  - expression: "velocity - avg_velocity"
+    column: over_value
+    default: 0
+    combine: mean
+    descriptions:
+        nl: Toegevoegde velocity
+        en: Added velocity
+    units:
+        nl: "%s extra storypoints per werkdag"
+        en: "%s added story points per working day"
+    short_units:
+        nl: "%s punten/sprint"
+        en: "%s points/sprint"
   - filename: 06-other-issues-done.sql
     table: other_done_issues
     column: other_done_issues

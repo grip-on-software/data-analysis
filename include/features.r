@@ -111,6 +111,10 @@ get_features <- function(conn, features, exclude, items, data, colnames, join_co
 			if (!is.null(item$result)) {
 				result <- item$result
 			}
+			else if (!is.null(item$expression)) {
+				result <- data.frame(data[join_cols])
+				result[item$column] <- eval(parse(text=item$expression), data)
+			}
 			else {
 				loginfo('Executing query for table %s', item$table)
 				time <- system.time(result <- dbGetQuery(conn, item$query))
