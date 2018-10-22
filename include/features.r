@@ -112,8 +112,18 @@ get_features <- function(conn, features, exclude, items, data, colnames, join_co
 				result <- item$result
 			}
 			else if (!is.null(item$expression)) {
+				expression <- parse(text=item$expression)
 				result <- data.frame(data[join_cols])
-				result[item$column] <- eval(parse(text=item$expression), data)
+				if (!is.null(item$window)) {
+					groups <- split(data, as.list(item$window$group), drop=T)
+					result[item$column] <- lapply(groups, function(group) {
+						c(rep(item$default, item$window$dimension - 1),
+						  eval(expression, group))
+					})
+				}
+				else {
+					result[item$column] <- eval(expression, data)
+				}
 			}
 			else {
 				loginfo('Executing query for table %s', item$table)

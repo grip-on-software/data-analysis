@@ -457,9 +457,11 @@ files:
         en: "%s points/day"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
-  - filename: 06-sprints-average-velocity.sql
-    table: sprint_three_velocity
-    column: avg_velocity
+  - expression: "rowSums(embed(done_story_points, 3)) / 3"
+    column: velocity_three
+    window:
+        dimension: 3
+        group: project_id
     default: 0
     combine: mean
     descriptions:
