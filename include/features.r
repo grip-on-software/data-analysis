@@ -154,7 +154,7 @@ get_features <- function(conn, features, exclude, items, data, colnames, join_co
 					names(details[[item$column[1]]]) <- NULL
 				}
 			}
-			data <- merge(data, result, by=join_cols, all.x=T, sort=F)
+			data <- merge(data, result, by=join_cols, all.x=T)
 			if (!is.null(item$default)) {
 				for (column in item$column) {
 					if (column %in% names(data)) {
@@ -343,7 +343,7 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T,
 			data.frame(project_id=projects, sprint_num=sprints, prediction=labels)
 		}, data$labels, data$projects, data$sprints, SIMPLIFY=F, USE.NAMES=F))
 		result$data <- merge(result$data, predictions,
-							 by=c("project_id", "sprint_num"), all.x=T, sort=F)
+							 by=c("project_id", "sprint_num"), all.x=T)
 	}
 	return(result)
 }
