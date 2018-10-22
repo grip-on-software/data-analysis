@@ -2,3 +2,4 @@
 .Rhistory
 Rplots.pdf
 config.yml
+config.*.yml
