@@ -29,6 +29,21 @@ files:
         en: "%s days"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
+  - definition: sprint_weekdays
+    table: sprint
+    column: sprint_weekdays
+    combine: sum
+    descriptions:
+        nl: Weekdagen
+        en: Week days
+    units:
+        nl: "%s weekdagen"
+        en: "%s weekdays"
+    short_units:
+        nl: "%s dagen"
+        en: "%s days"
+    source:
+        jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
   - filename: 00-sprint-closed.sql
     table: sprint_close
     column: sprint_is_closed
@@ -441,8 +456,7 @@ files:
     units:
         nl: "middelpunt van issuewijzigingen op %s dagen na begin van sprint"
         en: "midpoint of issuechanges at %s days after start of sprint"
-  - filename: 06-sprints-velocity.sql
-    table: sprint_velocity
+  - expression: "done_story_points / sprint_weekdays"
     column: velocity
     default: 0
     combine: mean

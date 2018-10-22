@@ -66,7 +66,8 @@ if (!exists('INC_DATABASE_R')) {
 				fields <- c(fields, paste(item$table, field, sep="."))
 			}
 			define <- patterns[[item$definition]]
-			fields <- c(fields, paste(define, "AS", item$column, sep=" "))
+			fields <- c(fields, paste(str_interp(define, patterns), "AS",
+									  item$column, sep=" "))
 			item$query <- paste('SELECT', paste(fields, collapse=", "),
 								'FROM', paste('gros', item$table, sep='.'))
 		}

@@ -7,6 +7,10 @@ fields:
         description: "Number of days in a sprint"
         table: sprint
         field: EXTRACT(day FROM sprint.end_date - sprint.start_date)
+    sprint_weekdays:
+        description: "Number of weekdays in a sprint"
+        table: sprint
+        field: CAST(EXTRACT(day FROM ${sprint_close} - start_date) * 5.0 / 7 AS INT) + 1 - 2 * CAST(TIMESTAMP_TO_STR(${sprint_close}, '%u') < TIMESTAMP_TO_STR(start_date, '%u') AS INT)
     velocity:
         description: "Velocity of a sprint (or average of multiple sprints in aggregate queries)"
         table: issue
