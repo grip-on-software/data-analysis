@@ -77,6 +77,39 @@ get_tags <- function(features_row) {
 	return(tags)
 }
 
+expr.args <- function(x) {
+    cond <- is.expression(x)
+    if (cond) {
+       	tmpe <- new.env()
+    }
+	else {
+		return()
+	}
+
+    while (cond) {
+       	ref <- try(eval(x, envir = tmpe), silent = TRUE)
+       	if (cond <- (class(ref) == "try-error")) {
+         	if (length(grep("not found", ref[1])) > 0) {
+           		aux <- substr(ref, regexpr("object ", ref) + 8,
+							  regexpr(" not found", ref) - 2)
+				assign(as.character(aux), 1, envir = tmpe)
+         	} else {
+				stop("expression could not be evaluated but a missing variable was not identified.")
+			}
+       	}
+    }
+
+    ls(envir = tmpe)
+}
+
+for (file in specifications$files) {
+	if (!is.null(file$expression)) {
+		assignment <- list(attributes=I(expr.args(parse(text=file$expression))),
+						   expression=file$expression) 
+		results$configuration$assignments[[file$column]] <- assignment
+	}
+}
+
 for (idx in 1:length(results$projects)) {
 	project_id <- results$projects[idx]
 	project_sprints <- results$sprints[results$projects == project_id]
