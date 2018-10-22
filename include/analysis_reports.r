@@ -240,7 +240,7 @@ story_flow <- function(item, result, output_dir) {
 	# from max (bottom) to min (top)
 	ranks <- list(darkgreen=c(), green=c(), gray=c(), yellow=c(), blue=c())
 	max_time <- 150
-	palette <- substr(viridis_pal(alpha=0, end=0.75, option="plasma")(max_time+1),
+	palette <- substr(viridis_pal(alpha=0, end=0.70, option="plasma")(max_time+1),
 					  0, 7)
 
 	for (change in changes) {
@@ -270,8 +270,12 @@ story_flow <- function(item, result, output_dir) {
 		new_name <- paste('"', paste(new_status, new_resolution, sep=" "),
 						  '"', sep='')
 
-		old_attrs <- list(style='rounded', shape='box')
-		new_attrs <- list(style='rounded', shape='box')
+		old_attrs <- list(style='"filled,rounded"',
+						  shape='box',
+						  fillcolor='"#FFFFFF"')
+		new_attrs <- list(style='"filled,rounded"',
+						  shape='box',
+						  fillcolor='"#FFFFFF"')
 		if (old_status_id %in% names(colors)) {
 			color <- colors[[old_status_id]]
 			ranks[[color]] <- c(ranks[[color]], old_name)
@@ -322,6 +326,7 @@ story_flow <- function(item, result, output_dir) {
 	}
 
 	dot <- c(paste("digraph", item$patterns[['name']], "{"),
+			 'bgcolor="#FDFDFD";',
 			 paste(names(edges), lapply(edges, dot_attrs)),
 			 paste(names(nodes), lapply(nodes, dot_attrs)),
 			 paste(mapply(dot_ranks, ranks, 1:length(ranks))),
