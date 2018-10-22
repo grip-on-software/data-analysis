@@ -475,7 +475,23 @@ files:
         en: "%s points/sprint"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
-  - expression: "velocity - avg_velocity"
+  - expression: "rowSums(embed(done_story_points, 7)) / 7"
+    column: velocity_seven
+    window:
+        dimension: 7
+        group: project_id
+    default: 0
+    combine: mean
+    descriptions:
+        nl: Langdurige velocity
+        en: Long term velocity
+    units:
+        nl: "velocity van %s storypoints over zeven sprints"
+        en: "velocity of %s story points over seven sprints"
+    short_units:
+        nl: "%s punten/sprint"
+        en: "%s points/sprint"
+  - expression: "velocity - velocity_three"
     column: over_value
     default: 0
     combine: mean
