@@ -506,7 +506,7 @@ files:
     short_units:
         nl: "%s punten/sprint"
         en: "%s points/sprint"
-  - expression: "expected_story_points - velocity_three"
+  - expression: "num_story_points - velocity_three"
     column: over_value
     default: 0
     combine: mean
