@@ -77,14 +77,12 @@ get_tags <- function(features_row) {
 	return(tags)
 }
 
-expr.args <- function(x) {
-    cond <- is.expression(x)
-    if (cond) {
-       	tmpe <- new.env()
-    }
-	else {
+expr.args <- function(x, vars) {
+	cond <- is.expression(x)
+    if (!cond) {
 		return()
 	}
+    tmpe <- new.env()
 
     while (cond) {
        	ref <- try(eval(x, envir = tmpe), silent = TRUE)
@@ -92,9 +90,10 @@ expr.args <- function(x) {
          	if (length(grep("not found", ref[1])) > 0) {
            		aux <- substr(ref, regexpr("object ", ref) + 8,
 							  regexpr(" not found", ref) - 2)
-				assign(as.character(aux), 1, envir = tmpe)
+				assign(as.character(aux), vars[[aux]], envir = tmpe)
          	} else {
-				stop("expression could not be evaluated but a missing variable was not identified.")
+				stop(paste("expression", x, "could not be evaluated:", ref[1],
+						   "but a missing variable was not identified."))
 			}
        	}
     }
@@ -104,7 +103,8 @@ expr.args <- function(x) {
 
 for (file in specifications$files) {
 	if (!is.null(file$expression)) {
-		assignment <- list(attributes=I(expr.args(parse(text=file$expression))),
+		assignment <- list(attributes=I(expr.args(parse(text=file$expression),
+												  features)),
 						   expression=file$expression) 
 		results$configuration$assignments[[file$column]] <- assignment
 	}
