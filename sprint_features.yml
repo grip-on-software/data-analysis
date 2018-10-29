@@ -345,17 +345,22 @@ files:
     units:
         nl: "%s rangwijzigingen na begin van sprint"
         en: "%s rank changes after start of sprint"
-  - filename: 04-not-done-status.sql
+  - filename: 04-not-done-points.sql
     table: not_done
-    column: num_not_done
+    column: num_not_done_points
     default: 0
+    summarize:
+        operation: sum
+        field: story_points
+        group: [project_id, sprint_id]
+        details: [key, story_points]
     combine: sum
     descriptions:
-        nl: Niet afgeronde stories
-        en: Unfinished stories
+        nl: Niet afgeronde storypunten
+        en: Unfinished story points
     units:
-        nl: "%s stories die niet afgerond zijn"
-        en: "%s stories that are not done"
+        nl: "%s storypunten die niet afgerond zijn"
+        en: "%s story points that are not done"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
   - filename: 04-late-story-points.sql
