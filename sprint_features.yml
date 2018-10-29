@@ -358,30 +358,40 @@ files:
         en: "%s stories that are not done"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
-  - filename: 04-added-stories.sql
-    table: added_stories
-    column: num_added_stories
+  - filename: 04-added-story-points.sql
+    table: added_story_points
+    column: num_added_points
     default: 0
+    summarize:
+        operation: sum
+        field: story_points
+        group: [project_id, sprint_id]
+        details: [key, story_points]
     combine: sum
     descriptions:
-        nl: Toegevoegde stories
-        en: Added stories
+        nl: Toegevoegde storypunten
+        en: Added story points
     units:
-        nl: "%s stories toegevoegd tijdens sprint"
-        en: "%s stories added during sprint"
+        nl: "%s storypunten toegevoegd uit eerdere sprint"
+        en: "%s story points added from earlier sprint"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
-  - filename: 04-removed-stories.sql
-    table: removed_stories
-    column: num_removed_stories
+  - filename: 04-removed-story-points.sql
+    table: removed_story_points
+    column: num_removed_points
     default: 0
+    summarize:
+        operation: sum
+        field: story_points
+        group: [project_id, sprint_id]
+        details: [key, story_points]
     combine: sum
     descriptions:
-        nl: Weggehaalde stories
-        en: Removed stories
+        nl: Weggehaalde storypunten
+        en: Removed story points
     units:
-        nl: "%s stories weggehaald tijdens sprint"
-        en: "%s stories removed during sprint"
+        nl: "%s storypunten weggehaald tijdens sprint"
+        en: "%s story points removed during sprint"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
   - filename: 04-stories.sql
