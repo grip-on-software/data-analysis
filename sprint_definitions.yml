@@ -23,6 +23,10 @@ fields:
         description: "The close date of a sprint"
         table: sprint
         field: CASE WHEN sprint.complete_date IS NOT NULL AND sprint.complete_date < sprint.end_date THEN sprint.complete_date ELSE sprint.end_date END
+    story_points:
+        description: "The number of planned points of an issue"
+        table: issue
+        field: CASE WHEN ${t("issue")}.story_points IN (99, 100) THEN 0 ELSE ${t("issue")}.story_points END
 conditions:
     issue_done:
         description: "Issues that are done according to the team's definition of done"

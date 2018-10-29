@@ -1,5 +1,5 @@
 -- Number of expected story points
-SELECT project_id, sprint_id, key, story_points FROM (
+SELECT project_id, sprint_id, key, ${s(story_points, issue="initial_stories")} AS story_points FROM (
     SELECT issue.project_id, issue.sprint_id, issue.issue_id, issue.key, issue.story_points,
         ROW_NUMBER() OVER (
             PARTITION BY issue.project_id, issue.sprint_id, issue.issue_id
