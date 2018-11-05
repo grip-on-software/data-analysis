@@ -107,7 +107,7 @@ get_features <- function(conn, features, exclude, items, data, colnames, join_co
 		details <- list()
 	}
 	for (item in items) {
-		if (all(item$column %in% features) && length(grep(exclude, item$table)) == 0) {
+		if (!is.null(item$result) || (all(item$column %in% features) && length(grep(exclude, item$table)) == 0)) {
 			if (!is.null(item$result)) {
 				result <- item$result
 			}
@@ -197,6 +197,30 @@ get_sprint_conditions <- function(latest_date='', core=F, sprint_days=NA, sprint
 	return(conditions)
 }
 
+get_metric_features <- function(conn, join_cols, items) {
+	loginfo('Executing query for metric features')
+	metric_cols <- c(join_cols, "value")
+	metric_data <- dbGetQuery(conn,
+							  'SELECT metric.base_name, project_id,
+							   sprint_id, AVG(value) AS value
+							   FROM gros.metric_value
+							   JOIN gros.metric
+							   ON metric_value.metric_id = metric.metric_id
+							   WHERE metric.base_name IS NOT NULL
+							   AND sprint_id <> 0 AND value <> -1
+							   GROUP BY metric.base_name, project_id, sprint_id
+							   ORDER BY metric.base_name, project_id, sprint_id')
+	for (metric_group in split(metric_data, metric_data$base_name)) {
+		name <- metric_group$base_name[1]
+		result <- metric_group[metric_cols]
+		names(result) <- c(join_cols, name)
+		items <- c(items,
+				   list(list(table=name, column=name, category="metrics",
+				   			 result=result)))
+	}
+	return(items)
+}
+
 get_sprint_features <- function(conn, features, exclude, variables, latest_date,
 								core=F, metrics=F, sprint_days=NA,
 								sprint_patch=NA, combine=F, details=F, time=F) {
@@ -233,27 +257,9 @@ get_sprint_features <- function(conn, features, exclude, variables, latest_date,
 						  c(variables,
 						  	list(sprint_conditions=sprint_conditions)))
 	join_cols <- c("project_id", "sprint_id")
-	metric_cols <- c("project_id", "sprint_id", "value")
 
 	if (metrics) {
-		loginfo('Executing query for metric features')
-		metric_data <- dbGetQuery(conn,
-								  'SELECT metric.base_name, project_id,
-								   sprint_id, AVG(value) AS value
-								   FROM gros.metric_value
-								   JOIN gros.metric
-								   ON metric_value.metric_id = metric.metric_id
-								   WHERE metric.base_name IS NOT NULL
-								   AND sprint_id <> 0 AND value <> -1
-								   GROUP BY metric.base_name, project_id, sprint_id
-								   ORDER BY metric.base_name, project_id, sprint_id')
-		for (metric_group in split(metric_data, metric_data$base_name)) {
-			name <- metric_group$base_name[1]
-			result <- metric_group[metric_cols]
-			names(result) <- c(join_cols, name) 
-			items <- c(items,
-					   list(list(table=name, column=name, result=result)))
-		}
+		items <- get_metric_features(conn, join_cols, items)
 	}
 
 	result <- get_features(conn, features, exclude, items, sprint_data,
@@ -271,7 +277,7 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T,
 									   sprint_meta=c(), sprint_conditions='', 
 									   project_fields=c('project_id'),
 									   project_meta=list(), old=F, details=F,
-									   prediction='') {
+									   metrics=F, prediction='') {
 	patterns <- load_definitions('sprint_definitions.yml')
 	if (!missing(date)) {
 		project_meta$recent <- date
@@ -325,25 +331,33 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T,
 
 	data <- yaml.load_file('sprint_features.yml')
 	items <- list()
+	colnames <- c("project_name", "quality_display_name", sprint_meta)
+	join_cols <- c("project_id", "sprint_id")
 	for (item in data$files) {
 		if (all(item$column %in% features)) {
 			items <- c(items, list(load_query(item, variables, data$path)))
 		}
 	}
+	if (metrics) {
+		items <- get_metric_features(conn, join_cols, items)
+	}
 
-	colnames <- c("project_name", "quality_display_name", sprint_meta)
-	join_cols <- c("project_id", "sprint_id")
 	result <- get_features(conn, features, '^$', items, sprint_data, colnames,
 						   join_cols, details=details, required=c("sprint_num"))
 	result$projects <- projects
 
 	if (prediction != '') {
+		loginfo('Collecting predictions from %s', prediction)
 		data <- fromJSON(url(prediction))
 		predictions <- do.call("rbind", mapply(function(labels, projects, sprints) {
 			data.frame(project_id=projects, sprint_num=sprints, prediction=labels)
 		}, data$labels, data$projects, data$sprints, SIMPLIFY=F, USE.NAMES=F))
 		result$data <- merge(result$data, predictions,
 							 by=c("project_id", "sprint_num"), all.x=T)
+		result$items <- c(result$items,
+						  list(list(column="prediction",
+									descriptions=list(nl="Voorspelling",
+													  en="Prediction"))))
 	}
 	return(result)
 }
@@ -364,14 +378,17 @@ get_project_features <- function(conn, features, exclude, variables, core=F) {
 }
 
 write_feature_metadata <- function(projects, specifications, output_directory,
-								   features=c()) {
-	write(toJSON(get_feature_locales(specifications$files)),
+								   features=c(), items=c()) {
+	if (length(items) == 0) {
+		items <- specifications$files
+	}
+	write(toJSON(get_feature_locales(items)),
 	  	  file=paste(output_directory, "descriptions.json", sep="/"))
-	write(toJSON(get_feature_locales(specifications$files, 'units')),
+	write(toJSON(get_feature_locales(items, 'units')),
 	  	  file=paste(output_directory, "units.json", sep="/"))
-	write(toJSON(get_feature_locales(specifications$files, 'short_units')),
+	write(toJSON(get_feature_locales(items, 'short_units')),
 	  	  file=paste(output_directory, "short_units.json", sep="/"))
-	write(toJSON(get_feature_locales(specifications$files, 'tags')),
+	write(toJSON(get_feature_locales(items, 'tags')),
 	  	  file=paste(output_directory, "tags.json", sep="/"))
 	write(toJSON(get_locales(yaml.load_file("source_types.yml"))),
 	  	  file=paste(output_directory, "sources.json", sep="/"))
@@ -381,7 +398,7 @@ write_feature_metadata <- function(projects, specifications, output_directory,
 	if (length(features) > 0) {
 		cats <- specifications$categories
 
-		for (item in specifications$files) {
+		for (item in items) {
 			feature <- item$column[item$column %in% features]
 			cat <- ifelse("category" %in% names(item), item$category, "other")
 			if (length(feature) > 0) {

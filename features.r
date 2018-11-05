@@ -19,6 +19,7 @@ features <- get_arg('--features', default=NA)
 exclude <- get_arg('--exclude', default='^$')
 core <- get_arg('--core', default=F)
 recent <- get_arg('--recent', default=F)
+metrics <- get_arg('--metrics', default=F)
 
 config <- get_config()
 patterns <- load_definitions('sprint_definitions.yml', config$fields)
@@ -136,13 +137,10 @@ if (get_arg('--project', default=F)) {
 		prediction <- str_interp(prediction, config$fields) 
 		if (prediction != '') {
 			extra_features <- c(extra_features, 'prediction')
-			specification <- list(column="prediction",
-							  	  descriptions=list(nl="Voorspelling",
-													en="Prediction"))
-			specifications$files$prediction <- specification
 		}
 	}
 	old_features <- unique(c(sprint_meta,default_features,extra_features))
+	cat_features <- list()
 
 	core <- get_arg('--core', default=F)
 	sprint_days <- get_arg('--days', default=NA)
@@ -166,7 +164,24 @@ if (get_arg('--project', default=F)) {
 										 project_meta=metadata,
 										 old=old,
 										 details=split,
-										 prediction=prediction)
+										 metrics=metrics, prediction=prediction)
+
+	for (cat in names(specifications$categories)) {
+		cat_mask <- sapply(result$items, function(item) {
+			return("category" %in% names(item) && item$category == cat)
+		})
+		if (length(cat_mask) > 0) {
+			for (item in result$items[cat_mask]) {
+				for (column in item$column) {
+					if (!(column %in% old_features)) {
+						cat_features[[cat]] <- c(cat_features[[cat]], column)
+					}
+				}
+			}
+		}
+	}
+	old_features <- c(old_features, unlist(cat_features))
+
 	sprint_data <- result$data
 	if (project_ids != '0') {
 		sprint_data$project_name <- paste("Proj", sprint_data$project_id, sep="")
@@ -199,6 +214,15 @@ if (get_arg('--project', default=F)) {
 					  file=paste(project_dir,
 							  	 paste(feature, 'json', sep='.'),
 								 sep='/'))
+			}
+			for (cat in names(specifications$categories)) {
+				for (column in cat_features[[cat]]) {
+					write(toJSON(project_data[[column]], auto_unbox=T,
+								 na="null", null="null"),
+						  file=paste(project_dir,
+								  	 paste(column, 'json', sep='.'),
+									 sep='/'))
+				}
 			}
 
 			project_id <- project_data$project_id[[1]]
@@ -238,12 +262,14 @@ if (get_arg('--project', default=F)) {
 				  file=paste(project_dir, "sources.json", sep="/"))
 		}
 
+		known_features <- c(default_features, extra_features,
+							unlist(cat_features))
 		write_feature_metadata(projects, specifications, output_dir,
-							   features=features)
+							   features=known_features, items=result$items)
 		write(toJSON(list(limit=recent, closed=closed, old=old), auto_unbox=T),
 			  file=paste(output_dir, "sprints.json", sep="/"))
 		write(toJSON(list(default=default_features,
-						  all=c(default_features, extra_features),
+						  all=known_features,
 						  meta=sprint_meta)),
 			  file=paste(output_dir, "features.json", sep="/"))
 		write_projects_metadata(conn, fields, metadata,
@@ -261,7 +287,6 @@ if (get_arg('--project', default=F)) {
 	latest_date <- get_arg('--latest-date', default='')
 	days <- get_arg('--days', default=NA)
 	patch <- ifelse(get_arg('--patch', default=F), NA, F)
-	metrics <- get_arg('--metrics', default=F)
 	combine <- get_arg('--combine', default=F)
 	details <- get_arg('--details', default=F)
 	time <- get_arg('--time', default=F)
