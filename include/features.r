@@ -363,7 +363,8 @@ get_project_features <- function(conn, features, exclude, variables, core=F) {
 	get_features(conn, features, exclude, items, data, colnames, join_cols)
 }
 
-write_feature_metadata <- function(projects, specifications, output_directory) {
+write_feature_metadata <- function(projects, specifications, output_directory,
+								   features=c()) {
 	write(toJSON(get_feature_locales(specifications$files)),
 	  	  file=paste(output_directory, "descriptions.json", sep="/"))
 	write(toJSON(get_feature_locales(specifications$files, 'units')),
@@ -376,4 +377,21 @@ write_feature_metadata <- function(projects, specifications, output_directory) {
 	  	  file=paste(output_directory, "sources.json", sep="/"))
 	write(toJSON(projects, auto_unbox=T),
 	  	  file=paste(output_directory, "projects.json", sep="/"))
+
+	if (length(features) > 0) {
+		cats <- specifications$categories
+		for (item in specifications$files) {
+			if ("category" %in% names(item)) {
+				cats[[item$category]]$items <- c(cats[[item$category]]$items,
+												 item$column[item$column %in% features])
+			}
+		}
+		categories <- mapply(function(cat, name) {
+			cat$name <- name
+			cat$items <- I(cat$items)
+			return(cat)
+		}, cats, names(cats), SIMPLIFY=F, USE.NAMES=F)
+		write(toJSON(categories, auto_unbox=T),
+		  	  file=paste(output_directory, "categories.json", sep="/"))
+	}
 }

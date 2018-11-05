@@ -1,4 +1,25 @@
 path: sprint_features
+categories:
+    general:
+        nl: Algemeen
+        en: General
+        icon: [fas, fa-project-diagram]
+    team:
+        nl: Team
+        en: Team
+        icon: [fas, fa-users]
+    metrics:
+        nl: Metrieken
+        en: Metrics
+        icon: [fas, fa-chart-pie]
+    tracking:
+        nl: Voortgang
+        en: Progress
+        icon: [fas, fa-tasks]
+    code:
+        nl: Code
+        en: Code
+        icon: [fas, fa-server]
 files:
   - filename: 00-sprint-num.sql
     table: sprint_num
@@ -14,6 +35,7 @@ files:
         en: "Sprint #%s"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=burndownChart&sprint=${jira_sprint_id}"
+    category: general
   - definition: sprint_days
     table: sprint
     column: sprint_days
@@ -30,6 +52,7 @@ files:
         en: "%s days"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
+    category: general
   - definition: sprint_weekdays
     table: sprint
     column: sprint_weekdays
@@ -45,6 +68,7 @@ files:
         en: "%s days"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
+    category: general
   - filename: 00-sprint-closed.sql
     table: sprint_close
     column: sprint_is_closed
@@ -61,6 +85,7 @@ files:
         en: "%s closed sprint"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
+    category: general
   - expression: "1 - sprint_is_closed"
     column: sprint_is_open
     optional: No
@@ -74,6 +99,7 @@ files:
     units:
         nl: "%s open sprint"
         en: "%s open sprint"
+    category: general
   - filename: 00-sprint-gathered.sql
     table: sprint_gathered
     column: sprint_is_complete
@@ -88,6 +114,7 @@ files:
     units:
         nl: "%s complete sprint"
         en: "%s complete sprint"
+    category: general
   - filename: 01-number-of-vcs-committers.sql
     table: sprint_vcs_dev_count
     column: number_of_vcs_devs
@@ -104,6 +131,7 @@ files:
         en: "%s devs"
     source:
         vcs: "${vcs_url}"
+    category: team
   - filename: 01-number-of-jira-updaters.sql
     table: sprint_jira_dev_count
     column: number_of_jira_devs
@@ -120,6 +148,7 @@ files:
         en: "%s members"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?projectKey=${jira_key}&rapidView=${jira_board_id}&view=planning"
+    category: team
   - filename: 01-number-of-seats.sql
     table: sprint_seat_count
     column: number_of_seats
@@ -134,6 +163,7 @@ files:
     short_units:
         nl: "%s fte"
         en: "%s FTE"
+    category: team
   - expression: "ifelse(number_of_vcs_devs > 0, number_of_vcs_devs, mean(c(number_of_jira_devs, number_of_seats)))"
     column: number_of_devs
     default: 0
@@ -147,6 +177,7 @@ files:
     short_units:
         nl: "%s devs"
         en: "%s devs"
+    category: team
   - filename: 01-dev-sprint-experience.sql
     table: sprint_experience
     column: dev_sprint_experience
@@ -161,6 +192,7 @@ files:
     short_units:
         nl: "%s sprints"
         en: "%s sprints"
+    category: team
   - filename: 01-new-committers.sql
     table: new_developers
     column: num_new_developers
@@ -172,6 +204,7 @@ files:
     units:
         nl: "%s nieuwe developers"
         en: "%s new developers"
+    category: team
   - filename: 02-team-spirit-metric.sql
     table: team_spirit_metric
     column: team_spirit
@@ -185,6 +218,7 @@ files:
     sources:
         quality: "${quality_url}/${quality_name}"
         metric_history: "${metric_history_url}/${metric_history_file}"
+    category: metrics
   - filename: 02-lines-of-code-metric.sql
     table: lines_of_code_metric
     column: lines_of_code
@@ -198,6 +232,7 @@ files:
     sources:
         quality: "${quality_url}/${quality_name}"
         metric_history: "${metric_history_url}/${metric_history_file}"
+    category: metrics
   - filename: 02-unittest-line-coverage-metric.sql
     table: unittest_metric
     column: unittest_line_coverage
@@ -214,6 +249,7 @@ files:
     sources:
         quality: "${quality_url}/${quality_name}"
         metric_history: "${metric_history_url}/${metric_history_file}"
+    category: metrics
   - filename: 03-story-watchers.sql
     table: watchers
     column: num_watchers
@@ -227,6 +263,7 @@ files:
         en: "%s issue watchers"
     source:
         jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=project %3D ${jira_key} and sprint %3D ${jira_sprint_id} and watchers %3E 0&runQuery=true"
+    category: tracking
   - filename: 03-number-of-issue-changers.sql
     table: updaters
     column: avg_updaters
@@ -238,6 +275,7 @@ files:
     units:
         nl: "%s issue-updaters"
         en: "%s issue updaters"
+    category: tracking
   - filename: 04-expected-story-points.sql
     table: expected_story_points
     column: num_story_points
@@ -256,6 +294,7 @@ files:
         en: "%s planned points"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=burndownChart&sprint=${jira_sprint_id}"
+    category: tracking
   - filename: 04-done-story-points.sql
     table: done_story_points
     column: done_story_points
@@ -274,6 +313,7 @@ files:
         en: "%s done story points"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
+    category: tracking
   - expression: "done_story_points - num_story_points"
     column: over_expectation
     default: 0
@@ -284,6 +324,7 @@ files:
     units:
         nl: "%s toegevoegde storypoints"
         en: "%s added story points"
+    category: tracking
   - filename: 04-weighted-story-points.sql
     table: weighted_story_points
     column: num_weighted_points
@@ -295,6 +336,7 @@ files:
     units:
         nl: "%s gewogen storypoints"
         en: "%s weighted story points"
+    category: tracking
   - filename: 04-attachments.sql
     table: attachments
     column: num_attachments
@@ -308,6 +350,7 @@ files:
         en: "%s attachments"
     source:
         jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=project %3D ${jira_key} and sprint %3D ${jira_sprint_id} and attachments is not empty&runQuery=true"
+    category: tracking
   - filename: 04-labels.sql
     table: labels
     column: num_labels
@@ -321,6 +364,7 @@ files:
         en: "%s labels"
     source:
         jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=project %3D ${jira_key} and sprint %3D ${jira_sprint_id} and labels is not empty&runQuery=true"
+    category: tracking
   - filename: 04-impediments.sql
     table: impediments
     column: num_impediments
@@ -334,6 +378,7 @@ files:
         en: "%s impediments"
     source:
         jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=project %3D ${jira_key} and sprint %3D ${jira_sprint_id} and Flagged %3D Impediment&runQuery=true"
+    category: tracking
   - filename: 04-late-rank-changes.sql
     table: rank_changes
     column: num_late_rank_changes
@@ -345,6 +390,7 @@ files:
     units:
         nl: "%s rangwijzigingen na begin van sprint"
         en: "%s rank changes after start of sprint"
+    category: tracking
   - filename: 04-not-done-points.sql
     table: not_done
     column: num_not_done_points
@@ -363,6 +409,7 @@ files:
         en: "%s story points that are not done"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
+    category: tracking
   - filename: 04-late-story-points.sql
     table: late_story_points
     column: num_late_points
@@ -381,6 +428,7 @@ files:
         en: "%s late story points"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
+    category: tracking
   - filename: 04-added-story-points.sql
     table: added_story_points
     column: num_added_points
@@ -399,6 +447,7 @@ files:
         en: "%s story points added from earlier sprint"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
+    category: tracking
   - filename: 04-removed-story-points.sql
     table: removed_story_points
     column: num_removed_points
@@ -417,6 +466,7 @@ files:
         en: "%s story points removed during sprint"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
+    category: tracking
   - filename: 04-stories.sql
     table: stories
     column: num_stories
@@ -430,6 +480,7 @@ files:
         en: "%s stories"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
+    category: tracking
   - filename: 04-done-stories.sql
     table: done_stories
     column: num_done_stories
@@ -443,6 +494,7 @@ files:
         en: "%s done stories"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
+    category: tracking
   - filename: 04-issue-links.sql
     table: issue_links
     column: num_links
@@ -456,6 +508,7 @@ files:
         en: "%s issue links"
     source:
         jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=project %3D ${jira_key} and sprint %3D ${jira_sprint_id} and issueFunction in hasLinks()&runQuery=true"
+    category: tracking
   - filename: 05-number-of-comments.sql
     table: issue_comments
     column: num_comments
@@ -469,6 +522,7 @@ files:
         en: "%s issue comments"
     source:
         jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=project %3D ${jira_key} and sprint %3D ${jira_sprint_id} and issueFunction in hasComments()&runQuery=true"
+    category: tracking
   - filename: 05-average-changes.sql
     table: issue_changes
     column: avg_changes
@@ -480,6 +534,7 @@ files:
     units:
         nl: "gemiddeld %s wijzigingen per issue"
         en: "average of %s changes per issue"
+    category: tracking
   - filename: 05-issue-change-pivot.sql
     table: issue_change_pivot
     column: avg_change_day
@@ -505,6 +560,7 @@ files:
         en: "%s points/day"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
+    category: tracking
   - expression: "rowSums(embed(done_story_points, 3)) / 3"
     column: velocity_three
     window:
@@ -523,6 +579,7 @@ files:
         en: "%s points/sprint"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
+    category: tracking
   - expression: "rowSums(embed(done_story_points, 7)) / 7"
     column: velocity_seven
     window:
@@ -539,6 +596,7 @@ files:
     short_units:
         nl: "%s punten/sprint"
         en: "%s points/sprint"
+    category: tracking
   - expression: "num_story_points - velocity_three"
     column: over_value
     default: 0
@@ -552,6 +610,7 @@ files:
     short_units:
         nl: "%s punten/sprint"
         en: "%s points/sprint"
+    category: tracking
   - filename: 06-other-issues-done.sql
     table: other_done_issues
     column: other_done_issues
@@ -565,6 +624,7 @@ files:
         en: "%s done issues that are not stories or subtasks"
     source:
         jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=project %3D ${jira_key} and sprint %3D ${jira_sprint_id} and ${issue_other} and resolution < %22${sprint_end_date}%22&runQuery=true"
+    category: tracking
   - filename: 07-concurrent-in-progress-stories.sql
     table: concurrent_in_progress_stories
     column: avg_concurrent_progress
@@ -576,6 +636,7 @@ files:
     units:
         nl: "gemiddeld %s stories die gelijktijdig in progress zijn"
         en: "average of %s stories that are concurrently in progress"
+    category: tracking
   - filename: 07-duration-in-progress-stories.sql
     table: duration_in_progress_stories
     column: avg_duration_progress
@@ -590,6 +651,7 @@ files:
     short_units:
         nl: "%s dagen/story"
         en: "%s days/story"
+    category: tracking
   - filename: 08-vcs-statistics.sql
     table: vcs_statistics
     column: [num_commits, avg_insertions, avg_deletions, avg_size, avg_files, avg_lines]
@@ -640,6 +702,7 @@ files:
             - "%s bytes/commit"
             - "%s files/commit"
             - "%s lines/commit"
+    category: code
   - filename: 09-metric-count.sql
     table: metric_count
     column: num_metrics
@@ -653,6 +716,7 @@ files:
     source:
         quality: "${quality_url}/${quality_name}"
         metric_history: "${metric_history_url}/${metric_history_file}"
+    category: metrics
   - filename: 09-red-metric-count.sql
     table: red_metric_count
     column: num_red_metrics
@@ -666,6 +730,7 @@ files:
     source:
         quality: "${quality_url}/${quality_name}"
         metric_history: "${metric_history_url}/${metric_history_file}"
+    category: metrics
   - filename: 09-missing-metric-count.sql
     table: missing_metric_count
     column: num_missing_metrics
@@ -679,6 +744,7 @@ files:
     source:
         quality: "${quality_url}/${quality_name}"
         metric_history: "${metric_history_url}/${metric_history_file}"
+    category: metrics
   - filename: 10-metric-target-change.sql
     table: metric_target_change
     column: num_metric_target_changes
@@ -693,6 +759,7 @@ files:
     source:
         metric_options: "${metric_options_url}/blob/master/${metric_options_file}"
         quality: "${quality_url}/${quality_name}"
+    category: metrics
   - filename: 11-early-rank-changes.sql
     table: early_rank_changes
     column: num_early_rank_changes
@@ -704,6 +771,7 @@ files:
     units:
         nl: "%s rangwijzigingen voor begin van sprint"
         en: "%s rank changes before start of sprint"
+    category: tracking
   - filename: 11-early-storypoint-changes.sql
     table: early_storypoint_changes
     column: num_early_storypoint_changes
@@ -715,6 +783,7 @@ files:
     units:
         nl: "%s wijzigingen aan storypoints voor begin van sprint"
         en: "%s story point changes before start of sprint"
+    category: tracking
   - filename: 11-early-changes.sql
     table: early_changes
     column: num_early_changes
@@ -726,6 +795,7 @@ files:
     units:
         nl: "%s overige wijzigingen aan issues voor begin van sprint"
         en: "%s other issue changes before start of sprint"
+    category: tracking
   - filename: 11-backlog-sprint.sql
     table: backlog_sprint
     column: backlog_size
@@ -737,6 +807,7 @@ files:
     units:
         nl: "%s issues voor de sprint op de backlog"
         en: "%s issues for the sprint on the backlog"
+    category: tracking
   - filename: 11-backlog-ready-status.sql
     table: backlog_ready_status
     column: backlog_ready_status
@@ -748,3 +819,4 @@ files:
     units:
         nl: "%s issues met readystatus voor de sprint op de backlog"
         en: "%s issues with ready status for the sprint on the backlog"
+    category: tracking
