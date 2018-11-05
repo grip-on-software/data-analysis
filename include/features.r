@@ -380,13 +380,20 @@ write_feature_metadata <- function(projects, specifications, output_directory,
 
 	if (length(features) > 0) {
 		cats <- specifications$categories
+
 		for (item in specifications$files) {
-			if ("category" %in% names(item)) {
-				cats[[item$category]]$items <- c(cats[[item$category]]$items,
-												 item$column[item$column %in% features])
+			feature <- item$column[item$column %in% features]
+			cat <- ifelse("category" %in% names(item), item$category, "other")
+			if (length(feature) > 0) {
+				cats[[cat]]$items <- c(cats[[cat]]$items, feature)
 			}
 		}
 		categories <- mapply(function(cat, name) {
+			if (name == "other") {
+				cat$nl = "Overig"
+				cat$en = "Other"
+				cat$icon = c("fas", "fa-ellipsis-h")
+			}
 			cat$name <- name
 			cat$items <- I(cat$items)
 			return(cat)

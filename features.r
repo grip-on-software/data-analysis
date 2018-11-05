@@ -129,7 +129,7 @@ if (get_arg('--project', default=F)) {
 	}
 	meta_features <- sprint_meta[sprint_meta %in% all_features]
 	default <- c(sprint_meta, 'num_story_points', 'done_story_points',
-				 'velocity', 'lines_of_code', 'unittest_line_coverage')
+				 'velocity_three', 'lines_of_code', 'unittest_line_coverage')
 	default_features <- default[default %in% c(sprint_meta, features)]
 	extra_features <- features[!(features %in% default_features)]
 	if (prediction != '') {

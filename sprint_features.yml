@@ -545,6 +545,7 @@ files:
     units:
         nl: "middelpunt van issuewijzigingen op %s dagen na begin van sprint"
         en: "midpoint of issuechanges at %s days after start of sprint"
+    category: tracking
   - expression: "done_story_points / sprint_weekdays"
     column: velocity
     default: 0
