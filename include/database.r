@@ -66,20 +66,33 @@ if (!exists('INC_DATABASE_R')) {
 				fields <- c(fields, paste(item$table, field, sep="."))
 			}
 			define <- patterns[[item$definition]]
-			fields <- c(fields, paste(str_interp(define, patterns), "AS",
-									  item$column, sep=" "))
+			fields <- c(fields, paste(define, "AS", item$column, sep=" "))
 			item$query <- paste('SELECT', paste(fields, collapse=", "),
 								'FROM', paste('gros', item$table, sep='.'))
 		}
-		else {
-			if (!is.null(item$query)) {
-				query <- item$query
-			}
-			else {
-				path <- paste(path, item$filename, sep="/")
-				query <- paste(readLines(path, encoding="UTF-8"), collapse="\n")
-			}
-			item$query <- str_interp(query, patterns)
+		else if (!is.null(item$metric)) {
+			columns <- c('metric_value.project_id', 'metric_value.sprint_id')
+			item$table <- item$metric
+			item$category <- "metrics"
+			item$query <- paste('SELECT', paste(columns, collapse=","), ",",
+								paste(toupper(item$aggregate), "(value) AS ",
+									  item$column, collapse=", ", sep=""),
+				   	   	   	    'FROM gros.metric_value
+								 JOIN gros.metric
+								 ON metric_value.metric_id = metric.metric_id
+								 WHERE metric.base_name =',
+								 paste('\'', item$metric, '\'', sep=""),
+								'AND metric_value.sprint_id <> 0
+								 AND metric_value.value > -1
+								 GROUP BY', paste(columns, collapse=","))
+		}
+		else if (!is.null(item$filename)) {
+			path <- paste(path, item$filename, sep="/")
+			item$query <- paste(readLines(path, encoding="UTF-8"), collapse="\n")
+		}
+
+		if (!is.null(item$query)) {
+			item$query <- str_interp(item$query, patterns)
 			item$patterns <- patterns
 		}
 		return(item)

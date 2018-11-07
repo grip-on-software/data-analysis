@@ -250,6 +250,33 @@ files:
         quality: "${quality_url}/${quality_name}"
         metric_history: "${metric_history_url}/${metric_history_file}"
     category: metrics
+  - metric: Vulnerabilities
+    column: vulnerabilities
+    aggregate: max
+    descriptions:
+        nl: Kwetsbaarheden
+        en: Vulnerabilities
+    units:
+        nl: "%s kwetsbaarheden"
+        en: "%s vulnerabilities"
+  - metric: MaintainabilityBugs
+    column: maintainability_bugs
+    aggregate: max
+    descriptions:
+        nl: Onderhoudsbugs
+        en: Maintainability bugs
+    units:
+        nl: "%s onderhoudsbugs"
+        en: "%s maintainability bugs"
+  - metric: CodeSmells
+    column: code_smells
+    aggregate: max
+    descriptions:
+        nl: Code smells
+        en: Code smells
+    units:
+        nl: "%s code smells"
+        en: "%s code smells"
   - filename: 03-story-watchers.sql
     table: watchers
     column: num_watchers

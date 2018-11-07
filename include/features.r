@@ -107,7 +107,7 @@ get_features <- function(conn, features, exclude, items, data, colnames, join_co
 		details <- list()
 	}
 	for (item in items) {
-		if (!is.null(item$result) || (all(item$column %in% features) && length(grep(exclude, item$table)) == 0)) {
+		if (all(item$column %in% features) && length(grep(exclude, item$table)) == 0) {
 			if (!is.null(item$result)) {
 				result <- item$result
 			}
@@ -124,6 +124,9 @@ get_features <- function(conn, features, exclude, items, data, colnames, join_co
 				else {
 					result[item$column] <- eval(expression, data)
 				}
+			}
+			else if (is.null(item$query)) {
+				stop(paste('No query or result available for', item$column))
 			}
 			else {
 				loginfo('Executing query for table %s', item$table)
@@ -197,33 +200,9 @@ get_sprint_conditions <- function(latest_date='', core=F, sprint_days=NA, sprint
 	return(conditions)
 }
 
-get_metric_features <- function(conn, join_cols, items) {
-	loginfo('Executing query for metric features')
-	metric_cols <- c(join_cols, "value")
-	metric_data <- dbGetQuery(conn,
-							  'SELECT metric.base_name, project_id,
-							   sprint_id, AVG(value) AS value
-							   FROM gros.metric_value
-							   JOIN gros.metric
-							   ON metric_value.metric_id = metric.metric_id
-							   WHERE metric.base_name IS NOT NULL
-							   AND sprint_id <> 0 AND value <> -1
-							   GROUP BY metric.base_name, project_id, sprint_id
-							   ORDER BY metric.base_name, project_id, sprint_id')
-	for (metric_group in split(metric_data, metric_data$base_name)) {
-		name <- metric_group$base_name[1]
-		result <- metric_group[metric_cols]
-		names(result) <- c(join_cols, name)
-		items <- c(items,
-				   list(list(table=name, column=name, category="metrics",
-				   			 result=result)))
-	}
-	return(items)
-}
-
 get_sprint_features <- function(conn, features, exclude, variables, latest_date,
-								core=F, metrics=F, sprint_days=NA,
-								sprint_patch=NA, combine=F, details=F, time=F) {
+								core=F, sprint_days=NA, sprint_patch=NA,
+								combine=F, details=F, time=F) {
 	conditions <- get_sprint_conditions(latest_date, core, sprint_days, sprint_patch)
 	if (length(conditions) != 0) {
 		where_clause <- paste('WHERE', paste(conditions, collapse=' AND '))
@@ -258,10 +237,6 @@ get_sprint_features <- function(conn, features, exclude, variables, latest_date,
 						  	list(sprint_conditions=sprint_conditions)))
 	join_cols <- c("project_id", "sprint_id")
 
-	if (metrics) {
-		items <- get_metric_features(conn, join_cols, items)
-	}
-
 	result <- get_features(conn, features, exclude, items, sprint_data,
 						   colnames, join_cols, details=details,
 						   required=c("sprint_num"))
@@ -277,7 +252,7 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T,
 									   sprint_meta=c(), sprint_conditions='', 
 									   project_fields=c('project_id'),
 									   project_meta=list(), old=F, details=F,
-									   metrics=F, prediction='') {
+									   prediction='') {
 	patterns <- load_definitions('sprint_definitions.yml')
 	if (!missing(date)) {
 		project_meta$recent <- date
@@ -337,9 +312,6 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T,
 		if (all(item$column %in% features)) {
 			items <- c(items, list(load_query(item, variables, data$path)))
 		}
-	}
-	if (metrics) {
-		items <- get_metric_features(conn, join_cols, items)
 	}
 
 	result <- get_features(conn, features, '^$', items, sprint_data, colnames,

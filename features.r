@@ -19,7 +19,6 @@ features <- get_arg('--features', default=NA)
 exclude <- get_arg('--exclude', default='^$')
 core <- get_arg('--core', default=F)
 recent <- get_arg('--recent', default=F)
-metrics <- get_arg('--metrics', default=F)
 
 config <- get_config()
 patterns <- load_definitions('sprint_definitions.yml', config$fields)
@@ -164,7 +163,7 @@ if (get_arg('--project', default=F)) {
 										 project_meta=metadata,
 										 old=old,
 										 details=split,
-										 metrics=metrics, prediction=prediction)
+										 prediction=prediction)
 
 	for (cat in names(specifications$categories)) {
 		cat_mask <- sapply(result$items, function(item) {
@@ -292,7 +291,7 @@ if (get_arg('--project', default=F)) {
 	time <- get_arg('--time', default=F)
 
 	result <- get_sprint_features(conn, features, exclude, NULL, latest_date,
-								  core=core, metrics=metrics,
+								  core=core,
 								  sprint_days=days, sprint_patch=patch,
 								  combine=combine, details=details, time=time)
 	sprint_data <- result$data
