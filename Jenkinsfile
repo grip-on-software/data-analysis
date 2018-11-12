@@ -2,6 +2,9 @@ pipeline {
     agent { label 'docker' }
 
     environment {
+        AGENT_TAG = env.BRANCH_NAME.replaceFirst('^master$', 'latest')
+        AGENT_NAME = "${env.DOCKER_REGISTRY}/gros-data-analysis-dashboard"
+        AGENT_IMAGE = "${env.AGENT_NAME}:${env.AGENT_TAG}"
         GITLAB_TOKEN = credentials('data-analysis-gitlab-token')
     }
 
@@ -29,13 +32,23 @@ pipeline {
         stage('Build') {
             steps {
                 updateGitlabCommitStatus name: env.JOB_NAME, state: 'running'
-                sh 'docker build -t $DOCKER_REGISTRY/gros-data-analysis-dashboard .'
+                sh 'docker build -t $AGENT_IMAGE .'
+            }
+        }
+        stage('Lint') {
+            agent {
+                docker {
+                    image '$AGENT_IMAGE'
+                }
+            }
+            steps {
+                sh 'Rscript lint.r *.r include/*.r'
             }
         }
         stage('Push') {
             when { branch 'master' }
             steps {
-                sh 'docker push $DOCKER_REGISTRY/gros-data-analysis-dashboard:latest'
+                sh 'docker push $AGENT_IMAGE:latest'
             }
         }
     }

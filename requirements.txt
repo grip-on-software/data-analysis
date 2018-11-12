@@ -13,3 +13,4 @@ stringr
 padr
 zoo
 viridis
+lintr
