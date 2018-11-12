@@ -150,7 +150,7 @@ get_features <- function(conn, features, exclude, items, data, colnames,
                 result <- do.call("rbind", lapply(groups, function(group) {
                     group_result <- data.frame(group[1, group_names])
                     summarizer <- function(operation, field) {
-                        do.call(operation, c(as.list(group[, field]),
+                        do.call(operation, c(list(group[, field]),
                                              list(na.rm=T)))
                     }
                     group_result[, item$column] <- mapply(summarizer,
