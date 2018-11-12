@@ -205,9 +205,9 @@ files:
         nl: "%s nieuwe developers"
         en: "%s new developers"
     category: team
-  - filename: 02-team-spirit-metric.sql
-    table: team_spirit_metric
+  - metric: TeamSpirit
     column: team_spirit
+    aggregate: end
     combine: mean
     descriptions:
         nl: Teamstemming
@@ -218,10 +218,9 @@ files:
     sources:
         quality: "${quality_url}/${quality_name}"
         metric_history: "${metric_history_url}/${metric_history_file}"
-    category: metrics
-  - filename: 02-lines-of-code-metric.sql
-    table: lines_of_code_metric
+  - metric: TotalLOC
     column: lines_of_code
+    aggregate: end
     combine: mean
     descriptions:
         nl: Aantal regels code
@@ -232,10 +231,10 @@ files:
     sources:
         quality: "${quality_url}/${quality_name}"
         metric_history: "${metric_history_url}/${metric_history_file}"
-    category: metrics
-  - filename: 02-unittest-line-coverage-metric.sql
-    table: unittest_metric
+  - metric: UnittestLineCoverage
     column: unittest_line_coverage
+    aggregate: end
+    summarize: mean
     combine: mean
     descriptions:
         nl: Unittest line coverage
@@ -249,10 +248,9 @@ files:
     sources:
         quality: "${quality_url}/${quality_name}"
         metric_history: "${metric_history_url}/${metric_history_file}"
-    category: metrics
   - metric: Vulnerabilities
     column: vulnerabilities
-    aggregate: max
+    aggregate: end
     summarize: sum
     descriptions:
         nl: Kwetsbaarheden
@@ -262,7 +260,7 @@ files:
         en: "%s vulnerabilities"
   - metric: MaintainabilityBugs
     column: maintainability_bugs
-    aggregate: max
+    aggregate: end
     summarize: sum
     descriptions:
         nl: Onderhoudsbugs
@@ -272,7 +270,7 @@ files:
         en: "%s maintainability bugs"
   - metric: CodeSmells
     column: code_smells
-    aggregate: max
+    aggregate: end
     summarize: sum
     descriptions:
         nl: Code smells

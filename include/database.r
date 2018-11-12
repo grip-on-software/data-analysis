@@ -83,12 +83,19 @@ if (!exists('INC_DATABASE_R')) {
             else {
                 field <- item$column
             }
+            if (item$aggregate == "end") {
+                columns <- c(columns, 'metric_value.value')
+                aggregate <- 'MAX(metric_value.date) AS end_date'
+            }
+            else {
+                aggregate <- paste(toupper(item$aggregate), "(value) AS ",
+                                   field, collapse=", ", sep="")
+            }
             item$table <- item$metric
             item$category <- "metrics"
             item$combine <- "sum"
             item$query <- paste('SELECT', paste(columns, collapse=","), ",",
-                                paste(toupper(item$aggregate), "(value) AS ",
-                                      field, collapse=", ", sep=""),
+                                aggregate,
                                 'FROM gros.metric_value
                                  JOIN gros.metric
                                  ON metric_value.metric_id = metric.metric_id
@@ -97,6 +104,27 @@ if (!exists('INC_DATABASE_R')) {
                                 'AND metric_value.sprint_id <> 0
                                  AND metric_value.value > -1
                                  GROUP BY', paste(columns, collapse=","))
+
+            if (item$aggregate == "end") {
+                colnames <- paste(lapply(strsplit(columns[-length(columns)],
+                                                  ".", fixed=TRUE),
+                                         function(column) {
+                                             column[[length(column)]]
+                                         }),
+                                  collapse=",")
+                item$query <- paste('SELECT', colnames, ',',
+                                    'MAX(value) AS', field,
+                                    'FROM (
+                                        SELECT', colnames, ', value,',
+                                        'ROW_NUMBER() OVER (
+                                            PARTITION BY', colnames, 'ORDER BY',
+                                            colnames, ', end_date DESC
+                                        ) AS rev_row
+                                        FROM (', item$query, ') AS metric_rows
+                                    ) AS ', item$metric,
+                                    'WHERE rev_row = 1
+                                     GROUP BY', paste(colnames, collapse=","))
+            }
         }
         else if (!is.null(item$filename)) {
             path <- paste(path, item$filename, sep="/")
