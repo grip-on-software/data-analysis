@@ -253,6 +253,7 @@ files:
   - metric: Vulnerabilities
     column: vulnerabilities
     aggregate: max
+    summarize: sum
     descriptions:
         nl: Kwetsbaarheden
         en: Vulnerabilities
@@ -262,6 +263,7 @@ files:
   - metric: MaintainabilityBugs
     column: maintainability_bugs
     aggregate: max
+    summarize: sum
     descriptions:
         nl: Onderhoudsbugs
         en: Maintainability bugs
@@ -271,6 +273,7 @@ files:
   - metric: CodeSmells
     column: code_smells
     aggregate: max
+    summarize: sum
     descriptions:
         nl: Code smells
         en: Code smells

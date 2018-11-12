@@ -72,12 +72,24 @@ if (!exists('INC_DATABASE_R')) {
         }
         else if (!is.null(item$metric)) {
             columns <- c('metric_value.project_id', 'metric_value.sprint_id')
+            if (!is.null(item$summarize)) {
+                columns <- c(columns, 'metric.domain_name')
+                field <- paste(item$aggregate, 'value', sep="_")
+                item$summarize <- list(operation=item$summarize,
+                                       field=field,
+                                       group=c('project_id', 'sprint_id'),
+                                       details=c('domain_name', field))
+            }
+            else {
+                field <- item$column
+            }
             item$table <- item$metric
             item$category <- "metrics"
+            item$combine <- "sum"
             item$query <- paste('SELECT', paste(columns, collapse=","), ",",
                                 paste(toupper(item$aggregate), "(value) AS ",
-                                      item$column, collapse=", ", sep=""),
-                                         'FROM gros.metric_value
+                                      field, collapse=", ", sep=""),
+                                'FROM gros.metric_value
                                  JOIN gros.metric
                                  ON metric_value.metric_id = metric.metric_id
                                  WHERE metric.base_name =',
