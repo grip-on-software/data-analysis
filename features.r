@@ -117,7 +117,7 @@ if (get_arg('--project', default=F)) {
         recent <- 5
     }
     split <- get_arg('--split', default=F)
-    old <- get_arg('--old', default=F)
+    with_old <- get_arg('--old', default=F)
     closed <- get_arg('--closed', default=F)
     prediction <- get_arg('--prediction', default='')
     specifications <- yaml.load_file('sprint_features.yml')
@@ -179,7 +179,7 @@ if (get_arg('--project', default=F)) {
                                          sprint_conditions=sprint_conditions,
                                          project_fields=fields,
                                          project_meta=metadata,
-                                         old=old,
+                                         old=with_old,
                                          details=split,
                                          prediction=prediction)
 
@@ -275,7 +275,8 @@ if (get_arg('--project', default=F)) {
                             unlist(cat_features))
         write_feature_metadata(projects, specifications, output_dir,
                                features=known_features, items=result$items)
-        write(toJSON(list(limit=recent, closed=closed, old=old), auto_unbox=T),
+        write(toJSON(list(limit=recent, closed=closed, old=with_old),
+                     auto_unbox=T),
               file=paste(output_dir, "sprints.json", sep="/"))
         write(toJSON(list(default=default_features,
                           all=known_features,
