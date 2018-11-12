@@ -167,15 +167,16 @@ build_sprint_source_urls <- function(conn, project_id, project_name, sprint,
     }
     source_items <- list()
     for (item in specifications$files) {
-        if (length(item$source) > 1) {
+        if (is.list(item$source)) {
             urls <- url_names(names(item$source))
             index <- which(urls %in% names(source_urls))
             if (length(index) > 0) {
-                item <- c(item, list(source=item$source[[index[1]]],
-                                     type=names(item$source)[[index[1]]]))
+                new_item <- list(source=item$source[[index[1]]],
+                                 type=names(item$source)[[index[1]]])
+                source_items[[item$column]] <- c(item, new_item)
             }
         }
-        if (length(item$source) == 1) {
+        else if (!is.null(item$source)) {
             source_items[[item$column]] <- item
         }
     }
