@@ -48,7 +48,7 @@ pipeline {
         stage('Push') {
             when { branch 'master' }
             steps {
-                sh 'docker push $AGENT_IMAGE:latest'
+                sh 'docker push $AGENT_IMAGE'
             }
         }
     }
