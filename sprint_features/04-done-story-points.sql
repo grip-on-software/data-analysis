@@ -1,5 +1,5 @@
 -- Number of done story points
-SELECT done_stories.project_id, done_stories.sprint_id, issue.key, issue.story_points FROM
+SELECT done_stories.project_id, done_stories.sprint_id, issue.key, ${s(story_points)} AS story_points FROM
 	gros.issue,
 	(SELECT DISTINCT issue.project_id, issue.sprint_id, issue.issue_id, max_issue.changelog_id
 		FROM gros.issue

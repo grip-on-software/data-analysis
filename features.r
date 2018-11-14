@@ -2,6 +2,7 @@
 # exports them to an ARFF file readable by Weka and other data mining tools.
 
 library(foreign) # For write.arff
+library(plyr)
 library(jsonlite)
 source('include/args.r')
 source('include/database.r')
@@ -199,7 +200,8 @@ if (get_arg('--project', default=F)) {
     }
     old_features <- c(old_features, unlist(cat_features))
 
-    sprint_data <- result$data
+    sprint_data <- arrange(result$data, result$data$project_id,
+                           result$data$start_date, result$data$sprint_name)
     if (project_ids != '0') {
         sprint_data$project_name <- paste("Proj", sprint_data$project_id,
                                           sep="")

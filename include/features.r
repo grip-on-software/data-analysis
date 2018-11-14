@@ -1,6 +1,7 @@
 # Utilities for retrieving sprint features.
 
 library(jsonlite)
+library(plyr)
 library(yaml)
 source('include/database.r')
 source('include/log.r')
@@ -123,11 +124,19 @@ get_features <- function(conn, features, exclude, items, data, colnames,
                 expression <- parse(text=item$expression)
                 result <- data.frame(data[join_cols])
                 if (!is.null(item$window)) {
-                    groups <- split(data, as.list(item$window$group), drop=T)
-                    result[item$column] <- lapply(groups, function(group) {
+                    if (length(item$window$group) == 1) {
+                        group_cols <- list(factor(data[, item$window$group]))
+                        names(group_cols) <- item$window$group
+                    }
+                    else {
+                        group_cols <- lapply(data[, item$window$group], factor)
+                    }
+                    groups <- split(data, as.list(group_cols), drop=T)
+                    all <- do.call("c", lapply(groups, function(group) {
                         c(rep(item$default, item$window$dimension - 1),
                           eval(expression, group))
-                    })
+                    }))
+                    result[item$column] <- all
                 }
                 else {
                     result[item$column] <- eval(expression, data)
@@ -146,7 +155,9 @@ get_features <- function(conn, features, exclude, items, data, colnames,
                 summarize <- item$summarize
                 group_names <- summarize$group
                 group_cols <- lapply(result[, group_names], factor)
+                print(str(group_cols))
                 groups <- split(result, as.list(group_cols), drop=T)
+                print(length(groups))
                 result <- do.call("rbind", lapply(groups, function(group) {
                     group_result <- data.frame(group[1, group_names])
                     summarizer <- function(operation, field) {
@@ -171,7 +182,7 @@ get_features <- function(conn, features, exclude, items, data, colnames,
                     names(details[[item$column[1]]]) <- NULL
                 }
             }
-            data <- merge(data, result, by=join_cols, all.x=T)
+            data <- join(data, result, by=join_cols, type="left", match="first")
             if (!is.null(item$default)) {
                 for (column in item$column) {
                     if (!(column %in% names(data))) {
@@ -325,6 +336,8 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T,
     }
     sprint_data$start_date <- as.POSIXct(sprint_data$start_date)
     sprint_data$close_date <- as.POSIXct(sprint_data$close_date)
+    sprint_data <- arrange(sprint_data, sprint_data$project_id,
+                           sprint_data$start_date, sprint_data$sprint_name)
 
     data <- yaml.load_file('sprint_features.yml')
     items <- list()
@@ -351,8 +364,9 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T,
                                },
                                data$labels, data$projects, data$sprints,
                                SIMPLIFY=F, USE.NAMES=F))
-        result$data <- merge(result$data, predictions,
-                             by=c("project_id", "sprint_num"), all.x=T)
+        result$data <- join(result$data, predictions,
+                            by=c("project_id", "sprint_num"), type="left",
+                            match="first")
         result$items <- c(result$items,
                           list(list(column="prediction",
                                     descriptions=list(nl="Voorspelling",
