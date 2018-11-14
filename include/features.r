@@ -192,7 +192,7 @@ get_features <- function(conn, features, exclude, items, data, colnames,
 }
 
 get_sprint_conditions <- function(latest_date='', core=F, sprint_days=NA,
-                                  sprint_patch=NA) {
+                                  sprint_patch=NA, future=T) {
     conditions <- list()
     if (!missing(latest_date) && latest_date != '') {
         conditions <- c(conditions,
@@ -212,12 +212,16 @@ get_sprint_conditions <- function(latest_date='', core=F, sprint_days=NA,
         conditions <- c(conditions, ifelse(sprint_patch, '${s(sprint_patch)}',
                                            'NOT (${s(sprint_patch)})'))
     }
+    if (!future) {
+        conditions <- c(conditions, 'start_date IS NOT NULL',
+                        'end_date IS NOT NULL')
+    }
     return(conditions)
 }
 
 get_sprint_features <- function(conn, features, exclude, variables, latest_date,
                                 core=F, sprint_days=NA, sprint_patch=NA,
-                                combine=F, details=F, time=F) {
+                                future=T, combine=F, details=F, time=F) {
     conditions <- get_sprint_conditions(latest_date, core, sprint_days,
                                         sprint_patch)
     if (length(conditions) != 0) {

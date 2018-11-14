@@ -30,7 +30,8 @@ sprint_patch <- ifelse(get_arg('--patch', default=F), NA, F)
 exportFeatures <- function(features, exclude, output_directory) {
     result <- get_sprint_features(conn, features, exclude, variables,
                                   sprint_days=sprint_days,
-                                  sprint_patch=sprint_patch)
+                                  sprint_patch=sprint_patch,
+                                  future=F)
     data <- result$data
     colnames <- result$colnames
     project_data <- lapply(as.list(projects$project_id), function(project) {
@@ -173,8 +174,8 @@ for (item in items) {
         projects_with_data <- modifyList(projects_with_data,
                                           as.list(have_data)[have_data])
 
-        minDate <- min(result$date)
-        maxDate <- max(result$date, result$end_date)
+        minDate <- min(result$date, na.rm=T)
+        maxDate <- max(result$date, result$end_date, na.rm=T)
         min_date[[item$type]] <- minDate
         max_date[[item$type]] <- maxDate
 
@@ -193,8 +194,8 @@ for (item in items) {
     }
 }
 
-total_data <- list(min_date=safe_unbox(min(unlist(min_date))),
-                   max_date=safe_unbox(max(unlist(max_date))),
+total_data <- list(min_date=safe_unbox(min(unlist(min_date), na.rm=T)),
+                   max_date=safe_unbox(max(unlist(max_date), na.rm=T)),
                    update_date=safe_unbox(dateFormat(Sys.time())),
                    projects=names(projects_with_data),
                    boards=project_boards)
