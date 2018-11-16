@@ -9,6 +9,7 @@ source('include/database.r')
 source('include/features.r')
 source('include/sources.r')
 source('include/tracker.r')
+options(warn=1)
 conn <- connect()
 
 output_directory <- get_arg('--output', default='output')
@@ -120,6 +121,10 @@ if (get_arg('--project', default=F)) {
     split <- get_arg('--split', default=F)
     with_old <- get_arg('--old', default=F)
     closed <- get_arg('--closed', default=F)
+    combine <- get_arg('--combine', default='')
+    if (combine == '') {
+        combine <- F
+    }
     prediction <- get_arg('--prediction', default='')
     specifications <- yaml.load_file('sprint_features.yml')
     all_features <- unlist(sapply(specifications$files, function(item) {
@@ -182,6 +187,7 @@ if (get_arg('--project', default=F)) {
                                          project_meta=metadata,
                                          old=with_old,
                                          details=split,
+                                         combine=combine,
                                          prediction=prediction)
 
     for (cat in names(specifications$categories)) {

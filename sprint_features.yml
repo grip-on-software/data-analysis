@@ -596,7 +596,9 @@ files:
         dimension: 3
         group: project_id
     default: 0
-    combine: mean
+    combine:
+        add: done_story_points
+        factor: 0.3333333
     descriptions:
         nl: Gemiddelde velocity
         en: Average velocity
@@ -615,7 +617,9 @@ files:
         dimension: 7
         group: project_id
     default: 0
-    combine: mean
+    combine:
+        add: done_story_points
+        factor: 0.1428571
     descriptions:
         nl: Langdurige velocity
         en: Long term velocity
@@ -629,7 +633,7 @@ files:
   - expression: "num_story_points - velocity_three"
     column: over_value
     default: 0
-    combine: mean
+    combine: true
     descriptions:
         nl: Toegevoegde velocity
         en: Added velocity

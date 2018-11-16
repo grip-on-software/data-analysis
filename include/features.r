@@ -55,50 +55,166 @@ get_feature_locales <- function(items, field='descriptions') {
     return(locales)
 }
 
-get_combined_features <- function(items, data, colnames, join_cols, combine=T) {
+get_combined_features <- function(items, data, colnames, details, join_cols,
+                                  combine=T) {
     new_data <- data.frame()
-    projects <- factor(data[, join_cols[[1]]])
-    project_data <- split(data, projects)
     if (isTRUE(combine)) {
         combine <- 10
     }
-    intervals <- lapply(project_data, function(project) {
-        end <- nrow(project)
-        combn(round(seq(1, end, length.out=max(2, min(combine, end)))), 2)
-    })
-    n <- sum(as.numeric(lapply(intervals,
-                               function(interval) { ncol(interval) })))
-    new_data <- data.frame(project_id=rep(NA, n))
-    colnames <- c(colnames, 'sprint_start', 'sprint_end')
-    new_data[, colnames] <- rep(list(rep(NA, n)), length(colnames))
-    i <- 0
-    for (project in levels(projects)) {
-        count <- ncol(intervals[[project]])
-        new_data[seq(i, i+count), 'project_id'] <- as.numeric(project)
-        for (interval in 1:count) {
-            i <- i + 1
-            range <- seq(intervals[[project]][1, interval],
-                         intervals[[project]][2, interval])
-            new_data[i, 'sprint_start'] <- intervals[[project]][1, interval]
-            new_data[i, 'sprint_end'] <- intervals[[project]][2, interval]
-            for (item in items) {
-                cols <- item$column %in% colnames
-                if (any(cols)) {
-                    combine <- function(column, combiner) {
-                        column_data <- project_data[[project]][range, column]
-                        if (column %in% colnames && !all(is.na(column_data))) {
-                            return(do.call(combiner,
-                                           list(column_data, na.rm=T)))
-                        }
-                        data.frame(NA)
-                    }
-                    combined <- mapply(combine, item$column, item$combine)
-                    new_data[i, item$column[cols]] <- combined[cols]
-                }
+
+    if (is.character(combine)) {
+        sprint_data <- data[, c('project_id', combine)]
+        sprint_data[[combine]] <- as.Date(sprint_data[[combine]])
+        duplicates <- duplicated(sprint_data)
+        n <- length(which(!duplicates))
+        new_data <- data.frame(project_id=data[!duplicates, 'project_id'],
+                               sprint_count=rep(1, n))
+        new_data[, colnames] <- data[!duplicates, colnames]
+        indexes <- which(duplicates)
+        if (length(indexes) == 0) {
+            start <- c()
+            end <- c()
+        }
+        else if (length(indexes) == 1) {
+            start <- indexes - 1
+            end <- indexes
+        }
+        else {
+            start <- indexes[c(0, diff(indexes)) != 1]
+            lagged <- embed(indexes, 2)
+            diffs <- lagged[lagged[, 1] != lagged[, 2] + 1, ]
+            start <- c(indexes[1] - 1, diffs[, 1] - 1)
+            end <- c(diffs[, 2], indexes[length(indexes)])
+        }
+        row_num <- start[1]
+        for (i in 1:length(start)) {
+            if (start[i] != end[i]) {
+                result <- update_combine_interval(items, data, new_data,
+                                                  row_num, details, colnames,
+                                                  c(start[i], end[i]))
+                new_data[row_num, result$columns] <- result$row
+                details <- result$details
+            }
+            row_num <- row_num + start[i+1] - end[i]
+        }
+    }
+    else {
+        colnames <- c(colnames, 'sprint_start', 'sprint_end')
+        projects <- factor(data[, join_cols[[1]]])
+        project_data <- split(data, projects)
+        intervals <- lapply(project_data, function(project) {
+            end <- nrow(project)
+            combn(round(seq(1, end, length.out=max(2, min(combine, end)))), 2)
+        })
+        n <- sum(as.numeric(lapply(intervals,
+                                   function(interval) { ncol(interval) })))
+        new_data <- data.frame(project_id=rep(NA, n), sprint_count=rep(1, n))
+        new_data[, colnames] <- rep(list(rep(NA, n)), length(colnames))
+
+        i <- 0
+        for (project in levels(projects)) {
+            count <- ncol(intervals[[project]])
+            new_data[seq(i, i+count), 'project_id'] <- as.numeric(project)
+            old_data <- project_data[[project]]
+            for (interval in 1:count) {
+                i <- i + 1
+                project_interval <- intervals[[project]][, interval]
+                new_data[i, 'sprint_start'] <- project_interval[1]
+                new_data[i, 'sprint_end'] <- project_interval[2]
+                result <- update_combine_interval(items, old_data, new_data, i,
+                                                  details, colnames,
+                                                  project_interval)
+                new_data[i, result$columns] <- result$row
+                details <- result$details
             }
         }
     }
-    return(list(data=new_data, colnames=colnames, items=items))
+    return(list(data=new_data, colnames=colnames, details=details, items=items))
+}
+
+update_combine_interval <- function(items, old_data, data, row_num, details,
+                                    colnames, interval) {
+    range <- seq(interval[1], interval[2])
+    project_id <- old_data[range[1], 'project_id']
+    result <- list(row=data.frame(sprint_count=length(range)),
+                   columns=c("sprint_count"))
+    for (item in items) {
+        cols <- item$column %in% colnames
+        if (any(cols)) {
+            combine <- function(column, combiner, expression=F, window=NULL) {
+                column_data <- old_data[range, column]
+                if (column %in% colnames && !all(is.na(column_data))) {
+                    if (isTRUE(combiner)) {
+                        return(eval(parse(text=expression), data[row_num, ]))
+                    }
+                    if (is.list(combiner)) {
+                        cur_value <- column_data[1]
+                        add_data <- old_data[range, combiner$add]
+                        if (!is.null(window)) {
+                            extra <- data[seq(row_num - window$dimension,
+                                              row_num - 1), ]
+                            size <- sum(extra[extra$project_id == project_id,
+                                              'sprint_count'] - 1)
+                            if (size > 0) {
+                                cur_value <- 0
+                                add_data <- c(cur_value, add_data,
+                                              old_data[seq(range[1] - size - 1,
+                                                           range[1] - 1),
+                                                       combiner$add])
+                            }
+                        }
+                        return(cur_value +
+                               combiner$factor * sum(add_data[-1], na.rm=T))
+                    }
+                    return(do.call(combiner,
+                                   c(list(column_data), list(na.rm=T))))
+                }
+                data.frame(NA)
+            }
+            if (!is.character(item$combine)) {
+                combined <- mapply(combine, item$column,
+                                   MoreArgs=list(item$combine,
+                                                 expression=item$expression,
+                                                 window=item$window))
+            }
+            else {
+                combined <- mapply(combine, item$column, item$combine)
+            }
+            result$row[[item$column[cols]]] <- combined[cols]
+            result$columns <- c(result$columns, item$column[cols])
+            if (!is.null(item$summarize) && !is.null(item$summarize$details) &&
+                is.list(details) && !is.null(details[[item$column[1]]])) {
+                feature <- details[[item$column[1]]]
+                sprint_ids <- old_data[range[-1], 'sprint_id']
+                sprint_id <- old_data[range[1], 'sprint_id']
+                detail_name <- paste(project_id, sprint_id, sep=".")
+                detail_names <- paste(project_id, sprint_ids, sep=".")
+                if (is.null(feature[[detail_name]])) {
+                    current <- data.frame(project_id=project_id,
+                                          sprint_id=sprint_id)
+                }
+                else {
+                    current <- feature[[detail_name]]
+                }
+                for (d in item$summarize$details) {
+                    if (!(d %in% colnames(current))) {
+                        current[[d]] <- list(list())
+                    }
+                    current[[d]][[1]] <- c(current[[d]][[1]],
+                                           do.call("c",
+                                                   lapply(feature[detail_names],
+
+                                                          function(detail) {
+                                                              detail[[d]][[1]]
+                                                          })))
+                }
+                details[[item$column[1]]][detail_names] <- NULL
+                details[[item$column[1]]][[detail_name]] <- current
+            }
+        }
+    }
+    result$details <- details
+    return(result)
 }
 
 get_features <- function(conn, features, exclude, items, data, colnames,
@@ -155,9 +271,7 @@ get_features <- function(conn, features, exclude, items, data, colnames,
                 summarize <- item$summarize
                 group_names <- summarize$group
                 group_cols <- lapply(result[, group_names], factor)
-                print(str(group_cols))
                 groups <- split(result, as.list(group_cols), drop=T)
-                print(length(groups))
                 result <- do.call("rbind", lapply(groups, function(group) {
                     group_result <- data.frame(group[1, group_names])
                     summarizer <- function(operation, field) {
@@ -179,7 +293,6 @@ get_features <- function(conn, features, exclude, items, data, colnames,
                         return(group_details)
                     }
                     details[[item$column[1]]] <- lapply(groups, detailer)
-                    names(details[[item$column[1]]]) <- NULL
                 }
             }
             data <- join(data, result, by=join_cols, type="left", match="first")
@@ -273,10 +386,10 @@ get_sprint_features <- function(conn, features, exclude, variables, latest_date,
     result <- get_features(conn, features, exclude, items, sprint_data,
                            colnames, join_cols, details=details,
                            required=c("sprint_num"))
-    if (combine) {
+    if (!identical(combine, F)) {
         return(get_combined_features(result$items, result$data,
-                                     result$colnames, join_cols,
-                                     combine=combine))
+                                     result$colnames, result$details,
+                                     join_cols, combine=combine))
     }
     return(result)
 }
@@ -285,7 +398,7 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T,
                                        sprint_meta=c(), sprint_conditions='',
                                        project_fields=c('project_id'),
                                        project_meta=list(), old=F, details=F,
-                                       prediction='') {
+                                       combine=F, prediction='') {
     patterns <- load_definitions('sprint_definitions.yml')
     if (!missing(date)) {
         project_meta$recent <- date
@@ -341,7 +454,8 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T,
 
     data <- yaml.load_file('sprint_features.yml')
     items <- list()
-    colnames <- c("project_name", "quality_display_name", sprint_meta)
+    colnames <- c("project_name", "quality_display_name", "quality_name",
+                  "board_id", sprint_meta, "old")
     join_cols <- c("project_id", "sprint_id")
     for (item in data$files) {
         if (all(item$column %in% features)) {
@@ -351,7 +465,6 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T,
 
     result <- get_features(conn, features, '^$', items, sprint_data, colnames,
                            join_cols, details=details, required=c("sprint_num"))
-    result$projects <- projects
 
     if (prediction != '') {
         loginfo('Collecting predictions from %s', prediction)
@@ -372,6 +485,12 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T,
                                     descriptions=list(nl="Voorspelling",
                                                       en="Prediction"))))
     }
+    if (!identical(combine, F)) {
+        result <- get_combined_features(result$items, result$data,
+                                        result$colnames, result$details,
+                                        join_cols, combine=combine)
+    }
+    result$projects <- projects
     return(result)
 }
 
