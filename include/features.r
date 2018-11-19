@@ -180,7 +180,7 @@ update_combine_interval <- function(items, old_data, data, row_num, details,
             else {
                 combined <- mapply(combine, item$column, item$combine)
             }
-            result$row[[item$column[cols]]] <- combined[cols]
+            result$row[, item$column[cols]] <- combined[cols]
             result$columns <- c(result$columns, item$column[cols])
             if (!is.null(item$summarize) && !is.null(item$summarize$details) &&
                 is.list(details) && !is.null(details[[item$column[1]]])) {
@@ -492,8 +492,10 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T,
                             match="first")
         result$items <- c(result$items,
                           list(list(column="prediction",
+                                    combine="mean",
                                     descriptions=list(nl="Voorspelling",
                                                       en="Prediction"))))
+        result$colnames <- c(result$colnames, "prediction")
     }
     if (!identical(combine, F)) {
         result <- get_combined_features(result$items, result$data,
