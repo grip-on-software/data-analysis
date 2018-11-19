@@ -213,6 +213,16 @@ update_combine_interval <- function(items, old_data, data, row_num, details,
             }
         }
     }
+
+    meta_columns <- c('sprint_name', 'start_date', 'close_date')
+    if (all(meta_columns %in% colnames)) {
+        result$row$sprint_name <- paste(old_data[range, 'sprint_name'],
+                                        collapse=", ")
+        result$row$start_date <- min(old_data[range, 'start_date'])
+        result$row$close_date <- max(old_data[range, 'close_date'])
+        result$columns <- c(result$columns, meta_columns)
+    }
+
     result$details <- details
     return(result)
 }
