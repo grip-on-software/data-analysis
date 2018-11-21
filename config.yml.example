@@ -10,3 +10,8 @@ fields:
     quality_url: $QUALITY_URL
     metric_history_file: compact-history.json
     metric_options_file: project_definition.py
+teams:
+	- name: $TEAM_NAME
+	  display_name: $TEAM_DISPLAY_NAME
+	  board: $TEAM_BOARD
+	  projects: $TEAM_PROJECTS

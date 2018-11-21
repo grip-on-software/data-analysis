@@ -29,9 +29,9 @@ project_metadata <- get_arg('--project-metadata', default='recent,core,main')
 metadata <- get_meta_keys(project_metadata)
 fields <- c('project_id', 'name', 'quality_display_name')
 
-map_details <- function(details, project_id, sprint_data) {
+map_details <- function(details, project_ids, sprint_data) {
     project <- Filter(function(detail) {
-                          return(detail$project_id == project_id &&
+                          return(detail$project_id %in% project_ids &&
                                  detail$sprint_id %in% sprint_data$sprint_id)
                       },
                       details)
@@ -125,6 +125,12 @@ if (get_arg('--project', default=F)) {
     if (combine == '') {
         combine <- F
     }
+    if (get_arg('--teams', default=F)) {
+        teams <- config$teams
+    }
+    else {
+        teams <- list()
+    }
     prediction <- get_arg('--prediction', default='')
     specifications <- yaml.load_file('sprint_features.yml')
     all_features <- unlist(sapply(specifications$files, function(item) {
@@ -188,6 +194,7 @@ if (get_arg('--project', default=F)) {
                                          old=with_old,
                                          details=split,
                                          combine=combine,
+                                         teams=teams,
                                          prediction=prediction)
 
     for (cat in names(specifications$categories)) {
@@ -206,7 +213,7 @@ if (get_arg('--project', default=F)) {
     }
     old_features <- c(old_features, unlist(cat_features))
 
-    sprint_data <- arrange(result$data, result$data$project_id,
+    sprint_data <- arrange(result$data, result$data$project_name,
                            result$data$start_date, result$data$sprint_name)
     if (project_ids != '0') {
         sprint_data$project_name <- paste("Proj", sprint_data$project_id,
@@ -251,7 +258,8 @@ if (get_arg('--project', default=F)) {
                 }
             }
 
-            project_id <- new$project_id[[1]]
+            # There may be multiple original project IDs for team projects.
+            project_id <- c(old$project_id, new$project_id)
             # Get latest sprint properties
             sprint <- c(new[nrow(new), sprint_meta],
                         list(quality_name=new$quality_name[[1]]))
@@ -261,16 +269,16 @@ if (get_arg('--project', default=F)) {
             write(toJSON(project_details),
                   file=paste(project_dir, "details.json", sep="/"))
 
-            source_urls <- get_source_urls(conn, project_id)
-            write(toJSON(build_sprint_source_urls(source_urls, project_id,
+            source_urls <- get_source_urls(conn, project_id[[1]])
+            write(toJSON(build_sprint_source_urls(source_urls, project_id[[1]],
                                                   project,
                                                   sprint, # latest sprint
                                                   specifications, patterns)),
                     file=paste(project_dir, "links.json", sep="/"))
 
-            dates <- get_tracker_dates(conn, project_id, aggregate=max)
-            urls <- build_project_source_urls(source_urls, project_id, project,
-                                              sprint)
+            dates <- get_tracker_dates(conn, project_id[[1]], aggregate=max)
+            urls <- build_project_source_urls(source_urls, project_id[[1]],
+                                              project, sprint)
             write(toJSON(mapply(function(date, url) {
                                     list(date=unbox(date), url=unbox(url))
                                 },

@@ -5,6 +5,17 @@ if (!exists('INC_PROJECT_R')) {
 
     INC_PROJECT_R <- T
 
+    get_recent_date <- function(recent) {
+        if (isTRUE(metadata$recent)) {
+            # Within the last three months
+            date <- Sys.Date() - as.difftime(12, units="weeks")
+        }
+        else {
+            date <- as.Date(recent)
+        }
+        return(date)
+    }
+
     get_projects_meta <- function(conn, fields=c('project_id', 'name'),
                                   metadata=list(), by='project_id') {
         joins <- list()
@@ -13,13 +24,7 @@ if (!exists('INC_PROJECT_R')) {
         must_group <- F
 
         if (!is.null(metadata$recent)) {
-            if (isTRUE(metadata$recent)) {
-                # Within the last three months
-                date <- Sys.Date() - as.difftime(12, units="weeks")
-            }
-            else {
-                date <- as.Date(metadata$recent)
-            }
+            date <- get_recent_date(metadata$recent)
             aliases$recent <- paste('MAX(start_date) >= CAST(', date,
                                     ' AS TIMESTAMP)', sep='\'')
             joins$sprint <- 'sprint.project_id = project.project_id'
