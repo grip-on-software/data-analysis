@@ -233,7 +233,7 @@ update_combine_interval <- function(items, old_data, data, row_num, details,
     for (item in items) {
         cols <- item$column %in% colnames
         if (any(cols)) {
-            combine <- function(column, combiner, expression=F, window=NULL) {
+            combine <- function(column, combiner) {
                 column_data <- old_data[range, column]
                 if (column %in% colnames && !all(is.na(column_data))) {
                     return(do.call(combiner,

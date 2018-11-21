@@ -218,9 +218,10 @@ files:
     sources:
         quality: "${quality_url}/${quality_name}"
         metric_history: "${metric_history_url}/${metric_history_file}"
-  - metric: TotalLOC
+  - metric: ProductLOC
     column: lines_of_code
     aggregate: end
+    summarize: sum
     combine: mean
     descriptions:
         nl: Aantal regels code

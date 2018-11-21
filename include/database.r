@@ -93,7 +93,9 @@ if (!exists('INC_DATABASE_R')) {
             }
             item$table <- item$metric
             item$category <- "metrics"
-            item$combine <- "sum"
+            if (!("combine" %in% names(item))) {
+                item$combine <- "sum"
+            }
             item$query <- paste('SELECT', paste(columns, collapse=","), ",",
                                 aggregate,
                                 'FROM gros.metric_value
