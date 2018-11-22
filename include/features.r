@@ -394,8 +394,9 @@ get_expressions <- function(items, data, expressions, join_cols) {
                 }
                 groups <- split(data, as.list(group_cols), drop=T)
                 all <- do.call("c", lapply(groups, function(group_data) {
-                    c(rep(item$default, item$window$dimension - 1),
-                      eval(expression, group_data))
+                    eval(expression,
+                         rbind(group_data[rep(1, item$window$dimension - 1), ],
+                               group_data))
                 }))
                 result[item$column] <- all
             }
