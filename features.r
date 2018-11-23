@@ -236,7 +236,7 @@ if (get_arg('--project', default=F)) {
             }
             new <- new_sprint_data[new_sprint_data$project_name == project, ]
             old <- old_sprint_data[old_sprint_data$project_name == project, ]
-            write(toJSON(new[, default_features]),
+            write(toJSON(new[, default_features], auto_unbox=T),
                   file=paste(project_dir, 'default.json', sep='/'))
             write(toJSON(old[, old_features], auto_unbox=T),
                   file=paste(project_dir, 'old.json', sep='/'))
@@ -304,7 +304,8 @@ if (get_arg('--project', default=F)) {
                                 output_directory=output_dir)
     }
     else {
-        write.csv(sprint_data[, result$colnames],
+        columns <- c("project_name", "quality_display_name", sprint_meta)
+        write.csv(sprint_data[, columns],
                   file=paste(output_directory, 'recent_sprint_features.csv',
                              sep="/"),
                   row.names=F)

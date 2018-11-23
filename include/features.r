@@ -278,10 +278,12 @@ update_combine_interval <- function(items, old_data, data, row_num, details,
         }
     }
 
-    meta_columns <- c('sprint_name', 'start_date', 'close_date')
+    meta_columns <- c('sprint_id', 'sprint_name', 'board_id',
+                      'start_date', 'close_date')
     if (all(meta_columns %in% colnames)) {
-        result$row$sprint_name <- paste(unique(old_data[range, 'sprint_name']),
-                                        collapse=", ")
+        result$row$sprint_id <- list(unique(old_data[range, 'sprint_id']))
+        result$row$sprint_name <- list(unique(old_data[range, 'sprint_name']))
+        result$row$board_id <- list(unique(old_data[range, 'board_id']))
         result$row$start_date <- min(old_data[range, 'start_date'])
         result$row$close_date <- max(old_data[range, 'close_date'])
         result$columns <- c(result$columns, meta_columns)
@@ -398,12 +400,11 @@ get_expressions <- function(items, data, expressions, join_cols) {
                          rbind(group_data[rep(1, item$window$dimension - 1), ],
                                group_data))
                 }))
-                result[item$column] <- all
+                data[, item$column] <- all
             }
             else {
-                result[item$column] <- eval(expression, data)
+                data[, item$column] <- eval(expression, data)
             }
-            data <- join(data, result, by=join_cols, type="left", match="first")
         }
     }
     return(data)
