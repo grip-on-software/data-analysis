@@ -294,8 +294,9 @@ if (get_arg('--project', default=F)) {
 
         known_features <- c(default_features, extra_features,
                             unlist(cat_features))
+        shown_features <- known_features[!(known_features %in% sprint_meta)]
         write_feature_metadata(projects, specifications, output_dir,
-                               features=known_features, items=result$items)
+                               features=shown_features, items=result$items)
         write(toJSON(list(limit=recent, closed=closed, old=with_old),
                      auto_unbox=T),
               file=paste(output_dir, "sprints.json", sep="/"))
