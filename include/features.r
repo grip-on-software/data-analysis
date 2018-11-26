@@ -63,9 +63,10 @@ get_combined_features <- function(items, data, colnames, details, join_cols,
     }
 
     if (is.character(combine)) {
-        teams <- get_combined_teams(data, teams, date, projects)
+        teams <- get_combined_teams(data, teams, date, projects, colnames)
         data <- teams$data
         projects <- teams$projects
+        colnames <- teams$colnames
 
         sprint_data <- data[, c('project_name', combine)]
         sprint_data[[combine]] <- as.Date(sprint_data[[combine]])
@@ -149,9 +150,14 @@ get_combined_features <- function(items, data, colnames, details, join_cols,
                 projects=projects))
 }
 
-get_combined_teams <- function(data, teams, date, projects) {
+get_combined_teams <- function(data, teams, date, projects, colnames) {
     recent_date <- get_recent_date(date)
+    projects$team <- T
+    data$team_id <- data$project_id
+    colnames <- c(colnames, "team_id")
+    team_id <- 0
     for (team in teams) {
+        team_id <- team_id - 1
         project_names <- sapply(team$projects,
                                 function(project) {
                                     return(ifelse(is.list(project),
@@ -187,13 +193,19 @@ get_combined_teams <- function(data, teams, date, projects) {
 
         t <- length(which(team_conditions))
         loginfo("Team %s has %d unmerged sprints", team$name, t)
-        team_meta <- list(project_name=rep(team$name, t),
+        team_meta <- list(team_id=rep(team_id, t),
+                          project_name=rep(team$name, t),
                           quality_display_name=rep(team$display_name, t),
                           board_id=rep(team$board, t))
-        data[team_conditions, names(team_meta)] <- team_meta
 
         if (length(replace) > 0) {
+            data[team_conditions, names(team_meta)] <- team_meta
             data <- data[!(data$project_name %in% replace) | team_conditions, ]
+        }
+        else {
+            team_data <- data[team_conditions, ]
+            team_data[, names(team_meta)] <- team_meta
+            data <- rbind(data, team_data)
         }
 
         project_id <- projects[projects$name %in% project_names, 'project_id']
@@ -201,25 +213,27 @@ get_combined_teams <- function(data, teams, date, projects) {
         recent <- any(as.Date(data[team_conditions, 'start_date']) >=
                       recent_date)
 
-        metadata <- data.frame(project_id=project_id[[1]],
+        metadata <- data.frame(project_id=team_id,
                                name=team$name,
                                quality_display_name=team$display_name,
                                recent=recent,
                                main=T,
                                core=core,
+                               team=team$board,
                                stringsAsFactors=F)[, colnames(projects)]
 
         if (team$name %in% projects$name) {
             projects[projects$name == team$name, ] <- as.list(metadata)
         }
         else {
+            projects[projects$name %in% project_names, 'team'] <- F
             projects <- rbind(projects, metadata)
         }
     }
     projects <- projects[projects$name %in% data$project_name, ]
     data <- arrange(data, data$project_name, data$start_date, data$sprint_name)
 
-    return(list(data=data, projects=projects))
+    return(list(data=data, projects=projects, colnames=colnames))
 }
 
 update_combine_interval <- function(items, old_data, data, row_num, details,
@@ -248,14 +262,14 @@ update_combine_interval <- function(items, old_data, data, row_num, details,
             if (!is.null(item$summarize) && !is.null(item$summarize$details) &&
                 is.list(details) && !is.null(details[[item$column[1]]])) {
                 feature <- details[[item$column[1]]]
-                project_id <- old_data[range[1], 'project_id']
+                team_id <- old_data[range[1], 'team_id']
                 sprint_id <- old_data[range[1], 'sprint_id']
                 project_ids <- old_data[range[-1], 'project_id']
                 sprint_ids <- old_data[range[-1], 'sprint_id']
-                detail_name <- paste(project_id, sprint_id, sep=".")
+                detail_name <- paste(team_id, sprint_id, sep=".")
                 detail_names <- paste(project_ids, sprint_ids, sep=".")
                 if (is.null(feature[[detail_name]])) {
-                    current <- data.frame(project_id=project_id,
+                    current <- data.frame(project_id=team_id,
                                           sprint_id=sprint_id)
                 }
                 else {
@@ -272,7 +286,6 @@ update_combine_interval <- function(items, old_data, data, row_num, details,
                                                               detail[[d]][[1]]
                                                           })))
                 }
-                details[[item$column[1]]][detail_names] <- NULL
                 details[[item$column[1]]][[detail_name]] <- current
             }
         }
