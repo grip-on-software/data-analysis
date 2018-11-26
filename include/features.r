@@ -61,6 +61,7 @@ get_combined_features <- function(items, data, colnames, details, join_cols,
     if (isTRUE(combine)) {
         combine <- 10
     }
+    team_projects <- list()
 
     if (is.character(combine)) {
         teams <- get_combined_teams(data, teams, date, projects, colnames)
@@ -68,6 +69,7 @@ get_combined_features <- function(items, data, colnames, details, join_cols,
         projects <- teams$projects
         colnames <- teams$colnames
         duplicates <- teams$duplicates
+        team_projects <- teams$team_projects
 
         sprint_data <- data[, c('project_name', combine)]
         sprint_data[[combine]] <- as.Date(sprint_data[[combine]])
@@ -148,7 +150,7 @@ get_combined_features <- function(items, data, colnames, details, join_cols,
         }
     }
     return(list(data=new_data, colnames=colnames, details=details, items=items,
-                projects=projects))
+                projects=projects, team_projects=team_projects))
 }
 
 get_combined_teams <- function(data, teams, date, projects, colnames) {
@@ -158,6 +160,7 @@ get_combined_teams <- function(data, teams, date, projects, colnames) {
     colnames <- c(colnames, "team_id")
     data$duplicate <- rep(F, nrow(data))
     team_id <- 0
+    team_projects <- list()
     for (team in teams) {
         team_id <- team_id - 1
         project_names <- sapply(team$projects,
@@ -166,6 +169,7 @@ get_combined_teams <- function(data, teams, date, projects, colnames) {
                                                   project$key, project))
                                 })
 
+        team_projects[[team$name]] <- project_names
         team_conditions <- data$project_name %in% project_names
         replace <- c()
         for (project in team$projects) {
@@ -255,7 +259,7 @@ get_combined_teams <- function(data, teams, date, projects, colnames) {
     data$duplicate <- NULL
 
     return(list(data=data, projects=projects, colnames=colnames,
-                duplicates=duplicates))
+                duplicates=duplicates, team_projects=team_projects))
 }
 
 update_combine_interval <- function(items, old_data, data, row_num, details,

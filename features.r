@@ -263,6 +263,7 @@ if (get_arg('--project', default=F)) {
             # There may be multiple original project IDs for team projects.
             project_id <- new$project_id[[1]]
             team_id <- new$team_id[[1]]
+            team_projects <- result$team_projects[[project]]
             # Get latest sprint properties
             sprint <- c(new[nrow(new), sprint_meta],
                         list(quality_name=new$quality_name[[1]]))
@@ -274,14 +275,15 @@ if (get_arg('--project', default=F)) {
 
             source_urls <- get_source_urls(conn, project_id)
             write(toJSON(build_sprint_source_urls(source_urls, project_id,
-                                                  project,
-                                                  sprint, # latest sprint
-                                                  specifications, patterns)),
+                                                  project, sprint$quality_name,
+                                                  NULL, specifications,
+                                                  patterns, team_projects)),
                     file=paste(project_dir, "links.json", sep="/"))
 
             dates <- get_tracker_dates(conn, project_id, aggregate=max)
             urls <- build_project_source_urls(source_urls, project_id,
-                                              project, sprint)
+                                              project, sprint,
+                                              team_projects=team_projects)
             write(toJSON(mapply(function(date, url) {
                                     list(date=unbox(date), url=unbox(url))
                                 },

@@ -291,7 +291,7 @@ files:
         nl: "%s issue-watchers"
         en: "%s issue watchers"
     source:
-        jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=project %3D ${jira_key} and sprint %3D ${jira_sprint_id} and watchers %3E 0&runQuery=true"
+        jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=project in (${jira_keys}) and sprint in (${jira_sprint_ids}) and watchers %3E 0&runQuery=true"
     category: tracking
   - filename: 03-number-of-issue-changers.sql
     table: updaters
@@ -378,7 +378,7 @@ files:
         nl: "%s bijlagen"
         en: "%s attachments"
     source:
-        jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=project %3D ${jira_key} and sprint %3D ${jira_sprint_id} and attachments is not empty&runQuery=true"
+        jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=project in (${jira_keys}) and sprint in (${jira_sprint_ids}) and attachments is not empty&runQuery=true"
     category: tracking
   - filename: 04-labels.sql
     table: labels
@@ -392,7 +392,7 @@ files:
         nl: "%s labels"
         en: "%s labels"
     source:
-        jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=project %3D ${jira_key} and sprint %3D ${jira_sprint_id} and labels is not empty&runQuery=true"
+        jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=project in (${jira_keys}) and sprint in (${jira_sprint_ids}) and labels is not empty&runQuery=true"
     category: tracking
   - filename: 04-impediments.sql
     table: impediments
@@ -406,7 +406,7 @@ files:
         nl: "%s impediments"
         en: "%s impediments"
     source:
-        jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=project %3D ${jira_key} and sprint %3D ${jira_sprint_id} and Flagged %3D Impediment&runQuery=true"
+        jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=project in (${jira_keys}) and sprint in (${jira_sprint_ids}) and Flagged %3D Impediment&runQuery=true"
     category: tracking
   - filename: 04-late-rank-changes.sql
     table: rank_changes
@@ -536,7 +536,7 @@ files:
         nl: "%s issue-links"
         en: "%s issue links"
     source:
-        jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=project %3D ${jira_key} and sprint %3D ${jira_sprint_id} and issueFunction in hasLinks()&runQuery=true"
+        jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=project in (${jira_keys}) and sprint in (${jira_sprint_ids}) and issueFunction in hasLinks()&runQuery=true"
     category: tracking
   - filename: 05-number-of-comments.sql
     table: issue_comments
@@ -550,7 +550,7 @@ files:
         nl: "%s commentaren bij issues"
         en: "%s issue comments"
     source:
-        jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=project %3D ${jira_key} and sprint %3D ${jira_sprint_id} and issueFunction in hasComments()&runQuery=true"
+        jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=project in (${jira_keys}) and sprint in (${jira_sprint_ids}) and issueFunction in hasComments()&runQuery=true"
     category: tracking
   - filename: 05-average-changes.sql
     table: issue_changes
@@ -653,7 +653,7 @@ files:
         nl: "%s afgeronde issues die geen story of subtask zijn"
         en: "%s done issues that are not stories or subtasks"
     source:
-        jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=project %3D ${jira_key} and sprint %3D ${jira_sprint_id} and ${issue_other} and resolution < %22${sprint_end_date}%22&runQuery=true"
+        jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=project in (${jira_keys}) and sprint in (${jira_sprint_ids}) and ${issue_other} and resolution < %22${sprint_end_date}%22&runQuery=true"
     category: tracking
   - filename: 07-concurrent-in-progress-stories.sql
     table: concurrent_in_progress_stories

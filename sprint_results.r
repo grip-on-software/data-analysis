@@ -207,7 +207,8 @@ for (idx in 1:length(results$projects)) {
                  auto_unbox=T), file=paste(path, "sources.json", sep="/"))
 
     source_data <- toJSON(build_sprint_source_urls(source_urls, project_id,
-                                                   project_name, sprint,
+                                                   project_name,
+                                                   sprint$quality_name, sprint,
                                                    specifications, patterns))
     write(source_data, file=paste(path,
                                   paste("links", sprint_id, "json", sep="."),

@@ -94,7 +94,7 @@ get_source_pattern <- function(item, project_urls) {
 }
 
 build_source_urls <- function(project_id, project_name, items=list(),
-                              patterns=c(), conn=NA) {
+                              patterns=c(), conn=NA, team_projects=c()) {
     project_links <- list()
     if (is.list(conn)) {
         project_urls <- conn
@@ -102,7 +102,9 @@ build_source_urls <- function(project_id, project_name, items=list(),
     else {
         project_urls <- get_source_urls(conn, project_id)
     }
-    project_patterns <- c(list(jira_key=project_name),
+    project_patterns <- c(list(jira_key=ifelse(length(team_projects) > 0, '',
+                                               project_name),
+                               jira_keys=paste(team_projects, collapse=',')),
                           project_urls, patterns)
 
     for (item in items) {
@@ -122,11 +124,17 @@ build_source_urls <- function(project_id, project_name, items=list(),
 }
 
 build_project_source_urls <- function(conn, project_id, project_name, patterns,
-                                      sources='all') {
+                                      sources='all', team_projects=c()) {
     metric_options_url <- paste("${metric_options_url}", "blob/master",
                                 "${metric_options_file}", sep="/")
     quality_url <- "${quality_url}/${quality_name}"
-    jira_url <- "${jira_url}/browse/${project_name}"
+    if (length(team_projects) > 0 && "board_id" %in% names(patterns)) {
+        jira_url <- paste("${jira_url}/secure/RapidBoard.jspa",
+                          "?rapidView=${board_id}&view=planning", sep="")
+    }
+    else {
+        jira_url <- "${jira_url}/browse/${project_name}"
+    }
     config <- get_config()
     default_urls <- config$fields[endsWith(names(config$fields), '_url')]
     source_types <- names(yaml.load_file('source_types.yml'))
@@ -134,10 +142,10 @@ build_project_source_urls <- function(conn, project_id, project_name, patterns,
     plain_urls <- as.list(paste("${", types, "}", sep=""))
     names(plain_urls) <- types
     urls <- modifyList(plain_urls, list(project_url=metric_options_url,
-                                         quality_url=quality_url,
-                                         metric_history_url=quality_url,
-                                         metric_options_url=metric_options_url,
-                                         jira_url=jira_url))
+                                        quality_url=quality_url,
+                                        metric_history_url=quality_url,
+                                        metric_options_url=metric_options_url,
+                                        jira_url=jira_url))
     if (is.list(conn)) {
         source_urls <- conn
     }
@@ -157,8 +165,10 @@ build_project_source_urls <- function(conn, project_id, project_name, patterns,
     return(project_links)
 }
 
-build_sprint_source_urls <- function(conn, project_id, project_name, sprint,
-                                     specifications, patterns) {
+build_sprint_source_urls <- function(conn, project_id, project_name,
+                                     quality_name, sprint,
+                                     specifications, patterns,
+                                     team_projects=c()) {
     if (is.list(conn)) {
         source_urls <- conn
     }
@@ -181,13 +191,24 @@ build_sprint_source_urls <- function(conn, project_id, project_name, sprint,
         }
     }
 
-    sprint_patterns <- list(jira_board_id=sprint$board_id,
-                            jira_sprint_id=sprint$sprint_id,
-                            quality_name=ifelse(is.na(sprint$quality_name), '',
-                                                sprint$quality_name),
-                            sprint_start_date=dateFormat(sprint$start_date),
-                            sprint_end_date=dateFormat(sprint$close_date))
+    if (is.null(sprint)) {
+        sprint_patterns <- list(jira_board_id='{{board_id}}',
+                                jira_sprint_id='{{sprint_id}}',
+                                jira_sprint_ids='{{sprint_ids}}',
+                                sprint_start_date='{{start_date}}',
+                                sprint_end_date='{{end_date}}')
+    }
+    else {
+        sprint_patterns <- list(jira_board_id=sprint$board_id[1],
+                                jira_sprint_id=sprint$sprint_id[1],
+                                jira_sprint_ids=paste(sprint$sprint_id,
+                                                      collapse=","),
+                                sprint_start_date=dateFormat(sprint$start_date),
+                                sprint_end_date=dateFormat(sprint$close_date))
+    }
+    sprint_patterns$quality_name <- ifelse(is.na(quality_name), '',
+                                           quality_name)
     return(build_source_urls(project_id, project_name, items=source_items,
                              patterns=c(patterns, sprint_patterns),
-                             conn=source_urls))
+                             conn=source_urls, team_projects=team_projects))
 }
