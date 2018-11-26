@@ -67,10 +67,11 @@ get_combined_features <- function(items, data, colnames, details, join_cols,
         data <- teams$data
         projects <- teams$projects
         colnames <- teams$colnames
+        duplicates <- teams$duplicates
 
         sprint_data <- data[, c('project_name', combine)]
         sprint_data[[combine]] <- as.Date(sprint_data[[combine]])
-        duplicates <- duplicated(sprint_data)
+        duplicates <- duplicates | duplicated(sprint_data)
 
         n <- length(which(!duplicates))
         new_data <- data.frame(project_id=data[!duplicates, 'project_id'],
@@ -155,6 +156,7 @@ get_combined_teams <- function(data, teams, date, projects, colnames) {
     projects$team <- T
     data$team_id <- data$project_id
     colnames <- c(colnames, "team_id")
+    data$duplicate <- rep(F, nrow(data))
     team_id <- 0
     for (team in teams) {
         team_id <- team_id - 1
@@ -196,7 +198,23 @@ get_combined_teams <- function(data, teams, date, projects, colnames) {
         team_meta <- list(team_id=rep(team_id, t),
                           project_name=rep(team$name, t),
                           quality_display_name=rep(team$display_name, t),
-                          board_id=rep(team$board, t))
+                          board_id=rep(team$board, t),
+                          duplicate=rep(F, t))
+
+        if (!is.null(team$overlap)) {
+            sprint_data <- data[team_conditions, c('start_date', 'close_date')]
+            prev <- embed(as.matrix(sprint_data), 3)
+            overlap <- as.Date(prev[, 4]) - as.Date(prev[, 1]) >= team$overlap &
+                as.Date(prev[, 2]) >= as.Date(prev[, 4])
+            for (index in which(overlap)) {
+                if (overlap[index]) {
+                    overlap[index+1] <- F
+                }
+            }
+            team_meta$duplicate <- c(F, F, overlap)
+            loginfo('Team %s has %d overlapping sprints', team$name,
+                    length(which(overlap)))
+        }
 
         if (length(replace) > 0) {
             data[team_conditions, names(team_meta)] <- team_meta
@@ -233,7 +251,11 @@ get_combined_teams <- function(data, teams, date, projects, colnames) {
     projects <- projects[projects$name %in% data$project_name, ]
     data <- arrange(data, data$project_name, data$start_date, data$sprint_name)
 
-    return(list(data=data, projects=projects, colnames=colnames))
+    duplicates <- data$duplicate
+    data$duplicate <- NULL
+
+    return(list(data=data, projects=projects, colnames=colnames,
+                duplicates=duplicates))
 }
 
 update_combine_interval <- function(items, old_data, data, row_num, details,
