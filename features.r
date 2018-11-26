@@ -270,8 +270,17 @@ if (get_arg('--project', default=F)) {
 
             project_details <- lapply(result$details, map_details,
                                       team_id, sprint_data)
-            write(toJSON(project_details),
+            default_details <- default[default %in% names(project_details)]
+            write(toJSON(project_details[default_details]),
                   file=paste(project_dir, "details.json", sep="/"))
+            for (detail in names(project_details)) {
+                if (!(detail %in% default_details)) {
+                    write(toJSON(project_details[detail]),
+                          file=paste(project_dir,
+                                     paste("details", detail, "json", sep="."),
+                                     sep="/"))
+                }
+            }
 
             source_urls <- get_source_urls(conn, project_id)
             write(toJSON(build_sprint_source_urls(source_urls, project_id,
