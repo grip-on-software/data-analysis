@@ -214,6 +214,7 @@ if (get_arg('--project', default=F)) {
         }
     }
     old_features <- c(old_features, unlist(cat_features))
+    details_features <- c()
 
     sprint_data <- arrange(result$data, result$data$project_name,
                            result$data$start_date, result$data$sprint_name)
@@ -270,12 +271,13 @@ if (get_arg('--project', default=F)) {
 
             project_details <- lapply(result$details, map_details,
                                       team_id, sprint_data)
+            details_features <- c(details_features, names(project_details))
             default_details <- default[default %in% names(project_details)]
             write(toJSON(project_details[default_details]),
                   file=paste(project_dir, "details.json", sep="/"))
             for (detail in names(project_details)) {
                 if (!(detail %in% default_details)) {
-                    write(toJSON(project_details[detail]),
+                    write(toJSON(project_details[[detail]]),
                           file=paste(project_dir,
                                      paste("details", detail, "json", sep="."),
                                      sep="/"))
@@ -311,6 +313,7 @@ if (get_arg('--project', default=F)) {
               file=paste(output_dir, "sprints.json", sep="/"))
         write(toJSON(list(default=default_features,
                           all=known_features,
+                          details=unique(details_features),
                           meta=sprint_meta)),
               file=paste(output_dir, "features.json", sep="/"))
         write_projects_metadata(conn, fields, metadata,
