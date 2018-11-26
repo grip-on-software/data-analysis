@@ -850,3 +850,22 @@ files:
         nl: "%s issues met readystatus voor de sprint op de backlog"
         en: "%s issues with ready status for the sprint on the backlog"
     category: tracking
+  - filename: 11-backlog-all.sql
+    table: backlog_all
+    column: backlog_items
+    default: 0
+    summarize:
+        operation: sum
+        field: story_points
+        group: [project_id, sprint_id]
+        details: [key, story_points]
+    combine: sum
+    descriptions:
+        nl: Issues op backlog
+        en: Issues on backlog
+    units:
+        nl: "%s issues op de algehele backlog"
+        en: "%s issues on the whole backlog"
+    source:
+        jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
+    category: tracking

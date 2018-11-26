@@ -52,6 +52,10 @@ conditions:
         description: "Issues that are test cases"
         table: issue
         condition: '"type" IN (9, 10, 10301)'
+    issue_backlog:
+        description: "Issues that are shown on backlogs"
+        table: issue
+        condition: 'issue."type" NOT IN (5, 6, 9, 10, 12, 20, 22, 10301)'
     sprint_closed:
         description: "Sprints that have been ended or completed"
         table: sprint
