@@ -222,7 +222,7 @@ files:
     column: lines_of_code
     aggregate: end
     summarize: sum
-    combine: mean
+    combine: sum
     descriptions:
         nl: Aantal regels code
         en: Number of lines of code
@@ -235,8 +235,8 @@ files:
   - metric: UnittestLineCoverage
     column: unittest_line_coverage
     aggregate: end
-    summarize: mean
-    combine: mean
+    summarize: [min, max]
+    combine: [min, max]
     descriptions:
         nl: Unittest line coverage
         en: Unittest line coverage

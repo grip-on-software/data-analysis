@@ -275,22 +275,37 @@ update_combine_interval <- function(items, old_data, data, row_num, details,
     project_col <- ifelse('project_name' %in% colnames, 'project_name',
                           'project_id')
     project <- old_data[range[1], project_col]
+    num_projects <- length(unique(old_data[range, project_col]))
     result <- list(row=data.frame(sprint_count=length(range)),
                    columns=c("sprint_count"))
     for (item in items) {
-        cols <- item$column %in% colnames
-        if (any(cols)) {
+        if (!is.null(item$summarize) && length(item$summarize$operation) > 1) {
+            columns <- paste(item$column, item$summarize$operation, sep="_")
+        }
+        else {
+            columns <- item$column
+        }
+        columns <- columns[columns %in% colnames]
+
+        if (length(columns) > 0) {
+            if (is.list(item$combine)) {
+                combiner <- ifelse(num_projects > 1, item$combine$project,
+                                   item$combine$sprint)
+            }
+            else {
+                combiner <- item$combine
+            }
             combine <- function(column, combiner) {
                 column_data <- old_data[range, column]
-                if (column %in% colnames && !all(is.na(column_data))) {
+                if (!all(is.na(column_data))) {
                     return(do.call(combiner,
                                    c(list(column_data), list(na.rm=T))))
                 }
                 data.frame(NA)
             }
-            combined <- mapply(combine, item$column, item$combine)
-            result$row[, item$column[cols]] <- combined[cols]
-            result$columns <- c(result$columns, item$column[cols])
+            combined <- mapply(combine, columns, combiner)
+            result$row[, columns] <- combined
+            result$columns <- c(result$columns, columns)
 
             if (!is.null(item$summarize) && !is.null(item$summarize$details) &&
                 is.list(details) && !is.null(details[[item$column[1]]])) {
@@ -352,20 +367,23 @@ get_features <- function(conn, features, exclude, items, data, colnames,
     if (isTRUE(details)) {
         details <- list()
     }
+    selected_items <- c()
     expressions <- c()
     for (item in items) {
         if (all(item$column %in% features) &&
             length(grep(exclude, item$table)) == 0) {
+            selected_items <- c(selected_items, list(item))
+            columns <- item$column
             if (!is.null(item$result)) {
                 result <- item$result
             }
             else if (!is.null(item$expression)) {
                 # To be filled in later
-                expressions <- c(expressions, item$column)
+                expressions <- c(expressions, columns)
                 next
             }
             else if (is.null(item$query)) {
-                stop(paste('No query or result available for', item$column))
+                stop(paste('No query or result available for', columns))
             }
             else {
                 loginfo('Executing query for table %s', item$table)
@@ -378,19 +396,22 @@ get_features <- function(conn, features, exclude, items, data, colnames,
                 group_names <- summarize$group
                 group_cols <- lapply(result[, group_names], factor)
                 groups <- split(result, as.list(group_cols), drop=T)
+                operation <- summarize$operation
                 with_missing <- ifelse(is.null(summarize$with_missing),
-                                       rep(F, length(summarize$operation)),
+                                       rep(F, length(operation)),
                                        summarize$with_missing)
+                if (length(columns) == 1 && length(operation) > 1) {
+                    columns <- paste(columns, operation, sep="_")
+                }
                 result <- do.call("rbind", lapply(groups, function(group) {
                     group_result <- data.frame(group[1, group_names])
                     summarizer <- function(operation, field, with_missing) {
                         do.call(operation, c(list(group[, field]),
                                              list(na.rm=with_missing)))
                     }
-                    group_result[, item$column] <- mapply(summarizer,
-                                                          summarize$operation,
-                                                          summarize$field,
-                                                          with_missing)
+                    group_result[, columns] <- mapply(summarizer, operation,
+                                                      summarize$field,
+                                                      with_missing)
                     return(group_result)
                 }))
 
@@ -407,7 +428,7 @@ get_features <- function(conn, features, exclude, items, data, colnames,
             }
             data <- join(data, result, by=join_cols, type="left", match="first")
             if (!is.null(item$default)) {
-                for (column in item$column) {
+                for (column in columns) {
                     if (!(column %in% names(data))) {
                         logwarn(paste('Column', column, 'could not be found'))
                     }
@@ -419,11 +440,11 @@ get_features <- function(conn, features, exclude, items, data, colnames,
                     }
                 }
             }
-            colnames <- c(colnames, item$column)
+            colnames <- c(colnames, columns)
         }
     }
-    list(data=data, details=details, colnames=unique(colnames), items=items,
-         expressions=expressions)
+    list(data=data, details=details, colnames=unique(colnames),
+         items=selected_items, expressions=expressions)
 }
 
 get_expressions <- function(items, data, expressions, join_cols) {
@@ -649,6 +670,23 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T,
     }
     result$data <- get_expressions(result$items, result$data,
                                    expressions, join_cols)
+
+    for (item in result$items) {
+        if (!is.null(item$summarize) && length(item$summarize$operation) > 1) {
+            loginfo("Wrapping column %s", item$column)
+            operations <- item$summarize$operation
+            columns <- paste(item$column, operations, sep="_")
+            result$data[[item$column]] <- apply(result$data[, columns], 1,
+                                                function(...) {
+                                                    args <- as.list(...)
+                                                    names(args) <- operations
+                                                    return(I(args))
+                                                })
+            result$data[, columns] <- NULL
+            result$colnames <- c(result$columns[!(result$columns %in% columns)],
+                                 item$column)
+        }
+    }
     return(result)
 }
 
