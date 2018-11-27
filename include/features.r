@@ -23,6 +23,13 @@ safe_unbox <- function(x) {
     return(unbox(x))
 }
 
+count <- function(data, na.rm=F) {
+    if (na.rm) {
+        return(length(which(!is.na(data))))
+    }
+    return(length(data))
+}
+
 get_locales <- function(items) {
     locales <- list()
     for (type in names(items)) {
@@ -371,15 +378,19 @@ get_features <- function(conn, features, exclude, items, data, colnames,
                 group_names <- summarize$group
                 group_cols <- lapply(result[, group_names], factor)
                 groups <- split(result, as.list(group_cols), drop=T)
+                with_missing <- ifelse(is.null(summarize$with_missing),
+                                       rep(F, length(summarize$operation)),
+                                       summarize$with_missing)
                 result <- do.call("rbind", lapply(groups, function(group) {
                     group_result <- data.frame(group[1, group_names])
-                    summarizer <- function(operation, field) {
+                    summarizer <- function(operation, field, with_missing) {
                         do.call(operation, c(list(group[, field]),
-                                             list(na.rm=T)))
+                                             list(na.rm=with_missing)))
                     }
                     group_result[, item$column] <- mapply(summarizer,
                                                           summarize$operation,
-                                                          summarize$field)
+                                                          summarize$field,
+                                                          with_missing)
                     return(group_result)
                 }))
 

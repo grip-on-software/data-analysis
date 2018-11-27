@@ -855,7 +855,8 @@ files:
     column: backlog_items
     default: 0
     summarize:
-        operation: sum
+        operation: count
+        include_missing: true
         field: story_points
         group: [project_id, sprint_id]
         details: [key, story_points]
