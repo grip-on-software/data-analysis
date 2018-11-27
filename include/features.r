@@ -312,8 +312,8 @@ update_combine_interval <- function(items, old_data, data, row_num, details,
                 feature <- details[[item$column[1]]]
                 team_id <- old_data[range[1], 'team_id']
                 sprint_id <- old_data[range[1], 'sprint_id']
-                project_ids <- old_data[range[-1], 'project_id']
-                sprint_ids <- old_data[range[-1], 'sprint_id']
+                project_ids <- old_data[range, 'project_id']
+                sprint_ids <- old_data[range, 'sprint_id']
                 detail_name <- paste(team_id, sprint_id, sep=".")
                 detail_names <- paste(project_ids, sprint_ids, sep=".")
                 if (is.null(feature[[detail_name]])) {

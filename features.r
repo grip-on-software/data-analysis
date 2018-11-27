@@ -29,9 +29,9 @@ project_metadata <- get_arg('--project-metadata', default='recent,core,main')
 metadata <- get_meta_keys(project_metadata)
 fields <- c('project_id', 'name', 'quality_display_name')
 
-map_details <- function(details, project_id, sprint_data) {
+map_details <- function(details, project_ids, sprint_data) {
     project <- Filter(function(detail) {
-                          return(detail$project_id == project_id &&
+                          return(detail$project_id %in% project_ids &&
                                  detail$sprint_id %in% sprint_data$sprint_id)
                       },
                       details)
@@ -263,14 +263,19 @@ if (get_arg('--project', default=F)) {
 
             # There may be multiple original project IDs for team projects.
             project_id <- new$project_id[[1]]
-            team_id <- new$team_id[[1]]
+            if (all(project_id == c(old$project_id, new$project_id))) {
+                team_ids <- c(new$team_id[[1]], project_id)
+            }
+            else {
+                team_ids <- new$team_id[[1]]
+            }
             team_projects <- result$team_projects[[project]]
             # Get latest sprint properties
             sprint <- c(new[nrow(new), sprint_meta],
                         list(quality_name=new$quality_name[[1]]))
 
             project_details <- lapply(result$details, map_details,
-                                      team_id, sprint_data)
+                                      team_ids, sprint_data)
             details_features <- c(details_features, names(project_details))
             default_details <- default[default %in% names(project_details)]
             write(toJSON(project_details[default_details]),
