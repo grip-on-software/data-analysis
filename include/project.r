@@ -6,7 +6,7 @@ if (!exists('INC_PROJECT_R')) {
     INC_PROJECT_R <- T
 
     get_recent_date <- function(recent) {
-        if (isTRUE(metadata$recent)) {
+        if (isTRUE(recent)) {
             # Within the last three months
             date <- Sys.Date() - as.difftime(12, units="weeks")
         }
