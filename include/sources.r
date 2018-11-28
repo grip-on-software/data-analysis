@@ -102,7 +102,8 @@ build_source_urls <- function(project_id, project_name, items=list(),
     else {
         project_urls <- get_source_urls(conn, project_id)
     }
-    project_patterns <- c(list(jira_key=ifelse(length(team_projects) > 0, '',
+    project_patterns <- c(list(jira_key=ifelse(length(team_projects) > 0,
+                                               team_projects[[1]],
                                                project_name),
                                jira_keys=paste(team_projects, collapse=',')),
                           project_urls, patterns)
