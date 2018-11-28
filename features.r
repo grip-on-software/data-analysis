@@ -217,7 +217,7 @@ if (get_arg('--project', default=F)) {
     details_features <- c()
 
     sprint_data <- arrange(result$data, result$data$project_name,
-                           result$data$start_date, result$data$sprint_name)
+                           result$data$start_date)
     if (project_ids != '0') {
         sprint_data$project_name <- paste("Proj", sprint_data$project_id,
                                           sep="")

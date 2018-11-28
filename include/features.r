@@ -156,108 +156,142 @@ get_combined_teams <- function(data, teams, date, projects, colnames) {
     data$team_id <- data$project_id
     colnames <- c(colnames, "team_id")
     data$duplicate <- rep(F, nrow(data))
-    team_id <- 0
-    team_projects <- list()
+    result <- list(data=data, projects=projects, team_id=0,
+                   team_projects=list())
     for (team in teams) {
-        team_id <- team_id - 1
-        project_names <- sapply(team$projects,
-                                function(project) {
-                                    return(ifelse(is.list(project),
-                                                  project$key, project))
-                                })
-
-        team_projects[[team$name]] <- project_names
-        team_conditions <- data$project_name %in% project_names
-        replace <- c()
-        for (project in team$projects) {
-            if (is.list(project)) {
-                if (!is.null(project$start_date)) {
-                    team_conditions <- team_conditions &
-                        (data$project_name != project$key |
-                         as.Date(data$start_date) >=
-                         as.Date(project$start_date))
-                }
-                if (!is.null(project$end_date)) {
-                    team_conditions <- team_conditions &
-                        (data$project_name != project$key |
-                         as.Date(data$close_date) <=
-                         as.Date(project$end_date))
-                }
-                if (!is.null(project$board)) {
-                    team_conditions <- team_conditions &
-                        (data$project_name != project$key |
-                         data$board_id == project$board)
-                }
-                if (isTRUE(project$replace)) {
-                    replace <- c(replace, project$key)
-                }
-            }
-        }
-
-        t <- length(which(team_conditions))
-        loginfo("Team %s has %d unmerged sprints", team$name, t)
-        team_meta <- list(team_id=rep(team_id, t),
-                          project_name=rep(team$name, t),
-                          quality_display_name=rep(team$display_name, t),
-                          board_id=rep(team$board, t),
-                          duplicate=rep(F, t))
-
-        if (!is.null(team$overlap)) {
-            sprint_data <- data[team_conditions, c('start_date', 'close_date')]
-            prev <- embed(as.matrix(sprint_data), 3)
-            overlap <- as.Date(prev[, 4]) - as.Date(prev[, 1]) >= team$overlap &
-                as.Date(prev[, 2]) >= as.Date(prev[, 4])
-            for (index in which(overlap)) {
-                if (overlap[index]) {
-                    overlap[index+1] <- F
-                }
-            }
-            team_meta$duplicate <- c(F, F, overlap)
-            loginfo('Team %s has %d overlapping sprints', team$name,
-                    length(which(overlap)))
-        }
-
-        if (length(replace) > 0) {
-            data[team_conditions, names(team_meta)] <- team_meta
-            data <- data[!(data$project_name %in% replace) | team_conditions, ]
-        }
-        else {
-            team_data <- data[team_conditions, ]
-            team_data[, names(team_meta)] <- team_meta
-            data <- rbind(data, team_data)
-        }
-
-        project_id <- projects[projects$name %in% project_names, 'project_id']
-        core <- any(projects[projects$name %in% project_names, 'core'])
-        recent <- ifelse(!is.null(team$recent), team$recent,
-                         any(as.Date(data[team_conditions, 'start_date']) >=
-                             recent_date))
-
-        metadata <- data.frame(project_id=team_id,
-                               name=team$name,
-                               quality_display_name=team$display_name,
-                               recent=recent,
-                               main=T,
-                               core=core,
-                               team=team$board,
-                               stringsAsFactors=F)[, colnames(projects)]
-
-        if (team$name %in% projects$name) {
-            projects[projects$name == team$name, ] <- as.list(metadata)
-        }
-        else {
-            projects[projects$name %in% project_names, 'team'] <- F
-            projects <- rbind(projects, metadata)
-        }
+        result <- get_combined_team(team, result$team_id - 1,
+                                    result$data, result$projects,
+                                    result$team_projects, recent_date)
     }
     projects <- projects[projects$name %in% data$project_name, ]
-    data <- arrange(data, data$project_name, data$start_date, data$sprint_name)
+    result$data <- arrange(result$data, result$data$project_name,
+                           result$data$start_date, result$data$sprint_name)
 
-    duplicates <- data$duplicate
-    data$duplicate <- NULL
+    duplicates <- result$data$duplicate
+    result$data$duplicate <- NULL
 
-    return(list(data=data, projects=projects, colnames=colnames,
-                duplicates=duplicates, team_projects=team_projects))
+    return(c(result, list(colnames=colnames, duplicates=duplicates)))
+}
+
+get_combined_team <- function(team, team_id, data, projects, team_projects,
+                              recent_date) {
+    project_names <- sapply(team$projects,
+                            function(project) {
+                                return(ifelse(is.list(project),
+                                              project$key, project))
+                            })
+
+    team_projects[[team$name]] <- project_names
+    team_conditions <- data$project_name %in% project_names
+    replace <- c()
+    for (project in team$projects) {
+        if (is.list(project)) {
+            if (!is.null(project$start_date)) {
+                team_conditions <- team_conditions &
+                    (data$project_name != project$key |
+                     as.Date(data$start_date) >=
+                     as.Date(project$start_date))
+            }
+            if (!is.null(project$end_date)) {
+                team_conditions <- team_conditions &
+                    (data$project_name != project$key |
+                     as.Date(data$close_date) <=
+                     as.Date(project$end_date))
+            }
+            if (!is.null(project$board)) {
+                team_conditions <- team_conditions &
+                    (data$project_name != project$key |
+                     data$board_id == project$board)
+            }
+            if (isTRUE(project$replace)) {
+                replace <- c(replace, project$key)
+            }
+        }
+    }
+
+    t <- length(which(team_conditions))
+    loginfo("Team %s has %d unmerged sprints", team$name, t)
+    team_meta <- list(team_id=rep(team_id, t),
+                      project_name=rep(team$name, t),
+                      quality_display_name=rep(team$display_name, t),
+                      board_id=rep(team$board, t),
+                      duplicate=rep(F, t))
+
+    if (!is.null(team$overlap)) {
+        sprint_data <- data[team_conditions, c('start_date', 'close_date')]
+        prev <- embed(as.matrix(sprint_data), 3)
+        overlap <- as.Date(prev[, 4]) - as.Date(prev[, 1]) >= team$overlap &
+            as.Date(prev[, 2]) >= as.Date(prev[, 4])
+        for (index in which(overlap)) {
+            if (overlap[index]) {
+                overlap[index+1] <- F
+            }
+        }
+        team_meta$duplicate <- c(F, F, overlap)
+        loginfo('Team %s has %d overlapping sprints', team$name,
+                length(which(overlap)))
+    }
+
+    team_data <- data[team_conditions, ]
+    if (length(replace) > 0) {
+        data[team_conditions, names(team_meta)] <- team_meta
+        data <- data[!(data$project_name %in% replace) | team_conditions, ]
+    }
+    else {
+        team_data[, names(team_meta)] <- team_meta
+        data <- rbind(data, team_data)
+    }
+
+    project_id <- projects[projects$name %in% project_names, 'project_id']
+    core <- any(projects[projects$name %in% project_names, 'core'])
+    recent <- ifelse(!is.null(team$recent), team$recent,
+                     any(as.Date(team_data[, 'start_date']) >= recent_date))
+
+    metadata <- data.frame(project_id=team_id,
+                           name=team$name,
+                           quality_display_name=team$display_name,
+                           recent=recent,
+                           main=T,
+                           core=core,
+                           team=ifelse(is.null(team$team), team$board,
+                                       as.logical(team$team)),
+                           stringsAsFactors=F)[, colnames(projects)]
+
+    if (team$name %in% projects$name) {
+        projects[projects$name == team$name, ] <- as.list(metadata)
+    }
+    else {
+        projects[projects$name %in% project_names, 'team'] <- F
+        projects <- rbind(projects, metadata)
+    }
+
+    if (length(team$projects) > 1) {
+        for (project in team$projects) {
+            if (is.list(project) && !is.null(project$board) &&
+                !isTRUE(project$replace)
+            ) {
+                loginfo("Replacing project %s to clean up board", project$key)
+                display_name <- projects[projects$name == project$key,
+                                         'quality_display_name']
+                board_project <- list(name=project$key,
+                                      display_name=display_name,
+                                      board=team$board,
+                                      team=F,
+                                      projects=list(c(project,
+                                                      list(replace=T))))
+                result <- get_combined_team(board_project, team_id - 1,
+                                            data, projects, team_projects,
+                                            recent_date)
+                data <- result$data
+                projects <- result$projects
+                team_projects <- result$team_projects
+                team_id <- result$team_id
+            }
+        }
+    }
+
+    return(list(data=data, projects=projects, team_id=team_id,
+                team_projects=team_projects))
 }
 
 update_combine_interval <- function(items, old_data, data, row_num, details,
