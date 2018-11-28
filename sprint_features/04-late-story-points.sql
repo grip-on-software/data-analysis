@@ -1,7 +1,7 @@
 SELECT DISTINCT issue.project_id, issue.sprint_id, issue.key, issue.story_points
 FROM gros.issue
 JOIN gros.sprint ON issue.project_id = sprint.project_id AND issue.sprint_id = sprint.sprint_id
-JOIN gros.issue AS old_issue
+LEFT JOIN gros.issue AS old_issue
 ON issue.issue_id = old_issue.issue_id AND issue.changelog_id = old_issue.changelog_id+1
 LEFT JOIN gros.subtask ON issue.issue_id = subtask.id_subtask
 WHERE issue.story_points IS NOT NULL
