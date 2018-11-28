@@ -263,13 +263,13 @@ if (get_arg('--project', default=F)) {
 
             # There may be multiple original project IDs for team projects.
             project_id <- new$project_id[[1]]
-            if (all(project_id == c(old$project_id, new$project_id))) {
+            team_projects <- result$team_projects[[project]]
+            if (length(team_projects) == 1) {
                 team_ids <- c(new$team_id[[1]], project_id)
             }
             else {
                 team_ids <- new$team_id[[1]]
             }
-            team_projects <- result$team_projects[[project]]
             # Get latest sprint properties
             sprint <- c(new[nrow(new), sprint_meta],
                         list(quality_name=new$quality_name[[1]]))
