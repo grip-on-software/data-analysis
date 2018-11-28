@@ -917,7 +917,9 @@ files:
         field: story_points
         group: [project_id, sprint_id]
         details: [key, story_points]
-    combine: sum
+    combine:
+        project: sum
+        sprint: max
     descriptions:
         nl: Issues op backlog
         en: Issues on backlog
