@@ -229,8 +229,9 @@ get_combined_teams <- function(data, teams, date, projects, colnames) {
 
         project_id <- projects[projects$name %in% project_names, 'project_id']
         core <- any(projects[projects$name %in% project_names, 'core'])
-        recent <- any(as.Date(data[team_conditions, 'start_date']) >=
-                      recent_date)
+        recent <- ifelse(!is.null(team$recent), team$recent,
+                         any(as.Date(data[team_conditions, 'start_date']) >=
+                             recent_date))
 
         metadata <- data.frame(project_id=team_id,
                                name=team$name,
