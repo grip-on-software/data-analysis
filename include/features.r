@@ -262,6 +262,9 @@ get_combined_team <- function(team, team_id, data, projects, team_projects,
     }
     else {
         projects[projects$name %in% project_names, 'team'] <- F
+        if (length(replace) > 0) {
+            projects <- projects[!(projects$name %in% replace), ]
+        }
         projects <- rbind(projects, metadata)
     }
 
