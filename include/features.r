@@ -114,16 +114,6 @@ get_combined_features <- function(items, data, colnames, details, join_cols,
             }
             row_num <- row_num + start[i+1] - end[i]
         }
-
-        if ("old" %in% colnames) {
-            new <- do.call("c", lapply(split(new_data, new_data$project_name),
-                                       function(project_name) {
-                                           rows <- rownames(project_name)
-                                           start <- max(0, length(rows) - limit)
-                                           return(rows[(start+1):length(rows)])
-                                       }))
-            new_data[new, 'old'] <- rep(F, length(new))
-        }
     }
     else {
         colnames <- c(colnames, 'sprint_start', 'sprint_end')
@@ -595,27 +585,32 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T,
               FROM gros.sprint
               JOIN gros.project
               ON project.project_id = sprint.project_id
-              WHERE sprint.project_id = ${project_id}
-              AND sprint.start_date IS NOT NULL
+              WHERE sprint.start_date IS NOT NULL
+              ${project_condition}
               ${s(sprint_conditions)}
               ORDER BY sprint.project_id, ${sprint_open} DESC, sprint.name DESC
-              ${pager} ${limit}'
-    sprint_data <- data.frame()
-    variables <- c(patterns, list(sprint_conditions=sprint_conditions,
-                                  limit=limit))
-    for (project in projects$project_id) {
+              ${limit}'
 
+    variables <- c(patterns, list(sprint_conditions=sprint_conditions))
+    if (old) {
+        # Old value is calculated by combined data later on
         item <- load_query(list(query=query),
-                           c(variables, list(project_id=project,
-                                             old='FALSE',
-                                             pager='LIMIT')))
-        sprint_data <- rbind(sprint_data, dbGetQuery(conn, item$query))
+                           c(variables, list(project_condition='',
+                                             old='TRUE',
+                                             pager='',
+                                             limit='')))
+        sprint_data <- dbGetQuery(conn, item$query)
+    }
+    else {
+        sprint_data <- data.frame()
+        for (project in projects$project_id) {
+            project_condition <- paste("AND sprint.project_id =", project)
 
-        if (old) {
             item <- load_query(list(query=query),
-                               c(variables, list(project_id=project,
-                                                 old='TRUE',
-                                                 pager='OFFSET')))
+                               c(variables,
+                                 list(project_condition=project_condition,
+                                      old='FALSE',
+                                      limit=paste('LIMIT', limit))))
             sprint_data <- rbind(sprint_data, dbGetQuery(conn, item$query))
         }
     }
@@ -667,6 +662,17 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T,
                                         join_cols, combine=combine, teams=teams,
                                         limit=limit, date=project_meta$recent,
                                         projects=result$projects)
+    }
+    if (old) {
+        result$data <- do.call("rbind",
+                               lapply(split(result$data,
+                                            result$data[, 'project_name']),
+                                      function(group) {
+                                          last <- nrow(group)
+                                          first <- max(1, last - limit + 1)
+                                          group[first:last, 'old'] <- F
+                                          return(group)
+                                      }))
     }
     result$data <- get_expressions(result$items, result$data,
                                    expressions, join_cols)
