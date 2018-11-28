@@ -135,8 +135,8 @@ if (!exists('INC_DATABASE_R')) {
         }
 
         if (!is.null(item$query)) {
-            item$query <- str_interp(item$query, patterns)
-            item$patterns <- patterns
+            item$patterns <- c(item$patterns, patterns)
+            item$query <- str_interp(item$query, item$patterns)
         }
         return(item)
     }

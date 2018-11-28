@@ -31,27 +31,28 @@ SELECT project_id, sprint_id, key, ${s(story_points, issue="initial_stories")} A
             AND (
                 older_issue.sprint_id IS NULL
                 OR older_issue.sprint_id <> issue.sprint_id
-				OR older_issue.story_points IS NULL
-				OR older_issue.story_points <> issue.story_points
+                OR older_issue.story_points IS NULL
+                OR older_issue.story_points <> issue.story_points
             )
         )
     )
+    AND ${story_point_types}
     AND issue.story_points IS NOT NULL
     AND issue.sprint_id IS NOT NULL
     AND issue.updated <= ${planned_late}
     AND (
-		later_issue.updated > ${planned_early}
-		OR later_issue.updated - issue.updated < ${planned_late} - ${sprint_open}
-		OR (later_issue.updated < ${sprint_open}
-			AND (newer_issue.issue_id IS NULL OR newer_issue.updated > ${planned_late})
-		)
-	)
+        later_issue.updated > ${planned_early}
+        OR later_issue.updated - issue.updated < ${planned_late} - ${sprint_open}
+        OR (later_issue.updated < ${sprint_open}
+            AND (newer_issue.issue_id IS NULL OR newer_issue.updated > ${planned_late})
+        )
+    )
     AND later_issue.changelog_id >= issue.changelog_id
     AND (
         newer_issue.issue_id IS NULL
         OR newer_issue.updated > ${planned_late}
         OR (newer_issue.sprint_id = later_issue.sprint_id
-			AND NOT (${sprint_closed}))
+            AND NOT (${sprint_closed}))
     )
     AND subtask.id_parent IS NULL
 ) AS initial_stories

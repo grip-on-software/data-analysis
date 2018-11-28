@@ -13,6 +13,7 @@ SELECT done_stories.project_id, done_stories.sprint_id, issue.key, ${s(story_poi
 		AND ${s(issue_done, issue="resolve_issue")}
 		--AND NOT ${issue_overdue}
 		AND issue.updated > ${sprint_open}
+		AND ${story_point_types}
 		AND issue.story_points IS NOT NULL
 		AND issue.sprint_id IS NOT NULL
     	AND subtask.id_parent IS NULL

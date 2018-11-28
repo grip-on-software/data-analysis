@@ -308,6 +308,8 @@ files:
   - filename: 04-expected-story-points.sql
     table: expected_story_points
     column: num_story_points
+    patterns:
+        story_point_types: "issue.type NOT IN (1,12)"
     default: 0
     summarize:
         operation: sum
@@ -327,6 +329,8 @@ files:
   - filename: 04-done-story-points.sql
     table: done_story_points
     column: done_story_points
+    patterns:
+        story_point_types: "issue.type NOT IN (1,12)"
     default: 0
     summarize:
         operation: sum
@@ -343,6 +347,58 @@ files:
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
     category: tracking
+  - filename: 04-expected-story-points.sql
+    table: expected_bug_points
+    column: planned_bug_points
+    patterns:
+        story_point_types: "issue.type IN (1,12)"
+    default: 0
+    summarize:
+        operation: sum
+        field: story_points
+        group: [project_id, sprint_id]
+        details: [key, story_points]
+    combine: sum
+    descriptions:
+        nl: Geplande bug points
+        en: Planned bug points
+    units:
+        nl: "%s geplande bug punten"
+        en: "%s planned bug points"
+    source:
+        jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=burndownChart&sprint=${jira_sprint_id}"
+    category: tracking
+  - filename: 04-done-story-points.sql
+    table: done_bug_points
+    column: done_bug_points
+    patterns:
+        story_point_types: "issue.type IN (1,12)"
+    default: 0
+    summarize:
+        operation: sum
+        field: story_points
+        group: [project_id, sprint_id]
+        details: [key, story_points]
+    combine: sum
+    descriptions:
+        nl: Afgeronde bug points
+        en: Done bug points
+    units:
+        nl: "%s afgronde bug points"
+        en: "%s done bug points"
+    source:
+        jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
+    category: tracking
+  - expression: "done_story_points + done_bug_points"
+    column: velocity_one
+    default: 0
+    combine: sum
+    descriptions:
+        nl: "Sprint-velocity"
+        en: "Sprint velocity"
+    units:
+        nl: "%s punten"
+        en: "%s points"
   - expression: "done_story_points - num_story_points"
     column: over_expectation
     default: 0
