@@ -399,6 +399,7 @@ files:
     units:
         nl: "%s punten"
         en: "%s points"
+    category: tracking
   - expression: "done_story_points - num_story_points"
     column: over_expectation
     default: 0
