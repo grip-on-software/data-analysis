@@ -404,8 +404,8 @@ files:
     default: 0
     combine: sum
     descriptions:
-        nl: Toegevoegde verwachting
-        en: Added expectation
+        nl: Punten boven verwachting
+        en: Points above expectation
     units:
         nl: "%s toegevoegde storypoints"
         en: "%s added story points"
@@ -525,8 +525,8 @@ files:
         details: [key, story_points]
     combine: sum
     descriptions:
-        nl: Toegevoegde storypunten
-        en: Added story points
+        nl: Heringeplande storypunten
+        en: Replanned story points
     units:
         nl: "%s storypunten toegevoegd uit eerdere sprint"
         en: "%s story points added from earlier sprint"
@@ -688,8 +688,8 @@ files:
     default: 0
     combine: true
     descriptions:
-        nl: Toegevoegde velocity
-        en: Added velocity
+        nl: Bovengeplande punten
+        en: Overplanned points
     units:
         nl: "%s extra storypoints per werkdag"
         en: "%s added story points per working day"
