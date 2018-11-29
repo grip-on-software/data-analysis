@@ -589,6 +589,7 @@ get_sprint_features <- function(conn, features, exclude, variables, latest_date,
     }
     result$data <- get_expressions(result$items, result$data,
                                    expressions, join_cols)
+    result$colnames <- c(result$colnames, expressions)
     return(result)
 }
 
@@ -714,6 +715,7 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T,
     }
     result$data <- get_expressions(result$items, result$data,
                                    expressions, join_cols)
+    result$colnames <- c(result$colnames, expressions)
 
     for (item in result$items) {
         if (!is.null(item$summarize) && length(item$summarize$operation) > 1) {
