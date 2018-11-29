@@ -716,6 +716,11 @@ files:
     table: concurrent_in_progress_stories
     column: avg_concurrent_progress
     default: 0
+    summarize:
+        operation: mean
+        field: num
+        group: [project_id, sprint_id]
+        details: [key, story_points, num]
     combine: mean
     descriptions:
         nl: Gelijktijdige stories in progress
@@ -728,6 +733,11 @@ files:
     table: duration_in_progress_stories
     column: avg_duration_progress
     default: 0
+    summarize:
+        operation: mean
+        field: num
+        group: [project_id, sprint_id]
+        details: [key, story_points, num]
     combine: mean
     descriptions:
         nl: Looptijd stories in progress
