@@ -164,11 +164,10 @@ if (get_arg('--project', default=F)) {
                  'velocity_three', 'lines_of_code', 'unittest_line_coverage')
     default_features <- default[default %in% c(sprint_meta, features)]
     extra_features <- features[!(features %in% default_features)]
-    if (prediction != '') {
-        prediction <- str_interp(prediction, config$fields)
-        if (prediction != '') {
-            extra_features <- c(extra_features, 'prediction')
-        }
+    prediction <- list(data=str_interp(prediction, config$fields),
+                       source=config$fields$prediction_url)
+    if (prediction$data != '') {
+        extra_features <- c(extra_features, 'prediction')
     }
     old_features <- unique(c(sprint_meta, default_features, extra_features))
     cat_features <- list()
@@ -300,9 +299,9 @@ if (get_arg('--project', default=F)) {
             source_urls <- get_source_urls(conn, project_id)
             write(toJSON(build_sprint_source_urls(source_urls, project_id,
                                                   project, sprint$quality_name,
-                                                  NULL, specifications,
+                                                  NULL, result$items,
                                                   patterns, team_projects)),
-                    file=paste(project_dir, "links.json", sep="/"))
+                  file=paste(project_dir, "links.json", sep="/"))
 
             dates <- get_tracker_dates(conn, project_id, aggregate=max)
             urls <- build_project_source_urls(source_urls, project_id,

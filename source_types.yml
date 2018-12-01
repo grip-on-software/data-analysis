@@ -46,3 +46,7 @@ subversion:
     nl: Subversion
     en: Subversion
     icon: [fas, fa-code-branch]
+prediction:
+    nl: Voorspelling
+    en: Prediction
+    icon: [fas, fa-percent]

@@ -597,7 +597,8 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T,
                                        sprint_meta=c(), sprint_conditions='',
                                        project_fields=c('project_id'),
                                        project_meta=list(), old=F, details=F,
-                                       combine=F, teams=list(), prediction='') {
+                                       combine=F, teams=list(),
+                                       prediction=list()) {
     patterns <- load_definitions('sprint_definitions.yml')
     if (!missing(date)) {
         project_meta$recent <- date
@@ -673,9 +674,9 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T,
                            join_cols, details=details, required=c("sprint_num"))
     expressions <- result$expressions
 
-    if (prediction != '') {
-        loginfo('Collecting predictions from %s', prediction)
-        data <- fromJSON(url(prediction))
+    if (prediction$data != '') {
+        loginfo('Collecting predictions from %s', prediction$data)
+        data <- fromJSON(url(prediction$data))
         predictions <- do.call("rbind",
                                mapply(function(labels, projects, sprints) {
                                           data.frame(project_id=projects,
@@ -691,7 +692,8 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T,
                           list(list(column="prediction",
                                     combine="mean",
                                     descriptions=list(nl="Voorspelling",
-                                                      en="Prediction"))))
+                                                      en="Prediction"),
+                                    source=list(prediction=prediction$source))))
         result$colnames <- c(result$colnames, "prediction")
     }
     result$projects <- projects

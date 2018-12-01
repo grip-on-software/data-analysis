@@ -83,7 +83,7 @@ get_source_urls <- function(conn, project_id, sources='all', web=T, one=F) {
 get_source_pattern <- function(item, project_urls) {
     if (is.list(item$source)) {
         index <- which(url_names(names(item$source)) %in% names(project_urls))
-        if (length(index) > 0) {
+        if (length(index) > 0 && !is.null(item$source[[index[1]]])) {
             return(item$source[[index[1]]])
         }
     }
@@ -96,6 +96,7 @@ get_source_pattern <- function(item, project_urls) {
 build_source_urls <- function(project_id, project_name, items=list(),
                               patterns=c(), conn=NA, team_projects=c()) {
     project_links <- list()
+    names(project_links) <- list()
     if (is.list(conn)) {
         project_urls <- conn
     }
@@ -168,8 +169,7 @@ build_project_source_urls <- function(conn, project_id, project_name, patterns,
 
 build_sprint_source_urls <- function(conn, project_id, project_name,
                                      quality_name, sprint,
-                                     specifications, patterns,
-                                     team_projects=c()) {
+                                     items, patterns, team_projects=c()) {
     if (is.list(conn)) {
         source_urls <- conn
     }
@@ -177,7 +177,7 @@ build_sprint_source_urls <- function(conn, project_id, project_name,
         source_urls <- get_source_urls(conn, project_id)
     }
     source_items <- list()
-    for (item in specifications$files) {
+    for (item in items) {
         if (is.list(item$source)) {
             urls <- url_names(names(item$source))
             index <- which(urls %in% names(source_urls))
