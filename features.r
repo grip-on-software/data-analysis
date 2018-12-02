@@ -227,6 +227,10 @@ if (get_arg('--project', default=F)) {
             dir.create(output_dir)
         }
         projects <- levels(factor(sprint_data$project_name))
+        ids <- levels(factor(sprint_data$project_id))
+
+        source_urls <- get_source_urls(conn, ids, multi=T)
+        source_ids <- get_source_ids(conn, ids)
 
         old_sprint_data <- sprint_data[sprint_data$old, ]
         new_sprint_data <- sprint_data[!sprint_data$old, ]
@@ -296,16 +300,18 @@ if (get_arg('--project', default=F)) {
                 }
             }
 
-            source_urls <- get_source_urls(conn, project_id)
-            write(toJSON(build_sprint_source_urls(source_urls, project_id,
+            project_urls <- source_urls[[as.character(project_id)]]
+            write(toJSON(build_sprint_source_urls(project_urls, project_id,
                                                   project, sprint$quality_name,
                                                   NULL, result$items,
                                                   patterns, team_projects)),
                   file=paste(project_dir, "links.json", sep="/"))
+            write(toJSON(source_ids[[as.character(project_id)]]),
+                  file=paste(project_dir, "source_ids.json", sep="/"))
 
             dates <- get_tracker_dates(conn, project_id, aggregate=max)
-            urls <- build_project_source_urls(source_urls, project_id,
-                                              project, sprint,
+            urls <- build_project_source_urls(project_urls, project_id, project,
+                                              sprint,
                                               team_projects=team_projects)
             write(toJSON(mapply(function(date, url) {
                                     list(date=unbox(date), url=unbox(url))

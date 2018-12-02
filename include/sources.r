@@ -41,7 +41,8 @@ filter_project_urls <- function(project, one, default_urls) {
     return(urls)
 }
 
-get_source_urls <- function(conn, project_id, sources='all', web=T, one=F) {
+get_source_urls <- function(conn, project_id, sources='all', web=T, one=F,
+                            multi=F) {
     conditions <- list(project_id=paste('project_id IN (',
                                         paste(project_id, collapse=','), ')'))
     config <- get_config()
@@ -74,7 +75,7 @@ get_source_urls <- function(conn, project_id, sources='all', web=T, one=F) {
     projects <- lapply(split(environments, environments$project_id),
                        filter_project_urls, one, default_urls)
 
-    if (length(project_id) == 1 && length(projects) == 1) {
+    if (!multi && length(project_id) == 1 && length(projects) == 1) {
         return(projects[[as.character(project_id)]])
     }
     return(projects)
@@ -94,10 +95,10 @@ get_source_pattern <- function(item, project_urls) {
 }
 
 build_source_urls <- function(project_id, project_name, items=list(),
-                              patterns=c(), conn=NA, team_projects=c()) {
+                              patterns=c(), conn=NULL, team_projects=c()) {
     project_links <- list()
     names(project_links) <- list()
-    if (is.list(conn)) {
+    if (is.list(conn) || is.null(conn)) {
         project_urls <- conn
     }
     else {
@@ -148,7 +149,7 @@ build_project_source_urls <- function(conn, project_id, project_name, patterns,
                                         metric_history_url=quality_url,
                                         metric_options_url=metric_options_url,
                                         jira_url=jira_url))
-    if (is.list(conn)) {
+    if (is.list(conn) || is.null(conn)) {
         source_urls <- conn
     }
     else {
@@ -170,7 +171,7 @@ build_project_source_urls <- function(conn, project_id, project_name, patterns,
 build_sprint_source_urls <- function(conn, project_id, project_name,
                                      quality_name, sprint,
                                      items, patterns, team_projects=c()) {
-    if (is.list(conn)) {
+    if (is.list(conn) || is.null(conn)) {
         source_urls <- conn
     }
     else {
@@ -212,4 +213,19 @@ build_sprint_source_urls <- function(conn, project_id, project_name,
     return(build_source_urls(project_id, project_name, items=source_items,
                              patterns=c(patterns, sprint_patterns),
                              conn=source_urls, team_projects=team_projects))
+}
+
+get_source_ids <- function(conn, project_id) {
+    query <- paste('SELECT project_id, domain_name, url, source_id
+                    FROM gros.source_id WHERE project_id IN (',
+                   paste(project_id, collapse=','), ')')
+    result <- dbGetQuery(conn, query)
+    lapply(split(result, result$project_id),
+           function(project) {
+               domain_names <- project$domain_name
+               project[, c("project_id", "domain_name")] <- NULL
+               source_ids <- as.list(split(project, seq(nrow(project))))
+               names(source_ids) <- domain_names
+               return(safe_unbox(source_ids))
+           })
 }
