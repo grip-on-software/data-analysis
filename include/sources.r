@@ -226,6 +226,6 @@ get_source_ids <- function(conn, project_id) {
                project[, c("project_id", "domain_name")] <- NULL
                source_ids <- as.list(split(project, seq(nrow(project))))
                names(source_ids) <- domain_names
-               return(safe_unbox(source_ids))
+               return(source_ids)
            })
 }
