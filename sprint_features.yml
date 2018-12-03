@@ -923,7 +923,7 @@ files:
     default: 0
     summarize:
         operation: count
-        include_missing: true
+        with_missing: true
         field: story_points
         group: [project_id, sprint_id]
         details: [key, story_points]

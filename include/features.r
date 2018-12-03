@@ -437,7 +437,7 @@ get_features <- function(conn, features, exclude, items, data, colnames,
                     group_result <- data.frame(group[1, group_names])
                     summarizer <- function(operation, field, with_missing) {
                         do.call(operation, c(list(group[, field]),
-                                             list(na.rm=with_missing)))
+                                             list(na.rm=!with_missing)))
                     }
                     group_result[, columns] <- mapply(summarizer, operation,
                                                       summarize$field,
