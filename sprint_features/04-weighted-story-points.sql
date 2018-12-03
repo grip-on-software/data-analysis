@@ -1,8 +1,8 @@
 SELECT
     issue.project_id, issue.sprint_id,
-SUM(issue.story_points) AS num_points,
+SUM(${s(story_points)}) AS num_points,
     SUM(CAST(
-        CAST(issue.story_points AS double) / 
+        CAST(${s(story_points)} AS double) / 
         CAST(
             CASE WHEN sprint_points.max_points IS NOT NULL
             AND sprint_points.max_points <> 0
@@ -31,7 +31,7 @@ FROM gros.issue,
 ) AS done_data,
 -- TODO: Weight the maximum points over the last three sprints
 (SELECT
-    issue.sprint_id, MAX(issue.story_points) AS max_points FROM gros.issue
+    issue.sprint_id, MAX(${s(story_points)}) AS max_points FROM gros.issue
     --WHERE issue.story_points <= sprint_points_normalization
     GROUP BY issue.sprint_id
 ) AS sprint_points

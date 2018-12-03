@@ -1,4 +1,4 @@
-SELECT DISTINCT issue.project_id, issue.sprint_id, issue.key, issue.story_points
+SELECT DISTINCT issue.project_id, issue.sprint_id, issue.key, ${s(story_points)} AS story_points
 FROM gros.issue
 JOIN gros.sprint ON issue.project_id = sprint.project_id AND issue.sprint_id = sprint.sprint_id
 JOIN gros.issue AS new_issue

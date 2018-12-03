@@ -1,5 +1,5 @@
 SELECT interval_sprint.project_id, interval_sprint.sprint_id,
-issue.key, MAX(issue.story_points) AS story_points
+issue.key, MAX(${s(story_points)}) AS story_points
 FROM gros.issue
 LEFT JOIN gros.issue AS newer_issue
 	ON issue.issue_id = newer_issue.issue_id

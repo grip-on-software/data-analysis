@@ -26,7 +26,7 @@ fields:
     story_points:
         description: "The number of planned points of an issue"
         table: issue
-        field: CASE WHEN ${t("issue")}.story_points IN (99, 100) THEN 0 ELSE ${t("issue")}.story_points END
+        field: CASE WHEN ${t("issue")}.story_points IN (99, 100, 122, 999) THEN 0 ELSE ${t("issue")}.story_points END
 conditions:
     issue_done:
         description: "Issues that are done according to the team's definition of done"
