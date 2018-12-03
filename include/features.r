@@ -248,6 +248,7 @@ get_combined_team <- function(team, team_id, data, projects, team_projects,
                      any(as.Date(team_data[, 'start_date']) >= recent_date))
 
     metadata <- data.frame(project_id=team_id,
+                           project_ids=0,
                            name=team$name,
                            quality_display_name=team$display_name,
                            recent=recent,
@@ -256,6 +257,7 @@ get_combined_team <- function(team, team_id, data, projects, team_projects,
                            team=ifelse(is.null(team$team), team$board,
                                        as.logical(team$team)),
                            stringsAsFactors=F)[, colnames(projects)]
+    metadata$project_ids <- list(project_id)
 
     if (team$name %in% projects$name) {
         projects[projects$name == team$name, ] <- as.list(metadata)
@@ -608,6 +610,7 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T,
     }
     projects <- get_projects_meta(conn, fields=project_fields,
                                   metadata=c(project_meta, list(main=T)))
+    projects$project_ids <- projects$project_id
     projects <- projects[projects$main, ]
     if (!old) {
         projects <- projects[projects$recent, ]
@@ -626,7 +629,7 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T,
               JOIN gros.project
               ON project.project_id = sprint.project_id
               WHERE sprint.start_date IS NOT NULL
-              ${project_condition}
+              AND ${project_condition}
               ${s(sprint_conditions)}
               ORDER BY sprint.project_id, ${sprint_open} DESC, sprint.name DESC
               ${limit}'
@@ -634,8 +637,10 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T,
     variables <- c(patterns, list(sprint_conditions=sprint_conditions))
     if (old) {
         # Old value is calculated by combined data later on
+        condition <- paste('sprint.project_id IN (',
+                           paste(projects$project_id, collapse=','), ')')
         item <- load_query(list(query=query),
-                           c(variables, list(project_condition='',
+                           c(variables, list(project_condition=condition,
                                              old='TRUE',
                                              pager='',
                                              limit='')))
@@ -644,7 +649,7 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T,
     else {
         sprint_data <- data.frame()
         for (project in projects$project_id) {
-            project_condition <- paste("AND sprint.project_id =", project)
+            project_condition <- paste("sprint.project_id =", project)
 
             item <- load_query(list(query=query),
                                c(variables,

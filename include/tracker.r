@@ -30,10 +30,10 @@ get_tracker_dates <- function(conn, project_id, sources='all',
             lapply(trackers[[group]], function(tracker) { tracker$file })
         }
     }))
-    query <- paste('SELECT filename, contents, update_date',
-                   'FROM gros.update_tracker',
-                   'WHERE project_id =', project_id,
-                   'AND filename IN (',
+    query <- paste('SELECT filename, contents, update_date
+                    FROM gros.update_tracker
+                    WHERE project_id IN (', paste(project_id, collapse=','), ')
+                    AND filename IN (',
                    paste(dbQuoteString(conn, filenames), collapse=','), ')')
 
     files <- dbGetQuery(conn, query)

@@ -227,7 +227,7 @@ if (get_arg('--project', default=F)) {
             dir.create(output_dir)
         }
         projects <- levels(factor(sprint_data$project_name))
-        ids <- levels(factor(sprint_data$project_id))
+        ids <- unique(do.call("c", result$projects$project_ids))
 
         source_urls <- get_source_urls(conn, ids, multi=T)
         source_ids <- get_source_ids(conn, ids)
@@ -268,10 +268,11 @@ if (get_arg('--project', default=F)) {
             }
 
             # There may be multiple original project IDs for team projects.
-            project_id <- new$project_id[[1]]
+            project_id <- result$projects[result$projects$name == project,
+                                          'project_ids'][[1]]
             team_projects <- result$team_projects[[project]]
             if (length(team_projects) == 1) {
-                team_ids <- c(new$team_id[[1]], project_id)
+                team_ids <- c(new$team_id[[1]], project_id[[1]])
             }
             else {
                 team_ids <- new$team_id[[1]]
@@ -300,13 +301,18 @@ if (get_arg('--project', default=F)) {
                 }
             }
 
-            project_urls <- source_urls[[as.character(project_id)]]
+            project_urls <- source_urls[as.character(project_id)]
+            names(project_urls) <- NULL
+            project_urls <- do.call("c", project_urls)
             write(toJSON(build_sprint_source_urls(project_urls, project_id,
                                                   project, sprint$quality_name,
                                                   NULL, result$items,
                                                   patterns, team_projects)),
                   file=paste(project_dir, "links.json", sep="/"))
-            write(toJSON(source_ids[[as.character(project_id)]]),
+
+            project_source_ids <- source_ids[as.character(project_id)]
+            names(project_source_ids) <- NULL
+            write(toJSON(do.call("c", project_source_ids)),
                   file=paste(project_dir, "source_ids.json", sep="/"))
 
             dates <- get_tracker_dates(conn, project_id, aggregate=max)
