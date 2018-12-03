@@ -30,6 +30,11 @@ count <- function(data, na.rm=F) {
     return(length(data))
 }
 
+sum_with_na_avg <- function(data, na.rm=F) {
+    sub <- sum(data, na.rm=na.rm)
+    return(sub + sub / length(which(!is.na(data))) * length(which(is.na(data))))
+}
+
 get_locales <- function(items) {
     locales <- list()
     for (type in names(items)) {
