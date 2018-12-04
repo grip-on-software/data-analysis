@@ -1,4 +1,4 @@
-SELECT DISTINCT issue.project_id, issue.sprint_id, issue.key, ${s(story_points)}AS story_points
+SELECT DISTINCT issue.project_id, issue.sprint_id, issue.key, ${s(story_points)} AS story_points
 FROM gros.issue
 JOIN gros.sprint ON issue.sprint_id = sprint.sprint_id
 JOIN (SELECT issue_id, MAX(changelog_id) AS changelog_id FROM gros.issue GROUP BY issue_id) AS max_issue
