@@ -165,6 +165,7 @@ if (get_arg('--project', default=F)) {
     default_features <- default[default %in% c(sprint_meta, features)]
     extra_features <- features[!(features %in% default_features)]
     prediction <- list(data=str_interp(prediction, config$fields),
+                       combine=config$fields$prediction_combine,
                        source=config$fields$prediction_url)
     if (prediction$data != '') {
         extra_features <- c(extra_features, 'prediction')

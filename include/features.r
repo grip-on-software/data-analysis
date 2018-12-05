@@ -413,8 +413,11 @@ get_features <- function(conn, features, exclude, items, data, colnames,
                 result <- item$result
             }
             else if (!is.null(item$expression)) {
-                # To be filled in later
                 expressions <- c(expressions, columns)
+                if (all(columns %in% required)) {
+                    data[, item$column] <- get_expression(item, data)
+                    colnames <- c(colnames, columns)
+                }
                 next
             }
             else if (is.null(item$query)) {
@@ -482,38 +485,41 @@ get_features <- function(conn, features, exclude, items, data, colnames,
          items=selected_items, expressions=expressions)
 }
 
-get_expressions <- function(items, data, expressions, join_cols) {
+get_expressions <- function(items, data, expressions) {
     for (item in items) {
         if (!is.null(item$expression) && all(item$column %in% expressions)) {
-            loginfo("Calculating expression %s", item$column)
-            expression <- parse(text=item$expression)
-            result <- data.frame(data[join_cols])
-            if (!is.null(item$window)) {
-                group <- item$window$group
-                if ("project_name" %in% colnames(data)) {
-                    group[group == "project_id"] <- "project_name"
-                }
-                if (length(group) == 1) {
-                    group_cols <- list(factor(data[, group]))
-                    names(group_cols) <- group
-                }
-                else {
-                    group_cols <- lapply(data[, group], factor)
-                }
-                groups <- split(data, as.list(group_cols), drop=T)
-                all <- do.call("c", lapply(groups, function(group_data) {
-                    eval(expression,
-                         rbind(group_data[rep(1, item$window$dimension - 1), ],
-                               group_data))
-                }))
-                data[, item$column] <- all
-            }
-            else {
-                data[, item$column] <- eval(expression, data)
-            }
+            data[, item$column] <- get_expression(item, data)
         }
     }
     return(data)
+}
+
+get_expression <- function(item, data) {
+    loginfo("Calculating expression %s", item$column)
+    expression <- parse(text=item$expression)
+    if (!is.null(item$window)) {
+        group <- item$window$group
+        if ("project_name" %in% colnames(data)) {
+            group[group == "project_id"] <- "project_name"
+        }
+        if (length(group) == 1) {
+            group_cols <- list(factor(data[, group]))
+            names(group_cols) <- group
+        }
+        else {
+            group_cols <- lapply(data[, group], factor)
+        }
+        groups <- split(data, as.list(group_cols), drop=T)
+        all <- do.call("c", lapply(groups, function(group_data) {
+            eval(expression,
+                 rbind(group_data[rep(1, item$window$dimension - 1), ],
+                       group_data))
+        }))
+    }
+    else {
+        all <- eval(expression, data)
+    }
+    return(all)
 }
 
 get_sprint_conditions <- function(latest_date='', core=F, sprint_days=NA,
@@ -594,8 +600,7 @@ get_sprint_features <- function(conn, features, exclude, variables, latest_date,
                                         result$colnames, result$details,
                                         join_cols, combine=combine, teams=teams)
     }
-    result$data <- get_expressions(result$items, result$data,
-                                   expressions, join_cols)
+    result$data <- get_expressions(result$items, result$data, expressions)
     result$colnames <- c(result$colnames, expressions)
     return(result)
 }
@@ -666,7 +671,7 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T,
     }
     sprint_data$start_date <- as.POSIXct(sprint_data$start_date)
     sprint_data$close_date <- as.POSIXct(sprint_data$close_date)
-    sprint_data <- arrange(sprint_data, sprint_data$project_id,
+    sprint_data <- arrange(sprint_data, sprint_data$project_name,
                            sprint_data$start_date, sprint_data$sprint_name)
 
     data <- yaml.load_file('sprint_features.yml')
@@ -684,29 +689,10 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T,
                            join_cols, details=details, required=c("sprint_num"))
     expressions <- result$expressions
 
-    if (prediction$data != '') {
-        loginfo('Collecting predictions from %s', prediction$data)
-        data <- fromJSON(url(prediction$data))
-        predictions <- do.call("rbind",
-                               mapply(function(labels, projects, sprints) {
-                                          data.frame(project_id=projects,
-                                                     sprint_num=sprints,
-                                                     prediction=labels)
-                               },
-                               data$labels, data$projects, data$sprints,
-                               SIMPLIFY=F, USE.NAMES=F))
-        result$data <- join(result$data, predictions,
-                            by=c("project_id", "sprint_num"), type="left",
-                            match="first")
-        result$items <- c(result$items,
-                          list(list(column="prediction",
-                                    combine="mean",
-                                    descriptions=list(nl="Voorspelling",
-                                                      en="Prediction"),
-                                    source=list(prediction=prediction$source))))
-        result$colnames <- c(result$colnames, "prediction")
-    }
     result$projects <- projects
+    if (prediction$data != '' && !identical(prediction$combine, F)) {
+        result <- get_prediction_feature(prediction, result)
+    }
     if (!identical(combine, F)) {
         result <- get_combined_features(result$items, result$data,
                                         result$colnames, result$details,
@@ -725,9 +711,11 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T,
                                           return(group)
                                       }))
     }
-    result$data <- get_expressions(result$items, result$data,
-                                   expressions, join_cols)
+    result$data <- get_expressions(result$items, result$data, expressions)
     result$colnames <- c(result$colnames, expressions)
+    if (prediction$data != '' && identical(prediction$combine, F)) {
+        result <- get_prediction_feature(prediction, result)
+    }
 
     for (item in result$items) {
         if (!is.null(item$summarize) && length(item$summarize$operation) > 1) {
@@ -745,6 +733,30 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T,
                                  item$column)
         }
     }
+    return(result)
+}
+
+get_prediction_feature <- function(prediction, result) {
+    loginfo('Collecting predictions from %s', prediction$data)
+    data <- fromJSON(url(prediction$data))
+    predictions <- do.call("rbind",
+                           mapply(function(labels, projects, sprints) {
+                                      data.frame(project_id=projects,
+                                                 sprint_num=sprints,
+                                                 prediction=labels)
+                           },
+                           data$labels, data$projects, data$sprints,
+                           SIMPLIFY=F, USE.NAMES=F))
+    result$data <- join(result$data, predictions,
+                        by=c("project_id", "sprint_num"), type="left",
+                        match="first")
+    result$items <- c(result$items,
+                      list(list(column="prediction",
+                                combine=prediction$combine,
+                                descriptions=list(nl="Voorspelling",
+                                                  en="Prediction"),
+                                source=list(prediction=prediction$source))))
+    result$colnames <- c(result$colnames, "prediction")
     return(result)
 }
 

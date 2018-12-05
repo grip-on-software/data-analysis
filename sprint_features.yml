@@ -21,11 +21,12 @@ categories:
         en: Code
         icon: [fas, fa-server]
 files:
-  - filename: 00-sprint-num.sql
-    table: sprint_num
+  - expression: '1:length(sprint_id)'
+    window:
+        dimension: 1
+        group: project_id
     column: sprint_num
     optional: No
-    sort: Yes
     combine: min
     descriptions:
         nl: Sprintnummer
