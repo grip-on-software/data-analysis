@@ -473,6 +473,9 @@ files:
     descriptions:
         nl: "Sprint-velocity"
         en: "Sprint velocity"
+    long_descriptions:
+        nl: "Het totaal aantal storypoints die voltooid zijn in de sprint"
+        en: "The total number of points that are completed during the sprint"
     units:
         nl: "%s punten"
         en: "%s points"

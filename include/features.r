@@ -522,6 +522,44 @@ get_expression <- function(item, data) {
     return(all)
 }
 
+get_expressions_metadata <- function(items, data) {
+    assignments <- list()
+    names(assignments) <- list()
+    for (item in items) {
+        if (!is.null(item$expression)) {
+            attributes <- I(get_expression_attrs(item$expression, data))
+            assignments[[item$column]] <- list(attributes=attributes,
+                                               expression=item$expression)
+        }
+    }
+    return(assignments)
+}
+
+get_expression_attrs <- function(expression, vars) {
+    expr <- parse(text=expression)
+    cond <- is.expression(expr)
+    if (!cond) {
+        return()
+    }
+    environment <- new.env()
+
+    while (cond) {
+        ref <- try(eval(expr, envir=environment), silent=T)
+        if (cond <- (class(ref) == "try-error")) {
+            if (length(grep("not found", ref[1])) > 0) {
+                aux <- substr(ref, regexpr("object ", ref) + 8,
+                              regexpr(" not found", ref) - 2)
+                assign(as.character(aux), vars[[aux]], envir=environment)
+            } else {
+                stop(paste("expression", expr, "could not be evaluated:",
+                           ref[1], "but a missing variable was not identified"))
+            }
+        }
+    }
+
+    ls(envir=environment)
+}
+
 get_sprint_conditions <- function(latest_date='', core=F, sprint_days=NA,
                                   sprint_patch=NA, future=T) {
     conditions <- list()
@@ -806,7 +844,7 @@ write_feature_metadata <- function(projects, specifications, output_directory,
     if (length(features) > 0) {
         cats <- specifications$categories
         values <- list()
-        names(values) <- NULL
+        names(values) <- list()
 
         for (item in items) {
             feature <- item$column[item$column %in% features]

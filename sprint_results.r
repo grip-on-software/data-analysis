@@ -76,30 +76,6 @@ get_tags <- function(features_row) {
     return(tags)
 }
 
-expr.args <- function(x, vars) {
-    cond <- is.expression(x)
-    if (!cond) {
-        return()
-    }
-    tmpe <- new.env()
-
-    while (cond) {
-           ref <- try(eval(x, envir = tmpe), silent = TRUE)
-           if (cond <- (class(ref) == "try-error")) {
-             if (length(grep("not found", ref[1])) > 0) {
-                   aux <- substr(ref, regexpr("object ", ref) + 8,
-                              regexpr(" not found", ref) - 2)
-                assign(as.character(aux), vars[[aux]], envir = tmpe)
-             } else {
-                stop(paste("expression", x, "could not be evaluated:", ref[1],
-                           "but a missing variable was not identified."))
-            }
-           }
-    }
-
-    ls(envir = tmpe)
-}
-
 get_analogy_results <- function(i, idx) {
     analogy <- results$analogy_indexes[idx, i]
     analogy_sprint <- get_sprint(features[analogy, "project_id"],
@@ -124,14 +100,10 @@ get_analogy_results <- function(i, idx) {
                 tags=get_tags(features[analogy, ])))
 }
 
-for (file in specifications$files) {
-    if (!is.null(file$expression)) {
-        assignment <- list(attributes=I(expr.args(parse(text=file$expression),
-                                                  features)),
-                           expression=file$expression)
-        results$configuration$assignments[[file$column]] <- assignment
-    }
-}
+assignments <- modifyList(results$configuration$assignments,
+                          get_expressions_metadata(specifications$files,
+                                                   features))
+results$configuration$assignments <- assignments
 
 sprint_data <- get_sprint_projects(conn)
 for (idx in 1:length(results$projects)) {

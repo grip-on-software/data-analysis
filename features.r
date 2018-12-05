@@ -341,6 +341,9 @@ if (get_arg('--project', default=F)) {
                           details=unique(details_features),
                           meta=sprint_meta)),
               file=paste(output_dir, "features.json", sep="/"))
+        write(toJSON(get_expressions_metadata(result$items, sprint_data),
+                     auto_unbox=T),
+              file=paste(output_dir, "expressions.json", sep="/"))
         write_projects_metadata(conn, fields, metadata,
                                 projects=result$projects,
                                 project_ids=project_ids,
