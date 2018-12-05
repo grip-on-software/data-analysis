@@ -750,12 +750,20 @@ get_prediction_feature <- function(prediction, result) {
     result$data <- join(result$data, predictions,
                         by=c("project_id", "sprint_num"), type="left",
                         match="first")
-    result$items <- c(result$items,
-                      list(list(column="prediction",
-                                combine=prediction$combine,
-                                descriptions=list(nl="Voorspelling",
-                                                  en="Prediction"),
-                                source=list(prediction=prediction$source))))
+    item <- list(column="prediction",
+                 combine=prediction$combine,
+                 descriptions=list(nl="Voorspelling",
+                                   en="Prediction"),
+                 long_descriptions=list(nl=paste("Voorspelling van het aantal",
+                                                 "storypoints dat in de sprint",
+                                                 "zou worden gerealiseerd op",
+                                                 "basis van historische data"),
+                                        en=paste("Prediction of the number of",
+                                                 "story points that could be",
+                                                 "realized during the sprint",
+                                                 "based on historical data")),
+                 source=list(prediction=prediction$source))
+    result$items <- c(result$items, list(item))
     result$colnames <- c(result$colnames, "prediction")
     return(result)
 }
@@ -782,6 +790,8 @@ write_feature_metadata <- function(projects, specifications, output_directory,
     }
     write(toJSON(get_feature_locales(items)),
           file=paste(output_directory, "descriptions.json", sep="/"))
+    write(toJSON(get_feature_locales(items, 'long_descriptions')),
+          file=paste(output_directory, "long_descriptions.json", sep="/"))
     write(toJSON(get_feature_locales(items, 'units')),
           file=paste(output_directory, "units.json", sep="/"))
     write(toJSON(get_feature_locales(items, 'short_units')),
@@ -795,12 +805,18 @@ write_feature_metadata <- function(projects, specifications, output_directory,
 
     if (length(features) > 0) {
         cats <- specifications$categories
+        values <- list()
+        names(values) <- NULL
 
         for (item in items) {
             feature <- item$column[item$column %in% features]
-            cat <- ifelse("category" %in% names(item), item$category, "other")
             if (length(feature) > 0) {
+                cat <- ifelse("category" %in% names(item), item$category,
+                              "other")
                 cats[[cat]]$items <- c(cats[[cat]]$items, feature)
+                if (!is.null(item$value_icon)) {
+                    values[[item$column]] <- item$value_icon
+                }
             }
         }
         categories <- mapply(function(cat, name) {
@@ -816,5 +832,7 @@ write_feature_metadata <- function(projects, specifications, output_directory,
                              cats, names(cats), SIMPLIFY=F, USE.NAMES=F)
         write(toJSON(categories, auto_unbox=T),
               file=paste(output_directory, "categories.json", sep="/"))
+        write(toJSON(values),
+              file=paste(output_directory, "value_icons.json", sep="/"))
     }
 }

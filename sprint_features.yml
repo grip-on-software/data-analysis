@@ -31,6 +31,9 @@ files:
     descriptions:
         nl: Sprintnummer
         en: Sprint number
+    long_descriptions:
+        nl: Het opeenvolgende nummer van de sprint in de loopduur van het project
+        en: The sequential number of the sprint in the project's lifespan
     units:
         nl: "Sprint #%s"
         en: "Sprint #%s"
@@ -45,6 +48,9 @@ files:
     descriptions:
         nl: Sprintlengte
         en: Sprint length
+    long_descriptions:
+        nl: Het aantal dagen tussen de begindatum en de einddatum van de sprint
+        en: The number of days between the start and eind date of the sprint
     units:
         nl: "%s dagen"
         en: "%s days"
@@ -61,6 +67,9 @@ files:
     descriptions:
         nl: Weekdagen
         en: Week days
+    long_descriptions:
+        nl: Het aantal dagen exclusief weekends tussen de begindatum en de einddatum van de sprint
+        en: The number of days, excluding weekends, between the start and end date of the sprint
     units:
         nl: "%s weekdagen"
         en: "%s weekdays"
@@ -78,6 +87,9 @@ files:
     descriptions:
         nl: Gesloten sprint
         en: Closed sprint
+    long_descriptions:
+        nl: Of de sprint op het moment afgesloten is
+        en: Whether the sprint is closed at the moment
     tags:
         nl: Gesloten
         en: Closed
@@ -94,6 +106,9 @@ files:
     descriptions:
         nl: Open sprint
         en: Open sprint
+    long_descriptions:
+        nl: Of de sprint op het moment open staat
+        en: Whether the sprint is open at the moment
     tags:
         nl: Open
         en: Open
@@ -109,6 +124,9 @@ files:
     descriptions:
         nl: Complete sprint
         en: Complete sprint
+    long_descriptions:
+        nl: Of alle gegevens beschikbaar zijn voor de sprint
+        en: Whether all data is available for the sprint
     tags:
         nl: Compleet
         en: Complete
@@ -124,6 +142,9 @@ files:
     descriptions:
         nl: Developer teamgrootte
         en: Development team size
+    long_descriptions:
+        nl: Het aantal developers dat commits in het versiebeheersysteem maakt tijdens de sprint
+        en: The number of developers that made commits in the version control system during the sprint
     units:
         nl: "%s developers"
         en: "%s developers"
@@ -141,6 +162,9 @@ files:
     descriptions:
         nl: Project teamgrootte
         en: Project team size
+    long_descriptions:
+        nl: Het aantal personen dat aanpassingen maakt in de projecttracker tijdens de sprint
+        en: The number of persons that made changes in the project tracker during the sprint
     units:
         nl: "%s projectleden"
         en: "%s project members"
@@ -158,6 +182,9 @@ files:
     descriptions:
         nl: Teamgrootte
         en: Team size
+    long_descriptions:
+        nl: Het aantal fte voor het project in de periode van de sprint
+        en: The number of FTE for the project during the sprint period
     units:
         nl: "%s full-time leden"
         en: "%s fulltime members"
@@ -172,6 +199,9 @@ files:
     descriptions:
         nl: Aantal developers
         en: Number of developers
+    long_descriptions:
+        nl: Het berekende aantal developers in het project tijdens de sprint
+        en: The calculated number of developers in the project during the sprint
     units:
         nl: "%s developers"
         en: "%s developers"
@@ -187,6 +217,9 @@ files:
     descriptions:
         nl: Teamervaring
         en: Team experience
+    long_descriptions:
+        nl: Het totaal aantal sprints waar developers in gewerkt hebben in de loopduur van het project voor de sprint
+        en: The total number of sprints that developers have worked in the lifespan of the project before the sprint
     units:
         nl: "%s sprints ervaring"
         en: "%s sprints of experience"
@@ -202,6 +235,9 @@ files:
     descriptions:
         nl: Nieuwe developers
         en: New developers
+    long_descriptions:
+        nl: Het aantal developers die niet eerder gewerkt hebben in de loopduur van het project voor de sprint
+        en: The number of developers that have not worked on the project during its lifespan before the sprint
     units:
         nl: "%s nieuwe developers"
         en: "%s new developers"
@@ -213,6 +249,13 @@ files:
     descriptions:
         nl: Teamstemming
         en: Team spirit
+    long_descriptions:
+        nl: De stemming van het team tijdens de sprint
+        en: The mood of the team during the sprint
+    value_icons:
+        0: [far, fa-frown]
+        1: [far, fa-meh]
+        2: [far, fa-grin]
     units:
         nl: "Stemming van %s"
         en: "Spirit %s"
@@ -227,6 +270,9 @@ files:
     descriptions:
         nl: Aantal regels code
         en: Number of lines of code
+    long_descriptions:
+        nl: Het totaal aantal regels code in de producten aan het einde van de sprint
+        en: The total number of lines of code in the products at the end of the sprint
     units:
         nl: "%s regels code"
         en: "%s regels code"
@@ -241,6 +287,9 @@ files:
     descriptions:
         nl: Unittest line coverage
         en: Unittest line coverage
+    long_descriptions:
+        nl: Het percentage regels code dat in de producten door tests wordt bereikt aan het einde van de sprint
+        en: The percentage of lines of code in the products that is reached by tests at the end of the sprint
     units:
         nl: "%s%% unittest line coverage"
         en: "%s%% unittest line coverage"
@@ -257,6 +306,9 @@ files:
     descriptions:
         nl: Kwetsbaarheden
         en: Vulnerabilities
+    long_descriptions:
+        nl: Het aantal gedetecteerde plekken in code in de producten die wellicht voor kwetsbaarheden zorgen aan het einde van de sprint
+        en: The number of detected locations in code in the products that may cause vulnerabilities at the end of the sprint
     units:
         nl: "%s kwetsbaarheden"
         en: "%s vulnerabilities"
@@ -267,6 +319,9 @@ files:
     descriptions:
         nl: Onderhoudsbugs
         en: Maintainability bugs
+    long_descriptions:
+        nl: Het aantal gedetecteerde plekken in code in de producten die er wellicht voor zorgen dat onderhoud wordt bemoeilijkt aan het einde van de sprint
+        en: The number of detected locations in code in the products that may cause hindrance to maintainability at the end of the sprint
     units:
         nl: "%s onderhoudsbugs"
         en: "%s maintainability bugs"
@@ -277,6 +332,9 @@ files:
     descriptions:
         nl: Code smells
         en: Code smells
+    long_descriptions:
+        nl: Het aantal gedetecteerde plekken in code in de producten die wellicht niet voldoen aan designprincipes aan het einde van de sprint
+        en: The number of detected locations in code in the products that may not adhere to design principles at the end of the sprint
     units:
         nl: "%s code smells"
         en: "%s code smells"
@@ -286,13 +344,16 @@ files:
     default: 0
     combine: mean
     descriptions:
-        nl: Issue-watchers
-        en: Issue watchers
+        nl: Story-watchers
+        en: Story watchers
+    long_descriptions:
+        nl: Het gemiddeld aantal personen dat notificaties van aanpassingen aan een story in de sprint ontvangt
+        en: The average number of persons that receive notifications of changes to a story in the sprint
     units:
-        nl: "%s issue-watchers"
-        en: "%s issue watchers"
+        nl: "%s story-watchers"
+        en: "%s story watchers"
     source:
-        jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=project in (${jira_keys}) and sprint in (${jira_sprint_ids}) and watchers %3E 0&runQuery=true"
+        jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=project in (${jira_keys}) and sprint in (${jira_sprint_ids}) and type = Story and watchers %3E 0&runQuery=true"
     category: tracking
   - filename: 03-number-of-issue-changers.sql
     table: updaters
@@ -300,11 +361,14 @@ files:
     default: 0
     combine: mean
     descriptions:
-        nl: Issue-updaters
-        en: Issue updaters
+        nl: Item-updaters
+        en: Item updaters
+    long_descriptions:
+        nl: Het gemiddeld aantal personen dat een aanpassing aan een item in de sprint maakt
+        en: The average number of persons that makes a change to an item in the sprint
     units:
-        nl: "%s issue-updaters"
-        en: "%s issue updaters"
+        nl: "%s item-updaters"
+        en: "%s item updaters"
     category: tracking
   - filename: 04-expected-story-points.sql
     table: expected_story_points
@@ -321,6 +385,9 @@ files:
     descriptions:
         nl: Geplande storypoints
         en: Planned story points
+    long_descriptions:
+        nl: Het totaal aantal storypoints voor 1 dag na de start van sprint is gepland
+        en: The total number of story points that is planned at most 1 day after the sprint starts
     units:
         nl: "%s geplande punten"
         en: "%s planned points"
@@ -342,6 +409,9 @@ files:
     descriptions:
         nl: Afgeronde storypoints
         en: Done story points
+    long_descriptions:
+        nl: Het totaal aantal storypoints dat voltooid is in de sprint
+        en: The total number of story points that are completed during the sprint
     units:
         nl: "%s afgronde storypoints"
         en: "%s done story points"
@@ -363,6 +433,9 @@ files:
     descriptions:
         nl: Geplande bug points
         en: Planned bug points
+    long_descriptions:
+        nl: Het totaal aantal storypoints voor bugs die voor 1 dag na de start van sprint zijn gepland
+        en: The total number of points for bugs that are planned at most 1 day after the sprint starts
     units:
         nl: "%s geplande bug punten"
         en: "%s planned bug points"
@@ -384,6 +457,9 @@ files:
     descriptions:
         nl: Afgeronde bug points
         en: Done bug points
+    long_descriptions:
+        nl: Het totaal aantal storypoints voor bugs die voltooid zijn in de sprint
+        en: The total number of points for bugs that are completed during the sprint
     units:
         nl: "%s afgronde bug points"
         en: "%s done bug points"
@@ -408,6 +484,9 @@ files:
     descriptions:
         nl: Punten boven verwachting
         en: Points above expectation
+    long_descriptions:
+        nl: Het aantal storypoints die tijdens de sprint zijn afgemaakt terwijl ze niet gepland zijn
+        en: The number of story points that are completed during the sprint despite not being planned
     units:
         nl: "%s toegevoegde storypoints"
         en: "%s added story points"
@@ -420,6 +499,9 @@ files:
     descriptions:
         nl: Gewogen storypoints
         en: Weighted story points
+    long_descriptions:
+        nl: Het aantal punten in de sprint wanneer deze genormaliseerd worden met een wisselkoers van alle projecten
+        en: The number of points in the sprint after normalizing then using an exchange rate of all projects
     units:
         nl: "%s gewogen storypoints"
         en: "%s weighted story points"
@@ -432,6 +514,9 @@ files:
     descriptions:
         nl: Bijlagen
         en: Attachments
+    long_descriptions:
+        nl: Het aantal bijlagen dat bij items in de sprint is toegevoegd
+        en: The number of attachements that is added to items in the sprint
     units:
         nl: "%s bijlagen"
         en: "%s attachments"
@@ -446,6 +531,9 @@ files:
     descriptions:
         nl: Labels
         en: Labels
+    long_descriptions:
+        nl: Het aantal labels dat bij items in de sprint is toegevoegd
+        en: The number of labels that is added to items in the sprint
     units:
         nl: "%s labels"
         en: "%s labels"
@@ -460,6 +548,9 @@ files:
     descriptions:
         nl: Impediments
         en: Impediments
+    long_descriptions:
+        nl: Het aantal items in de sprint dat gemarkeerd is als geblokeerd door een impediment of een andere taak buiten het team
+        en: The number of items in the sprint that is marked as blocked due to an impediment or another external task
     units:
         nl: "%s impediments"
         en: "%s impediments"
@@ -474,6 +565,9 @@ files:
     descriptions:
         nl: Late rangwijzigingen
         en: Late rank changes
+    long_descriptions:
+        nl: Het aantal wijzigingen in volgorde op de backlog na het begin van de sprint
+        en: The number of changes in the order on the backlog after the sprint start
     units:
         nl: "%s rangwijzigingen na begin van sprint"
         en: "%s rank changes after start of sprint"
@@ -489,10 +583,13 @@ files:
         details: [key, story_points]
     combine: sum
     descriptions:
-        nl: Niet afgeronde storypunten
+        nl: Niet afgeronde storypoints
         en: Unfinished story points
+    long_descriptions:
+        nl: Het totaal aantal storypoints dat niet tijdens de sprint zijn afgerond
+        en: The total number of story points that are not done during the sprint
     units:
-        nl: "%s storypunten die niet afgerond zijn"
+        nl: "%s storypoints die niet afgerond zijn"
         en: "%s story points that are not done"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
@@ -508,10 +605,13 @@ files:
         details: [key, story_points]
     combine: sum
     descriptions:
-        nl: Late storypunten
+        nl: Late storypoints
         en: Late story points
+    long_descriptions:
+        nl: Het totaal aantal storypoints dat later dan 1 dag na het begin van de sprint toegevoegd worden
+        en: The total number of story points that is added later than 1 day after the start of the sprint
     units:
-        nl: "%s late storypunten"
+        nl: "%s late storypoints"
         en: "%s late story points"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
@@ -527,10 +627,13 @@ files:
         details: [key, story_points]
     combine: sum
     descriptions:
-        nl: Heringeplande storypunten
+        nl: Heringeplande storypoints
         en: Replanned story points
+    long_descriptions:
+        nl: Het totaal aantal storypoints dat uit een eerdere sprint wordt toegevoegd aan de sprint
+        en: The total number of story points that is added from an earlier sprint to the sprint
     units:
-        nl: "%s storypunten toegevoegd uit eerdere sprint"
+        nl: "%s storypoints toegevoegd uit eerdere sprint"
         en: "%s story points added from earlier sprint"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
@@ -546,10 +649,13 @@ files:
         details: [key, story_points]
     combine: sum
     descriptions:
-        nl: Weggehaalde storypunten
+        nl: Weggehaalde storypoints
         en: Removed story points
+    long_descriptions:
+        nl: Het totaal aantal storypoints dat tijdens de sprint wordt weggehaald
+        en: The total number of story points that is removed during the sprint
     units:
-        nl: "%s storypunten weggehaald tijdens sprint"
+        nl: "%s storypoints weggehaald tijdens sprint"
         en: "%s story points removed during sprint"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
@@ -562,6 +668,9 @@ files:
     descriptions:
         nl: User stories
         en: User stories
+    long_descriptions:
+        nl: Het aantal stories in de sprint
+        en: The number of stories in the sprint
     units:
         nl: "%s stories"
         en: "%s stories"
@@ -576,6 +685,9 @@ files:
     descriptions:
         nl: Afgeronde stories
         en: Done stories
+    long_descriptions:
+        nl: Het aantal stories dat in de sprint wordt afgerond
+        en: The number of stories that are completed in the sprint
     units:
         nl: "%s afgeronde stories"
         en: "%s done stories"
@@ -588,11 +700,14 @@ files:
     default: 0
     combine: sum
     descriptions:
-        nl: Issue-links
-        en: Issue links
+        nl: Item-links
+        en: Item links
+    long_descriptions:
+        nl: Het totaal aantal projectracker-links dat wordt gemaakt vanuit items in de sprint
+        en: The total number of project tracker links that are made from items in the sprint
     units:
-        nl: "%s issue-links"
-        en: "%s issue links"
+        nl: "%s item-links"
+        en: "%s item links"
     source:
         jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=project in (${jira_keys}) and sprint in (${jira_sprint_ids}) and issueFunction in hasLinks()&runQuery=true"
     category: tracking
@@ -604,9 +719,12 @@ files:
     descriptions:
         nl: Commentaren
         en: Comments
+    long_descriptions:
+        nl: Het totaal aantal commentaren in de projecttracker bij items in de sprint
+        en: The total number of comments in the project tracker for items in the sprint
     units:
-        nl: "%s commentaren bij issues"
-        en: "%s issue comments"
+        nl: "%s commentaren bij items"
+        en: "%s item comments"
     source:
         jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=project in (${jira_keys}) and sprint in (${jira_sprint_ids}) and issueFunction in hasComments()&runQuery=true"
     category: tracking
@@ -616,30 +734,39 @@ files:
     default: 0
     combine: mean
     descriptions:
-        nl: Wijzigingen per issue
-        en: Changes per issue
+        nl: Wijzigingen per item
+        en: Changes per item
+    long_descriptions:
+        nl: Het gemiddeld aantal wijzigingen in de projecttracker per item in de sprint
+        en: The average number of changes in the project tracker for each item in the sprint
     units:
-        nl: "gemiddeld %s wijzigingen per issue"
-        en: "average of %s changes per issue"
+        nl: "gemiddeld %s wijzigingen per item"
+        en: "average of %s changes per item"
     category: tracking
   - filename: 05-issue-change-pivot.sql
     table: issue_change_pivot
     column: avg_change_day
     combine: mean
     descriptions:
-        nl: Middelpunt van issuewijzigingen
-        en: Midpoint of issue changes
+        nl: Middelpunt van itemwijzigingen
+        en: Midpoint of item changes
+    long_descriptions:
+        nl: De gemiddelde dag geteld vanaf het begin van de sprint waarop wijzigen aan items in de sprint worden gemaakt
+        en: The average day counted from the start of the sprint when changes to items in the sprint are made
     units:
-        nl: "middelpunt van issuewijzigingen op %s dagen na begin van sprint"
-        en: "midpoint of issuechanges at %s days after start of sprint"
+        nl: "middelpunt van itemwijzigingen op %s dagen na begin van sprint"
+        en: "midpoint of item changes at %s days after start of sprint"
     category: tracking
   - expression: "done_story_points / sprint_weekdays"
     column: velocity
     default: 0
     combine: mean
     descriptions:
-        nl: Gerealiseerde velocity
-        en: Realized velocity
+        nl: Dagelijkse velocity
+        en: Daily velocity
+    long_descriptions:
+        nl: Het aantal storypoints per werkdag dat in de sprint wordt gerealiseerd
+        en: The number of story points per working day that are realized during the sprint
     units:
         nl: "%s storypoints per werkdag"
         en: "%s story points per working day"
@@ -659,6 +786,9 @@ files:
     descriptions:
         nl: Gemiddelde velocity
         en: Average velocity
+    long_descriptions:
+        nl: Het aantal storypoints per sprint gerealiseerd over de afgelopen drie sprints
+        en: The number of story points per sprint that are realized durint the past three sprints
     units:
         nl: "velocity van %s storypoints over drie sprints"
         en: "velocity of %s story points over three sprints"
@@ -678,6 +808,9 @@ files:
     descriptions:
         nl: Langdurige velocity
         en: Long term velocity
+    long_descriptions:
+        nl: Het aantal storypoints per sprint gerealiseerd over de afgelopen zeven sprints
+        en: The number of story points per sprint that are realized durint the past seven sprints
     units:
         nl: "velocity van %s storypoints over zeven sprints"
         en: "velocity of %s story points over seven sprints"
@@ -692,12 +825,15 @@ files:
     descriptions:
         nl: Bovengeplande punten
         en: Overplanned points
+    long_descriptions:
+        nl: Het aantal storypoints dat meer gepland is voor de sprint dan de velocity van de afgelopen drie sprints
+        en: The number of story points that are planned for the sprint over the velocity of the past three sprints
     units:
-        nl: "%s extra storypoints per werkdag"
-        en: "%s added story points per working day"
+        nl: "%s storypoints boven velocity"
+        en: "%s story points above velocity"
     short_units:
-        nl: "%s punten/sprint"
-        en: "%s points/sprint"
+        nl: "%s extra points"
+        en: "%s extra points"
     category: tracking
   - filename: 06-other-issues-done.sql
     table: other_done_issues
@@ -705,11 +841,14 @@ files:
     default: 0
     combine: sum
     descriptions:
-        nl: Afgeronde niet-story issues
-        en: Done non-story issues
+        nl: Afgeronde niet-story item
+        en: Done non-story items
+    long_descriptions:
+        nl: Het aantal items dat is afgerond in de sprint en geen story of subtask zijn
+        en: The number of items that are completed during the sprint and are not a story or subtask
     units:
-        nl: "%s afgeronde issues die geen story of subtask zijn"
-        en: "%s done issues that are not stories or subtasks"
+        nl: "%s afgeronde items die geen story of subtask zijn"
+        en: "%s done items that are not stories or subtasks"
     source:
         jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=project in (${jira_keys}) and sprint in (${jira_sprint_ids}) and ${issue_other} and resolution < %22${sprint_end_date}%22&runQuery=true"
     category: tracking
@@ -726,6 +865,9 @@ files:
     descriptions:
         nl: Gelijktijdige stories in progress
         en: Concurrent stories in progress
+    long_descriptions:
+        nl: Het gemiddelde aantal stories dat gelijktijdig in progress is tijdens de sprint
+        en: The average number of stories that are in progress at the same time during the sprint
     units:
         nl: "gemiddeld %s stories die gelijktijdig in progress zijn"
         en: "average of %s stories that are concurrently in progress"
@@ -746,6 +888,9 @@ files:
     units:
         nl: "gemiddeld %s dagen in progress per story"
         en: "average of %s days in progress per story"
+    long_descriptions:
+        nl: Het gemiddelde aantal dagen dat een story in progress is tijdens de sprint
+        en: The average number of days that a story is in progress during the sprint
     short_units:
         nl: "%s dagen/story"
         en: "%s days/story"
@@ -770,6 +915,21 @@ files:
             - Commit size
             - Files in commit
             - Lines in commit
+    long_descriptions:
+        nl:
+            - Het aantal commits dat in het versiebeheersysteem wordt gemaakt tijdens de sprint
+            - Het gemiddelde aantal regels dat in een commit in het versiebeheersysteem wordt toegevoegd tijdens de sprint
+            - Het gemiddelde aantal regels dat in een commit in het versiebeheersysteem wordt weggehaald tijdens de sprint
+            - De gemiddelde grootte van een commit dat in het versiebeheersystem wordt gemaakt tijdens de sprint in bytes (in Git wordt alleen metadata gerekend)
+            - Het gemiddelde aantal bestanden dat in een commit in het versiebeheersysteem wordt aangepast tijdens de sprint
+            - Het gemiddelde aantal regels dat in een commit in het versiebeheersysteem wordt aangepast tijdens de sprint
+        en:
+            - The number of commits that are made in the version control system during the sprint
+            - The average number of lines that are added in a commit in the version control system during the sprint
+            - The average number of lines that are removed in a commit in the version control system during the sprint
+            - The average size in bytes of a commit that is made in the version control system during the sprint (only metadata is counted in Git)
+            - The average number of files that are changed in a commit in the version control system during the sprint
+            - The average number of lines that are changed in a commit in the version control system during the sprint
     units:
         nl:
             - "%s commits"
@@ -808,6 +968,9 @@ files:
     descriptions:
         nl: Metrieken
         en: Metrics
+    long_descriptions:
+        nl: Het aantal metrieken dat wordt gemeten door het kwaliteitssysteem tijdens de sprint
+        en: The number of metrics that are measured by the quality system during the sprint
     units:
         nl: "%s metrieken"
         en: "%s metrics"
@@ -822,6 +985,9 @@ files:
     descriptions:
         nl: Rode metrieken
         en: Red metrics
+    long_descriptions:
+        nl: Het aantal metrieken dat een rode meting hebben in het kwaliteitssysteem tijdens de sprint
+        en: The number of metrics that have a red measurement in the quality system during the sprint
     units:
         nl: "%s metrieken die op rood staan"
         en: "%s metrics that are red"
@@ -834,8 +1000,11 @@ files:
     column: num_missing_metrics
     combine: max
     descriptions:
-        nl: Metrieken met missende bronnen
-        en: Metrics with missing sources
+        nl: Metrieken zonder bronn
+        en: Metrics without source
+    long_descriptions:
+        nl: Het aantal metrieken die een missende bron hebben in het kwaliteitssysteem tijdens de sprint
+        en: The number of metrics that are missing a source in the quality system during the sprint
     units:
         nl: "%s metrieken met missende bron"
         en: "%s metrics with missing sources"
@@ -851,6 +1020,9 @@ files:
     descriptions:
         nl: Veranderde metrieknormen
         en: Changed metric targets
+    long_descriptions:
+        nl: Het aantal normen van metrieken van het kwaliteitssysteem dat is aangepast tijdens de sprint
+        en: The number of targets of metrics in the quality system that are adjusted during the sprint
     units:
         nl: "%s veranderingen aan metrieknormen"
         en: "%s changes to metric targets"
@@ -866,6 +1038,9 @@ files:
     descriptions:
         nl: Tijdige rangwijzigingen
         en: Timely rank changes
+    long_descriptions:
+        nl: Het aantal wijzigingen aan de volgorde op de backlog voor het begin van de sprint
+        en: The number of changes to the order of the backlog before the start of the sprint
     units:
         nl: "%s rangwijzigingen voor begin van sprint"
         en: "%s rank changes before start of sprint"
@@ -878,6 +1053,9 @@ files:
     descriptions:
         nl: Tijdige storypointwijzigingen
         en: Timely story point changes
+    long_descriptions:
+        nl: Het aantal wijzigingen aan storypoints voor het begin van de sprint
+        en: The number of changes to story points before the start of the sprint
     units:
         nl: "%s wijzigingen aan storypoints voor begin van sprint"
         en: "%s story point changes before start of sprint"
@@ -888,8 +1066,11 @@ files:
     default: 0
     combine: sum
     descriptions:
-        nl: Vroege issuewijzigingen
-        en: Early issue changes
+        nl: Vroege itemwijzigingen
+        en: Early item changes
+    long_descriptions:
+        nl: Het aantal wijzigingen aan items in de projecttracker voor het begin van de sprint
+        en: The number of changes to items in the project tracker before the start of the sprint
     units:
         nl: "%s overige wijzigingen aan issues voor begin van sprint"
         en: "%s other issue changes before start of sprint"
@@ -900,11 +1081,14 @@ files:
     default: 0
     combine: max
     descriptions:
-        nl: Issues op sprintbacklog
-        en: Issues on sprint backlog
+        nl: Items op sprintbacklog
+        en: Items on sprint backlog
+    long_descriptions:
+        nl: Het aantal items in de projecttracker op de sprintbacklog
+        en: The number of items in the project tracker on the sprint backlog
     units:
-        nl: "%s issues voor de sprint op de backlog"
-        en: "%s issues for the sprint on the backlog"
+        nl: "%s items voor de sprint op de backlog"
+        en: "%s items for the sprint on the backlog"
     category: tracking
   - filename: 11-backlog-ready-status.sql
     table: backlog_ready_status
@@ -912,11 +1096,14 @@ files:
     default: 0
     combine: max
     descriptions:
-        nl: Issues met readystatus op sprintbacklog
-        en: Issues with ready status on sprint backlog
+        nl: Items met readystatus op sprintbacklog
+        en: Items with ready status on sprint backlog
+    long_descriptions:
+        nl: Het aantal items in de projecttracker met een readystatus op de sprintbacklog
+        en: The number of items in the project tracker with a ready status on the sprint backlog
     units:
-        nl: "%s issues met readystatus voor de sprint op de backlog"
-        en: "%s issues with ready status for the sprint on the backlog"
+        nl: "%s items met readystatus voor de sprint op de backlog"
+        en: "%s items with ready status for the sprint on the backlog"
     category: tracking
   - filename: 11-backlog-all.sql
     table: backlog_all
@@ -934,11 +1121,14 @@ files:
         project: sum
         sprint: max
     descriptions:
-        nl: Issues op backlog
-        en: Issues on backlog
+        nl: Items op backlog
+        en: Items on backlog
+    long_descriptions:
+        nl: Het aantal items in de projecttracker dat op de product backlog staat bij het begin van de sprint
+        en: The number of items in the project tracker that is on the product backlog at the start of the sprint
     units:
-        nl: "%s issues op de algehele backlog"
-        en: "%s issues on the whole backlog"
+        nl: "%s items op de algehele backlog"
+        en: "%s items on the whole backlog"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
     category: tracking
@@ -959,6 +1149,9 @@ files:
     descriptions:
         nl: Storypoints op backlog
         en: Story points on backlog
+    long_descriptions:
+        nl: Het totaal aantal storypoints (inclusief een schatting voor ongepokerde stories) in de projecttracker dat op de product backlog staat bij het begin van de sprint
+        en: The total number of story point (including an estimate for stories that are not pokered) in the project tracker that is on the product backlog at the start of the sprint
     units:
         nl: "%s storypoints op de product backlog"
         en: "%s story points on the product backlog"
