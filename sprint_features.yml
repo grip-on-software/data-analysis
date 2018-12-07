@@ -44,7 +44,7 @@ files:
     table: sprint
     column: sprint_days
     optional: No
-    combine: sum
+    combine: median
     descriptions:
         nl: Sprintlengte
         en: Sprint length
@@ -63,7 +63,7 @@ files:
   - definition: sprint_weekdays
     table: sprint
     column: sprint_weekdays
-    combine: sum
+    combine: median
     descriptions:
         nl: Weekdagen
         en: Week days
