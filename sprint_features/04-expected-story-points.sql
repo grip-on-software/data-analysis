@@ -40,6 +40,7 @@ SELECT project_id, sprint_id, key, ${s(story_points, issue="initial_stories")} A
     AND issue.story_points IS NOT NULL
     AND issue.sprint_id IS NOT NULL
     AND issue.updated <= ${planned_late}
+    AND ${s(issue_not_done)}
     AND (
         later_issue.updated > ${planned_early}
         OR later_issue.updated - issue.updated < ${planned_late} - ${sprint_open}

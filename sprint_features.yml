@@ -1154,7 +1154,7 @@ files:
         en: Story points on backlog
     long_descriptions:
         nl: Het totaal aantal storypoints (inclusief een schatting voor ongepokerde stories) in de projecttracker dat op de product backlog staat bij het begin van de sprint
-        en: The total number of story point (including an estimate for stories that are not pokered) in the project tracker that is on the product backlog at the start of the sprint
+        en: The total number of story points (including an estimate for stories that are not pokered) in the project tracker that is on the product backlog at the start of the sprint
     units:
         nl: "%s storypoints op de product backlog"
         en: "%s story points on the product backlog"
