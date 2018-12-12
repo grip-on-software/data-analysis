@@ -100,10 +100,12 @@ get_analogy_results <- function(i, idx) {
                 tags=get_tags(features[analogy, ])))
 }
 
-assignments <- modifyList(results$configuration$assignments,
-                          get_expressions_metadata(specifications$files,
-                                                   features))
-results$configuration$assignments <- assignments
+if (!is.null(results$configuration$assignments)) {
+    assignments <- modifyList(results$configuration$assignments,
+                              get_expressions_metadata(specifications$files,
+                                                       features))
+    results$configuration$assignments <- assignments
+}
 
 sprint_data <- get_sprint_projects(conn)
 for (idx in 1:length(results$projects)) {
