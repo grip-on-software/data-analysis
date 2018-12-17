@@ -7,6 +7,7 @@ library(jsonlite)
 source('include/args.r')
 source('include/database.r')
 source('include/features.r')
+source('include/metrics.r')
 source('include/sources.r')
 source('include/tracker.r')
 options(warn=1)
@@ -232,6 +233,7 @@ if (get_arg('--project', default=F)) {
 
         source_urls <- get_source_urls(conn, ids, multi=T)
         source_ids <- get_source_ids(conn, ids)
+        targets <- get_metric_targets(conn, ids, result$items)
 
         old_sprint_data <- sprint_data[sprint_data$old, ]
         new_sprint_data <- sprint_data[!sprint_data$old, ]
@@ -273,7 +275,7 @@ if (get_arg('--project', default=F)) {
                                           'project_ids'][[1]]
             team_projects <- result$team_projects[[project]]
             if (length(team_projects) == 1) {
-                team_ids <- c(new$team_id[[1]], project_id[[1]])
+                team_ids <- c(new$team_id[[1]], project_id)
             }
             else {
                 team_ids <- new$team_id[[1]]
@@ -326,6 +328,8 @@ if (get_arg('--project', default=F)) {
                                 dates, urls[names(dates)],
                                 USE.NAMES=T, SIMPLIFY=F)),
                   file=paste(project_dir, "sources.json", sep="/"))
+            metric_targets <- targets[targets$project_id %in% project_id, ]
+            write_metric_targets(metric_targets, project_dir, result$items)
         }
 
         known_features <- c(default_features, extra_features,
@@ -344,6 +348,8 @@ if (get_arg('--project', default=F)) {
         write(toJSON(get_expressions_metadata(result$items, sprint_data),
                      auto_unbox=T),
               file=paste(output_dir, "expressions.json", sep="/"))
+        default_targets <- get_metric_targets(conn, NA, result$items)
+        write_metric_targets(default_targets, output_dir, result$items)
         write_projects_metadata(conn, fields, metadata,
                                 projects=result$projects,
                                 project_ids=project_ids,
