@@ -9,8 +9,8 @@ get_metric_targets <- function(conn, project_id, items) {
                                        paste(dbQuoteString(conn, base_names),
                                              collapse=','), ')'))
     if (length(project_id) == 1 && is.na(project_id)) {
-        query <- paste('SELECT base_name, commit_date,
-                        perfect target, low_target
+        query <- paste('SELECT base_name, commit_date, direction,
+                        perfect, target, low_target
                         FROM gros.metric_default
                         WHERE', paste(conditions, collapse=' AND '),
                        'ORDER BY base_name, commit_date')
