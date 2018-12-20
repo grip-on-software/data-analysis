@@ -228,7 +228,7 @@ get_combined_team <- function(team, team_id, data, projects, team_projects,
         overlap <- as.Date(prev[, 4]) - as.Date(prev[, 1]) >= team$overlap &
             as.Date(prev[, 2]) >= as.Date(prev[, 4])
         for (index in which(overlap)) {
-            if (overlap[index]) {
+            if (overlap[index] && index < length(overlap)) {
                 overlap[index+1] <- F
             }
         }
