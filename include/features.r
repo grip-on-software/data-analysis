@@ -454,13 +454,25 @@ get_features <- function(conn, features, exclude, items, data, colnames,
                 }))
 
                 if (is.list(details)) {
+                    if (!is.null(summarize$filter)) {
+                        filter <- parse(text=summarize$filter)
+                    }
+                    else {
+                        filter <- NULL
+                    }
+
                     detailer <- function(group) {
-                        if (!is.null(summarize$filter)) {
-                            group <- group[eval(summarize$filter, group), ]
+                        if (!is.null(filter)) {
+                            group <- group[eval(filter, group), ]
                         }
                         group_details <- data.frame(group[1, group_names])
-                        details <- lapply(group[, summarize$details],
-                                          function(detail) { list(detail) })
+                        if (length(summarize$details) == 1) {
+                            details <- list(list(group[, summarize$details]))
+                        }
+                        else {
+                            details <- lapply(group[, summarize$details],
+                                              function(detail) { list(detail) })
+                        }
                         group_details[, summarize$details] <- details
                         return(group_details)
                     }

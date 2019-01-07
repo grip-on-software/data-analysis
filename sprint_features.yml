@@ -1171,7 +1171,7 @@ files:
         operation: sum_of_na_avg
         field: story_points
         group: [project_id, sprint_id]
-        details: [key, story_points]
+        details: [key]
         filter: 'is.na(story_points)'
     combine:
         project: sum
