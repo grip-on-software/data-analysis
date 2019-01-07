@@ -1172,7 +1172,7 @@ files:
         field: story_points
         group: [project_id, sprint_id]
         details: [key, story_points]
-        filter: 'is.null(story_points)'
+        filter: 'is.na(story_points)'
     combine:
         project: sum
         sprint: max
