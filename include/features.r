@@ -30,9 +30,9 @@ count <- function(data, na.rm=F) {
     return(length(data))
 }
 
-sum_with_na_avg <- function(data, na.rm=F) {
+sum_of_na_avg <- function(data, na.rm=F) {
     sub <- sum(data, na.rm=na.rm)
-    return(sub + sub / length(which(!is.na(data))) * length(which(is.na(data))))
+    return(sub / length(which(!is.na(data))) * length(which(is.na(data))))
 }
 
 get_locales <- function(items) {
@@ -455,6 +455,9 @@ get_features <- function(conn, features, exclude, items, data, colnames,
 
                 if (is.list(details)) {
                     detailer <- function(group) {
+                        if (!is.null(summarize$filter)) {
+                            group <- group[eval(summarize$filter, group), ]
+                        }
                         group_details <- data.frame(group[1, group_names])
                         details <- lapply(group[, summarize$details],
                                           function(detail) { list(detail) })

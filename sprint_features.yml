@@ -1140,9 +1140,9 @@ files:
     column: backlog_story_points
     default: 0
     patterns:
-        issue_backlog: 'issue."type" = 7'
+        issue_backlog: 'issue."type" = 7 and issue.story_points IS NOT NULL'
     summarize:
-        operation: sum_with_na_avg
+        operation: sum
         field: story_points
         group: [project_id, sprint_id]
         details: [key, story_points]
@@ -1161,3 +1161,46 @@ files:
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
     category: tracking
+  - filename: 11-backlog-all.sql
+    table: backlog_stories
+    column: backlog_expected_story_points
+    default: 0
+    patterns:
+        issue_backlog: 'issue."type" = 7'
+    summarize:
+        operation: sum_of_na_avg
+        field: story_points
+        group: [project_id, sprint_id]
+        details: [key, story_points]
+        filter: 'is.null(story_points)'
+    combine:
+        project: sum
+        sprint: max
+    descriptions:
+        nl: Geschatte storypoints op backlog
+        en: Estimated story points on backlog
+    long_descriptions:
+        nl: De schatting van het totaal aantal ongepokerde storypoints dat op de product backlog in de projecttracker staat bij het begin van de sprint
+        en: The estimate of the total number of story points that are not pokered that is on the product backlog in the project tracker at the start of the sprint
+    units:
+        nl: "%s geschatte extra storypoints op de product backlog"
+        en: "%s estimated additional story points on the product backlog"
+    source:
+        jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
+    category: tracking
+  - expression: 'backlog_story_points + backlog_expected_story_points'
+    column: backlog_points
+    combine: sum
+    descriptions:
+        nl: Punten op backlog
+        en: Points on backlog
+    long_descriptions:
+        nl: Het totaal aantal storypoints dat op de product backlog in de projecttracker staat bij het begin van de sprint (inclusief inschattingen van andere items)
+        en: The total number of story points on the product backlog in the project tracker at the start of the sprint (including estimates of other items)
+    units:
+        nl: "%s punten op de product backlog"
+        en: "%s points on the product backlog"
+    source:
+        jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
+    category: tracking
+
