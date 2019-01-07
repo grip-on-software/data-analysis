@@ -1,1 +1,1 @@
-SELECT project_id, sprint_id, CAST(${sprint_closed} AS INT) AS sprint_is_closed FROM gros.sprint;
+SELECT ${f(join_cols, "sprint")}, CAST(${s(sprint_closed)} AS INT) AS sprint_is_closed FROM gros.${t("sprint")};

@@ -1,5 +1,5 @@
-SELECT issue.project_id, sprint.sprint_id, AVG(EXTRACT(day FROM issue.updated - ${sprint_open})) AS avg_change_day
-FROM gros.issue, gros.sprint
-WHERE issue.sprint_id = sprint.sprint_id
-AND issue.updated < sprint.end_date
-GROUP BY issue.project_id, sprint.sprint_id
+SELECT ${f(join_cols, "issue")}, AVG(EXTRACT(day FROM ${t("issue")}.updated - ${s(sprint_open)})) AS avg_change_day
+FROM gros.${t("issue")}, gros.${t("sprint")}
+WHERE ${j(join_cols, "issue", "sprint")}
+AND ${t("issue")}.updated < sprint.end_date
+GROUP BY ${f(join_cols, "issue")}

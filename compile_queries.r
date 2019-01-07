@@ -17,10 +17,12 @@ analysis_definitions <- c(lapply(definitions$fields,
                           list(project_ids=project_ids))
 
 export(load_queries('sprint_features.yml', 'sprint_definitions.yml',
-                    list(sprint_conditions='')),
+                    list(sprint_conditions='',
+                         join_cols=c('project_id', 'sprint_id'))),
        'feature', 'table')
 export(load_queries('sprint_events.yml', 'sprint_definitions.yml',
-                    list(project_ids=project_ids)),
+                    list(project_ids=project_ids,
+                         join_cols=c('project_id', 'sprint_id'))),
        'event', 'type')
 export(load_queries('analysis_reports.yml', 'sprint_definitions.yml',
                     analysis_definitions),

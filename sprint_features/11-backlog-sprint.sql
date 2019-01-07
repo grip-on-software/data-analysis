@@ -1,7 +1,7 @@
-SELECT project_id, sprint_id, COUNT(*) AS backlog_size FROM (
-	SELECT DISTINCT issue.project_id, issue.sprint_id, issue.issue_id
-	FROM gros.issue
-	JOIN gros.sprint ON issue.project_id = sprint.project_id AND issue.sprint_id = sprint.sprint_id
-	AND issue.updated < ${planned_end}
+SELECT ${f(join_cols, "backlog_sprint")}, COUNT(*) AS backlog_size FROM (
+	SELECT DISTINCT ${f(join_cols, "issue")}, ${t("issue")}.issue_id
+	FROM gros.${t("issue")}
+	JOIN gros.${t("sprint")} ON ${j(join_cols, "issue", "sprint")}
+	AND ${t("issue")}.updated < ${s(planned_end)}
 ) AS backlog_sprint
-GROUP BY project_id, sprint_id
+GROUP BY ${f(join_cols, "backlog_sprint")}

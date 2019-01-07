@@ -1,12 +1,13 @@
-SELECT DISTINCT issue.project_id, issue.sprint_id, issue.key, ${s(story_points)} AS story_points
-FROM gros.issue
-JOIN gros.sprint ON issue.project_id = sprint.project_id AND issue.sprint_id = sprint.sprint_id
-LEFT JOIN gros.issue AS old_issue
-ON issue.issue_id = old_issue.issue_id AND issue.changelog_id = old_issue.changelog_id+1
-LEFT JOIN gros.subtask ON issue.issue_id = subtask.id_subtask
-WHERE issue.story_points IS NOT NULL
+SELECT DISTINCT ${f(join_cols, "issue")}, ${s(issue_key)} AS key,
+	${s(story_points)} AS story_points
+FROM gros.${t("issue")}
+JOIN gros.${t("sprint")} ON ${j(join_cols, "issue", "sprint")}
+LEFT JOIN gros.${t("issue")} AS old_issue
+ON ${j(issue_next_changelog, "issue", "old_issue")}
+LEFT JOIN gros.subtask ON ${t("issue")}.issue_id = subtask.id_subtask
+WHERE ${t("issue")}.story_points IS NOT NULL
 AND old_issue.sprint_id IS NULL
-AND issue.sprint_id IS NOT NULL
-AND issue.updated > ${planned_end}
+AND ${t("issue")}.sprint_id IS NOT NULL
+AND ${t("issue")}.updated > ${s(planned_end)}
 AND ${s(issue_not_done)}
 AND subtask.id_parent IS NULL

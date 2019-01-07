@@ -1,10 +1,10 @@
-SELECT project_id, sprint_id, COUNT(*) AS num_stories
+SELECT ${f(join_cols, "stories")}, COUNT(*) AS num_stories
 FROM (
-	SELECT DISTINCT issue.project_id, issue.sprint_id, issue.issue_id
-	FROM gros.issue
-	JOIN gros.sprint ON issue.project_id = sprint.project_id AND issue.sprint_id = sprint.sprint_id
-	WHERE issue.type = 7
-	AND issue.updated > ${sprint_open}
-	AND issue.sprint_id <> 0
+	SELECT DISTINCT ${f(join_cols, "issue")}, ${t("issue")}.issue_id
+	FROM gros.${t("issue")}
+	JOIN gros.${t("sprint")} ON ${j(join_cols, "issue", "sprint")}
+	WHERE ${s(issue_story)}
+	AND ${t("issue")}.updated > ${s(sprint_open)}
+	AND ${t("issue")}.sprint_id <> 0
 ) AS stories
-GROUP BY project_id, sprint_id
+GROUP BY ${f(join_cols, "stories")}

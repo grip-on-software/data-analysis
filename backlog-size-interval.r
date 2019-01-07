@@ -32,7 +32,7 @@ project_backlog_size <- function(project_id, name, quality_name) {
                         FROM gros.issue
                         WHERE issue.project_id =', project_id,
                         'AND issue.updated BETWEEN', constraint,
-                        'AND ${issue_not_done}')
+                        'AND ${s(issue_not_done)}')
         item <- load_query(list(query=query), patterns)
         dbGetQuery(conn, item$query)$backlog_size
     }

@@ -1,33 +1,32 @@
 -- Number of expected story points
-SELECT project_id, sprint_id, key, ${s(story_points, issue="initial_stories")} AS story_points FROM (
-    SELECT issue.project_id, issue.sprint_id, issue.issue_id, issue.key, issue.story_points,
+SELECT ${f(join_cols, "initial_stories")}, initial_stories.key,
+	initial_stories.story_points
+FROM (
+    SELECT ${f(join_cols, "issue")}, ${t("issue")}.issue_id,
+		${s(issue_key)} AS key, ${s(story_points)} AS story_points,
         ROW_NUMBER() OVER (
-            PARTITION BY issue.project_id, issue.sprint_id, issue.issue_id
-            ORDER BY issue.project_id, issue.sprint_id, issue.issue_id, issue.changelog_id DESC
+            PARTITION BY ${f(join_cols, "issue")}, ${t("issue")}.issue_id
+            ORDER BY ${f(join_cols, "issue")}, ${t("issue")}.issue_id, ${t("issue")}.changelog_id DESC
         ) AS rev_row
-    FROM gros.issue
-    JOIN gros.sprint
-        ON issue.project_id = sprint.project_id
-        AND issue.sprint_id = sprint.sprint_id
-    JOIN gros.issue AS older_issue
-        ON issue.issue_id = older_issue.issue_id
-        AND issue.changelog_id = older_issue.changelog_id + 1
+    FROM gros.${t("issue")}
+    JOIN gros.${t("sprint")} ON ${j(join_cols, "issue", "sprint")}
+    JOIN gros.${t("issue")} AS older_issue
+	ON ${j(issue_next_changelog, "issue", "older_issue")}
     JOIN (
         SELECT issue_id, sprint_id, story_points,
             MAX(updated) AS updated,
             MAX(changelog_id) AS changelog_id
-        FROM gros.issue GROUP BY issue_id, sprint_id, story_points
+        FROM gros.${t("issue")} GROUP BY issue_id, sprint_id, story_points
     ) AS later_issue
-        ON issue.issue_id = later_issue.issue_id
-        AND later_issue.sprint_id = issue.sprint_id
-    LEFT JOIN gros.issue AS newer_issue
-        ON newer_issue.issue_id = issue.issue_id
-        AND newer_issue.changelog_id = later_issue.changelog_id + 1
-    LEFT JOIN gros.subtask ON issue.issue_id = subtask.id_subtask
+        ON ${t("issue")}.issue_id = later_issue.issue_id
+        AND ${t("issue")}.sprint_id = later_issue.sprint_id
+    LEFT JOIN gros.${t("issue")} AS newer_issue
+	ON ${j(issue_next_changelog, "newer_issue", "later_issue")}
+    LEFT JOIN gros.subtask ON ${t("issue")}.issue_id = subtask.id_subtask
     WHERE (
         (older_issue.changelog_id = 0 AND older_issue.sprint_id IS NOT NULL AND issue.sprint_id = older_issue.sprint_id)
         OR (
-            older_issue.updated <= ${planned_end}
+            older_issue.updated <= ${s(planned_end)}
             AND (
                 older_issue.sprint_id IS NULL
                 OR older_issue.sprint_id <> issue.sprint_id
@@ -37,23 +36,23 @@ SELECT project_id, sprint_id, key, ${s(story_points, issue="initial_stories")} A
         )
     )
     AND ${story_point_types}
-    AND issue.story_points IS NOT NULL
-    AND issue.sprint_id IS NOT NULL
-    AND issue.updated <= ${planned_late}
+    AND ${t("issue")}.story_points IS NOT NULL
+    AND ${t("issue")}.sprint_id IS NOT NULL
+    AND ${t("issue")}.updated <= ${s(planned_late)}
     AND ${s(issue_not_done)}
     AND (
-        later_issue.updated > ${planned_early}
-        OR later_issue.updated - issue.updated < ${planned_late} - ${sprint_open}
-        OR (later_issue.updated < ${sprint_open}
-            AND (newer_issue.issue_id IS NULL OR newer_issue.updated > ${planned_late})
+        later_issue.updated > ${s(planned_early)}
+        OR later_issue.updated - ${t("issue")}.updated < ${s(planned_late)} - ${s(sprint_open)}
+        OR (later_issue.updated < ${s(sprint_open)}
+            AND (newer_issue.issue_id IS NULL OR newer_issue.updated > ${s(planned_late)})
         )
     )
-    AND later_issue.changelog_id >= issue.changelog_id
+    AND later_issue.changelog_id >= ${t("issue")}.changelog_id
     AND (
         newer_issue.issue_id IS NULL
-        OR newer_issue.updated > ${planned_late}
+        OR newer_issue.updated > ${s(planned_late)}
         OR (newer_issue.sprint_id = later_issue.sprint_id
-            AND NOT (${sprint_closed}))
+            AND NOT (${s(sprint_closed)}))
     )
     AND subtask.id_parent IS NULL
 ) AS initial_stories

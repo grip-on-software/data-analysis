@@ -1,5 +1,7 @@
-SELECT metric_target.project_id, sprint.sprint_id, COUNT(*) AS num_metric_target_changes
-FROM gros.metric_target, gros.metric_version, gros.sprint
-WHERE metric_target.project_id = metric_version.project_id AND metric_target.version_id = metric_version.version_id
-AND metric_version.commit_date BETWEEN sprint.start_date AND sprint.end_date
-GROUP BY metric_target.project_id, sprint.sprint_id
+SELECT ${f(join_cols, "sprint")}, COUNT(*) AS num_metric_target_changes
+FROM gros.metric_target, gros.metric_version, gros.${t("sprint")}
+WHERE ${j(join_cols[1], "metric_target", "metric_version")}
+AND metric_target.version_id = metric_version.version_id
+AND ${j(join_cols[1], "metric_version", "sprint")}
+AND metric_version.commit_date BETWEEN ${t("sprint")}.start_date AND ${t("sprint")}.end_date
+GROUP BY ${f(join_cols, "sprint")}

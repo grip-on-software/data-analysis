@@ -1,9 +1,9 @@
-SELECT issue.project_id, issue.sprint_id, AVG(num_changes) AS avg_changes
+SELECT ${f(join_cols, "issue")}, AVG(max_issue.num_changes) AS avg_changes
 FROM gros.issue, (
-    SELECT issue.project_id, issue.issue_id, MAX(issue.changelog_id) AS changelog_id, COUNT(*) AS num_changes
-    FROM gros.issue
-    GROUP BY issue.project_id, issue.issue_id
+    SELECT ${t("issue")}.issue_id, MAX(${t("issue")}.changelog_id) AS changelog_id, COUNT(*) AS num_changes
+    FROM gros.${t("issue")}
+    GROUP BY ${t("issue")}.issue_id
 ) AS max_issue
-WHERE issue.issue_id = max_issue.issue_id AND issue.changelog_id = max_issue.changelog_id
-AND issue.sprint_id <> 0
-GROUP BY issue.project_id, issue.sprint_id
+WHERE ${j(issue_changelog, "issue", "max_issue")}
+AND ${t("issue")}.sprint_id <> 0
+GROUP BY ${f(join_cols, "issue")}

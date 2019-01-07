@@ -2,5 +2,5 @@ SELECT DISTINCT ${s(project_name)} AS project_name, sprint.sprint_id AS sprint_i
 FROM gros.metric_value
 JOIN gros.project ON metric_value.project_id = project.project_id
 LEFT OUTER JOIN gros.sprint ON metric_value.project_id = sprint.project_id AND metric_value.sprint_id = sprint.sprint_id
-WHERE metric_value.since_date BETWEEN sprint.start_date AND ${sprint_close}
+WHERE metric_value.since_date BETWEEN sprint.start_date AND ${s(sprint_close)}
 AND category = 'red' AND EXTRACT(day FROM date - since_date) > 7

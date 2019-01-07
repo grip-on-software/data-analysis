@@ -5,8 +5,8 @@ FROM (
 	RIGHT OUTER JOIN gros.sprint ON issue.project_id = sprint.project_id
 	JOIN (SELECT issue_id, MAX(sprint_id) AS sprint_id FROM gros.issue GROUP BY issue_id) AS max_issue ON issue.issue_id = max_issue.issue_id
 	WHERE start_date IS NOT NULL AND
-	issue.updated < ${sprint_close} AND
-	(issue.resolution_date IS NULL OR issue.resolution_date > ${sprint_close})
+	issue.updated < ${s(sprint_close)} AND
+	(issue.resolution_date IS NULL OR issue.resolution_date > ${s(sprint_close)})
 	AND max_issue.sprint_id <> sprint.sprint_id
 	AND issue."type" <> 6 --IN (6,7,20)
 	AND issue."status" = 1
@@ -23,8 +23,8 @@ FROM (
 		RIGHT OUTER JOIN gros.sprint ON issue.project_id = sprint.project_id
 		JOIN (SELECT issue_id, MAX(sprint_id) AS sprint_id FROM gros.issue GROUP BY issue_id) AS max_issue ON issue.issue_id = max_issue.issue_id
 		WHERE start_date IS NOT NULL AND
-		issue.updated < ${sprint_close} AND
-		(issue.resolution_date IS NULL OR issue.resolution_date > ${sprint_close})
+		issue.updated < ${s(sprint_close)} AND
+		(issue.resolution_date IS NULL OR issue.resolution_date > ${s(sprint_close)})
 		AND max_issue.sprint_id <> sprint.sprint_id
 		AND issue."type" = 6 --IN (6,7,20)
 		AND issue."status" = 1

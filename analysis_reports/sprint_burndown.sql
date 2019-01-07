@@ -71,6 +71,6 @@ GROUP BY sprint.project_id, sprint.sprint_id, sprint.start_date
 -- Close date
 UNION ALL
 SELECT project_id, sprint_id, null AS story_points, null as key,
-	${sprint_close} AS close_date, 'close' AS event_type
+	${s(sprint_close)} AS close_date, 'close' AS event_type
 FROM gros.sprint
 ORDER BY project_id, sprint_id, close_date;

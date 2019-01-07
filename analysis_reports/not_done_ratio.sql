@@ -3,7 +3,7 @@ FROM
 (
     SELECT CAST(${sprint_points_normalization}*CAST(issue.story_points AS double)/CAST(CASE WHEN sprint_points.max_points IS NOT NULL AND sprint_points.max_points <> 0 THEN sprint_points.max_points ELSE ${sprint_points_normalization} END AS double) AS DECIMAL(5,2)) AS num_points, COUNT(*) AS num_not_done FROM gros.issue,
     (SELECT issue_id, MIN(changelog_id) AS first_changelog_id FROM gros.issue
-        WHERE ${issue_story}
+        WHERE ${s(issue_story_subtask)}
 		--AND issue.story_points <> 0
 		AND issue.sprint_id <> 0
 		AND issue.status = 3
@@ -31,7 +31,7 @@ FULL OUTER JOIN
 (
     SELECT CAST(${sprint_points_normalization}*CAST(issue.story_points AS double)/CAST(CASE WHEN sprint_points.max_points IS NOT NULL AND sprint_points.max_points <> 0 THEN sprint_points.max_points ELSE ${sprint_points_normalization} END AS double) AS DECIMAL(5,2)) AS num_points, COUNT(*) AS num_done FROM gros.issue,
     (SELECT issue_id, MIN(changelog_id) AS first_changelog_id FROM gros.issue
-        WHERE ${issue_story}
+        WHERE ${s(issue_story_subtask)}
 		--AND issue.story_points <> 0
 		AND issue.sprint_id <> 0
 		AND issue.status = 3

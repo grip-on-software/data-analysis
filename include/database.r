@@ -37,11 +37,22 @@ if (!exists('INC_DATABASE_R')) {
                 variables[[name]] <- arg
             }
         }
+        primary_source <- "jira"
+        sources <- list(jira=c("issue", "sprint", "project"),
+                        tfs=c("tfs_work_item", "tfs_sprint", "tfs_team"))
 
-        patterns <- c(lapply(definitions$fields,
-                               function(define) { define$field }),
-                      lapply(definitions$conditions,
-                               function(define) { define$condition }),
+        get_define <- function(define, field) {
+            if (!is.null(define[[primary_source]])) {
+                return(define[[primary_source]][[field]])
+            }
+            return(define[[field]])
+        }
+        issue_next_changelog <- list(left=c("issue_id", "changelog_id"),
+                                     right=c("issue_id", "changelog_id + 1"))
+        patterns <- c(lapply(definitions$fields, get_define, "field"),
+                      lapply(definitions$conditions, get_define, "condition"),
+                      list(issue_next_changelog=issue_next_changelog,
+                           issue_changelog=issue_next_changelog$left),
                       variables)
         recursive_str_interp <- function(string, ...) {
             str_interp(string, c(as.list(parent.frame()), patterns, list(...)))
@@ -53,7 +64,44 @@ if (!exists('INC_DATABASE_R')) {
             }
             return(variable)
         }
+        field_str_interp <- function(field, table=NULL, ...) {
+            if (is.null(table)) {
+                if (!is.null(definitions$fields[[field]])) {
+                    definition <- definitions$fields[[field]]
+                }
+                else {
+                    definition <- definitions$conditions[[field]]
+                }
+                var_table <- get_define(definition, "table")
+                if (length(var_table) > 1) {
+                    tables <- var_table %in% sources[[primary_source]]
+                    var_table <- var_table[tables][1]
+                }
+                field <- get_define(definition, "column")
+            }
+            else {
+                var_table <- var_str_interp(table, ...)
+            }
+            return(paste(var_table, field, sep=".", collapse=", "))
+        }
+        join_str_interp <- function(field, left, right, ...) {
+            if (is.list(field)) {
+                left_fields <- field$left
+                right_fields <- field$right
+            }
+            else {
+                left_fields <- field
+                right_fields <- field
+            }
+            left_table <- var_str_interp(left, ...)
+            right_table <- var_str_interp(right, ...)
+            return(paste(paste(left_table, left_fields, sep="."),
+                         paste(right_table, right_fields, sep="."),
+                         sep=" = ", collapse=" AND "))
+        }
         patterns <- c(patterns, list(s=recursive_str_interp,
+                                     f=field_str_interp,
+                                     j=join_str_interp,
                                      t=var_str_interp))
 
         return(patterns)
@@ -61,10 +109,7 @@ if (!exists('INC_DATABASE_R')) {
 
     load_query <- function(item, patterns, path) {
         if (!is.null(item$definition)) {
-            fields <- list()
-            for (field in c("project_id", "sprint_id")) {
-                fields <- c(fields, paste(item$table, field, sep="."))
-            }
+            fields <- list(paste('${f(join_cols, "', item$table, '")}'))
             define <- patterns[[item$definition]]
             fields <- c(fields, paste(define, "AS", item$column, sep=" "))
             item$query <- paste('SELECT', paste(fields, collapse=", "),

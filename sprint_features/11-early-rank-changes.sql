@@ -1,10 +1,14 @@
-SELECT issue.project_id, max_issue.sprint_id, COUNT(*) AS num_early_rank_changes FROM gros.issue,
-    (SELECT issue.issue_id, issue.sprint_id, MAX(issue.changelog_id) AS changelog_id
-        FROM gros.issue
-        GROUP BY issue.issue_id, issue.sprint_id
+SELECT ${f(join_cols, "max_issue")}, COUNT(*) AS num_early_rank_changes
+FROM gros.${t("issue")},
+    (SELECT ${f(join_cols, "issue")}, ${t("issue")}.issue_id,
+		MAX(${t("issue")}.changelog_id) AS changelog_id
+        FROM gros.${t("issue")}
+        GROUP BY ${f(join_cols, "issue")}, issue.issue_id
     ) AS max_issue,
-    gros.sprint
-WHERE issue.issue_id = max_issue.issue_id AND issue.changelog_id <= max_issue.changelog_id
-AND max_issue.sprint_id = sprint.sprint_id
-AND issue.rank_change IS NOT NULL AND issue.updated < ${planned_early}
-GROUP BY issue.project_id, max_issue.sprint_id
+    gros.${t("sprint")}
+WHERE ${t("issue")}.issue_id = max_issue.issue_id
+AND ${t("issue")}.changelog_id <= max_issue.changelog_id
+AND ${j(join_cols, "max_issue", "sprint")}
+AND ${t("issue")}.rank_change IS NOT NULL
+AND ${t("issue")}.updated < ${s(planned_early)}
+GROUP BY ${f(join_cols, "max_issue")}

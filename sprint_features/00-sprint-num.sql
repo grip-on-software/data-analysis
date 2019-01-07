@@ -1,11 +1,11 @@
 -- Sprint sequence number within project
-SELECT sprint.project_id, sprint.sprint_id, COUNT(*) AS sprint_num
-FROM (gros.sprint
-	JOIN gros.project ON sprint.project_id = project.project_id
-), gros.sprint AS sprint2
-WHERE sprint.project_id = sprint2.project_id
---AND ${sprint_open} >= sprint2.start_date
-AND sprint.sprint_id >= sprint2.sprint_id
-${s(sprint_conditions)}
+SELECT ${f(join_cols, "sprint")}, COUNT(*) AS sprint_num
+FROM (gros.${t("sprint")} AS sprint1
+	JOIN gros.project ON sprint1.project_id = project.project_id
+), gros.${t("sprint")} AS sprint2
+WHERE sprint1.project_id = sprint2.project_id
+--AND ${s(sprint_open)} >= sprint2.start_date
+AND sprint1.sprint_id >= sprint2.sprint_id
+${s(sprint_conditions, sprint='sprint1')}
 ${s(sprint_conditions, sprint='sprint2')}
-GROUP BY sprint.project_id, sprint.sprint_id
+GROUP BY ${f(join_cols, "sprint")}

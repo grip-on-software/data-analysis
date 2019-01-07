@@ -1,74 +1,172 @@
 fields:
     project_name:
-        description: "Identifer of a project"
-        table: project
-        field: CASE WHEN ${project_ids} THEN CONCAT('Proj', project.project_id) ELSE project.name END
+        description: "Identifer of a project or team"
+        jira:
+            table: project
+            column: [project_id, name]
+            field: CASE WHEN ${project_ids} THEN CONCAT('Proj', ${t("project")}.project_id) ELSE ${t("project")}.name END
+        tfs:
+            table: tfs_team
+            column: [team_id, name]
+            field: CASE WHEN ${project_ids} THEN CONCAT('Team', ${t("project")}.team_id) ELSE ${t("project")}.name END
+    issue_key:
+        description: "Human-readable identifier of an issue"
+        jira:
+            table: issue
+            column: [key]
+            field: ${t("issue")}.key
+        tfs:
+            table: tfs_work_item
+            column: [issue_id]
+            field: CONCAT('#', ${t("issue")}.issue_id)
     sprint_days:
         description: "Number of days in a sprint"
-        table: sprint
-        field: EXTRACT(day FROM sprint.end_date - sprint.start_date)
+        table: [sprint, tfs_sprint]
+        column: [end_date, start_date]
+        field: EXTRACT(day FROM ${t("sprint")}.end_date - ${t("sprint")}.start_date)
     sprint_weekdays:
         description: "Number of weekdays in a sprint"
-        table: sprint
-        field: CAST(EXTRACT(day FROM ${sprint_close} - start_date) * 5.0 / 7 AS INT) + 1 - 2 * CAST(TIMESTAMP_TO_STR(${sprint_close}, '%u') < TIMESTAMP_TO_STR(start_date, '%u') AS INT)
+        table: [sprint, tfs_sprint]
+        column: [start_date]
+        field: CAST(EXTRACT(day FROM ${s(sprint_close)} - ${t("sprint")}.start_date) * 5.0 / 7 AS INT) + 1 - 2 * CAST(TIMESTAMP_TO_STR(${s(sprint_close)}, '%u') < TIMESTAMP_TO_STR(${t("sprint")}.start_date, '%u') AS INT)
     velocity:
         description: "Velocity of a sprint (or average of multiple sprints in aggregate queries)"
-        table: issue
-        field: CAST(SUM(issue.story_points) AS float)/(CASE WHEN sprint_days <> 0 THEN CEIL(sprint_days/7.0*5) ELSE 1 END)
+        table: [issue, tfs_work_item]
+        column: [story_points]
+        field: CAST(SUM(${t("issue")}.story_points) AS float)/(CASE WHEN sprint_days <> 0 THEN CEIL(sprint_days/7.0*5) ELSE 1 END)
     sprint_open:
         description: "The open date of a sprint"
-        table: sprint
-        field: COALESCE(sprint.start_date, NOW())
+        table: [sprint, tfs_sprint]
+        column: [start_date]
+        field: COALESCE(${t("sprint")}.start_date, NOW())
     sprint_close:
         description: "The close date of a sprint"
-        table: sprint
-        field: CASE WHEN sprint.complete_date IS NOT NULL AND sprint.complete_date < sprint.end_date THEN sprint.complete_date ELSE sprint.end_date END
+        jira:
+            table: sprint
+            column: [complete_date, end_date]
+            field: CASE WHEN ${t("sprint")}.complete_date IS NOT NULL AND ${t("sprint")}.complete_date < ${t("sprint")}.end_date THEN ${t("sprint")}.complete_date ELSE ${t("sprint")}.end_date END
+        tfs:
+            table: tfs_sprint
+            column: [end_date]
+            field: ${t("sprint")}.end_date
     story_points:
         description: "The number of planned points of an issue"
-        table: issue
+        table: [issue, tfs_work_item]
+        column: [complete_date, end_date]
         field: CASE WHEN ${t("issue")}.story_points IN (99, 100, 122, 999) THEN 0 ELSE ${t("issue")}.story_points END
 conditions:
+    issue_in_progress:
+        description: "Issues that are in progress"
+        jira:
+            table: issue
+            column: [status]
+            condition: ${t("issue")}.status = 3
+        tfs:
+            table: tfs_work_item
+            column: [status]
+            condition: ${t("issue")}.status = 'In Progress'
     issue_done:
         description: "Issues that are done according to the team's definition of done"
-        table: issue
-        condition: (${t("issue")}.resolution = 1 OR ${t("issue")}.status = 6)
+        jira:
+            table: issue
+            column: [resolution, status]
+            condition: (${t("issue")}.resolution = 1 OR ${t("issue")}.status = 6)
+        tfs:
+            table: tfs_work_item
+            column: [status]
+            condition: ${t("issue")}.status IN ('Closed', 'Done', 'done', 'Removed', 'Completed')
     issue_not_done:
         description: "Issues that are not (yet) done according to the team's definition of done"
-        table: issue
-        condition: COALESCE(${t("issue")}.resolution, 0) <> 1 AND COALESCE(${t("issue")}.status, 0) <> 6
+        jira:
+            table: issue
+            column: [resolution, status]
+            condition: COALESCE(${t("issue")}.resolution, 0) <> 1 AND COALESCE(${t("issue")}.status, 0) <> 6
+        tfs:
+            table: tfs_work_item
+            column: [status]
+            condition: ${t("issue")}.status NOT IN ('Closed', 'Done', 'done', 'Removed', 'Completed')
+    issue_closed:
+        description: "Issues where no further work is ever expected"
+        jira:
+            table: issue
+            column: [status]
+            condition: ${t("issue")}.status = 6
+        tfs:
+            table: tfs_work_item
+            column: [status]
+            condition: ${t("issue")}.status = 'Closed'
     issue_overdue:
         description: "Issues that are in a certain state after the sprint ended (use in combination with other conditions)"
-        table: issue, sprint, max_issue
-        condition: (issue.updated > sprint.end_date OR (issue.changelog_id = max_issue.changelog_id AND sprint.end_date < CURRENT_TIMESTAMP()))
+        table: [issue, sprint, max_issue, tfs_work_item, tfs_sprint]
+        column: [update, changelog_id]
+        condition: (${t("issue")}.updated > ${t("sprint")}.end_date OR (${t("issue")}.changelog_id = ${t("max_issue")}.changelog_id AND ${t("sprint")}.end_date < CURRENT_TIMESTAMP()))
     issue_story:
+        description: "Issues that are stories"
+        jira:
+            table: issue
+            column: [type]
+            condition: ${t("issue")}."type" = 7
+        tfs:
+            table: tfs_work_item
+            column: [type]
+            condition: ${t("issue")}."type" = 'Product Backlog Item'
+    issue_story_subtask:
         description: "Issues that are stories or subtasks"
-        table: issue
-        condition: issue."type" IN (5,7)
+        jira:
+            table: issue
+            column: [type]
+            condition: ${t("issue")}."type" IN (5,7)
+        tfs:
+            table: tfs_work_item
+            column: [type]
+            condition: ${t("issue")}."type" IN ('Product Backlog Item')
     issue_other:
         description: "Issues that are not stories or subtasks"
-        table: issue
-        condition: '"type" NOT IN (5,7)'
+        jira:
+            table: issue
+            column: [type]
+            condition: ${t("issue")}."type" NOT IN (5,7)
+        tfs:
+            table: tfs_work_item
+            column: [type]
+            condition: ${t("issue")}."type" NOT IN ('Product Backlog Item')
     issue_test_case:
         description: "Issues that are test cases"
-        table: issue
-        condition: '"type" IN (9, 10, 10301)'
+        jira:
+            table: issue
+            column: [type]
+            condition: ${t("issue")}."type" IN (9, 10, 10301)
+        tfs:
+            table: tfs_work_item
+            column: [type]
+            condition: ${t("issue")}."type" IN ('Test Case', 'Test Suite', 'Test Plan')
     sprint_closed:
         description: "Sprints that have been ended or completed"
-        table: sprint
-        condition: COALESCE(COALESCE(sprint.complete_date, sprint.end_date), NOW()) < NOW()
+        jira:
+            table: sprint
+            column: [complete_date, end_date]
+            condition: COALESCE(COALESCE(${t("sprint")}.complete_date, ${t("sprint")}.end_date), NOW()) < NOW()
+        tfs:
+            table: tfs_sprint
+            column: [end_date]
+            condition: COALESCE(${t("sprint")}.end_date, NOW()) < NOW()
     planned_early:
         description: "Earliest time for stories that are planned for a sprint to start work on"
-        table: sprint
-        condition: COALESCE(sprint.start_date, NOW()) - interval '1' day
+        table: [sprint, tfs_sprint]
+        column: [start_date]
+        condition: COALESCE(${t("sprint")}.start_date, NOW()) - interval '1' day
     planned_end:
         description: "Latest time for stories to be planned for a sprint"
-        table: sprint
-        condition: COALESCE(sprint.start_date, NOW()) + interval '1' day
+        table: [sprint, tfs_sprint]
+        column: [start_date]
+        condition: COALESCE(${t("sprint")}.start_date, NOW()) + interval '1' day
     planned_late:
         description: "Latest time for stories that are planned for a sprint to have been worked on"
-        table: sprint
-        condition: COALESCE(sprint.start_date + (sprint.end_date - sprint.start_date)/7, NOW())
+        table: [sprint, tfs_sprint]
+        column: [start_date, end_date]
+        condition: COALESCE(${t("sprint")}.start_date + (${t("sprint")}.end_date - ${t("sprint")}.start_date)/7, NOW())
     sprint_patch:
         description: "Sprints that have patch names"
-        table: sprint
+        table: [sprint, tfs_sprint]
+        column: [name]
         condition: 'false'

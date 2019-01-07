@@ -1,6 +1,6 @@
 -- Number of VCS committers in sprint
-SELECT sprint_devs.project_id, sprint_devs.sprint_id, COUNT(*) AS number_of_vcs_devs FROM (
-    SELECT commits.project_id, commits.sprint_id, commits.developer_id FROM gros.commits
-    GROUP BY commits.project_id, commits.sprint_id, commits.developer_id HAVING commits.sprint_id <> 0
+SELECT ${f(join_cols, "sprint_devs")}, COUNT(*) AS number_of_vcs_devs FROM (
+    SELECT ${f(join_cols, "commits")}, commits.developer_id FROM gros.commits
+    GROUP BY ${f(join_cols, "commits")}, commits.developer_id HAVING commits.sprint_id <> 0
 ) AS sprint_devs
-GROUP BY sprint_devs.project_id, sprint_devs.sprint_id
+GROUP BY ${f(join_cols, "sprint_devs")}

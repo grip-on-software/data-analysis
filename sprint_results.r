@@ -29,11 +29,11 @@ get_sprints <- function(conn) {
     query <- paste('SELECT project.project_id, project.name AS project_key,
                    project.quality_name, project.quality_display_name,
                    sprint.sprint_id, sprint.name,
-                   sprint.start_date, ${sprint_close} AS close_date,
+                   sprint.start_date, ${s(sprint_close)} AS close_date,
                    sprint.board_id FROM gros.sprint
                    JOIN gros.project ON sprint.project_id = project.project_id
-                   WHERE', paste(conditions, collapse=' AND '),
-                   'ORDER BY project.project_id, ${sprint_open}, sprint.name')
+                   WHERE', paste(conditions, collapse=' AND '), '
+                   ORDER BY project.project_id, ${s(sprint_open)}, sprint.name')
     item <- load_query(list(query=query), c(patterns, sprint_days=sprint_days))
     time <- system.time(sprint <- dbGetQuery(conn, item$query))
     loginfo('Obtained sprints in %f seconds', time['elapsed'])

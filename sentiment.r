@@ -24,7 +24,8 @@ collect <- function() {
                     ON issue.project_id = project.project_id
                     JOIN gros.sprint
                     ON sprint.project_id = project.project_id
-                    AND comment.date BETWEEN ${sprint_open} AND ${sprint_close}
+                    AND comment.date BETWEEN ${s(sprint_open)} AND
+                        ${s(sprint_close)}
                     WHERE project.is_support_team = false
                     AND message NOT LIKE 'Versie%\nGeslaagd:%'
                     AND message <> '", pmessage, "'
