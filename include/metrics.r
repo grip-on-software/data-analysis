@@ -5,6 +5,9 @@ source('include/database.r')
 
 get_metric_targets <- function(conn, project_id, items) {
     base_names <- unlist(lapply(items, function(item) { item$metric }))
+    if (length(base_names) == 0) {
+        return(data.frame())
+    }
     conditions <- list(base_name=paste('base_name IN (',
                                        paste(dbQuoteString(conn, base_names),
                                              collapse=','), ')'))
@@ -37,6 +40,7 @@ get_metric_targets <- function(conn, project_id, items) {
 
 write_metric_targets <- function(targets, output_directory, items) {
     feature_targets <- list()
+    names(feature_targets) <- list()
     for (item in items) {
         if (!is.null(item$metric)) {
             feature <- targets[targets$base_name == item$metric, ]

@@ -340,16 +340,20 @@ if (get_arg('--project', default=F)) {
         write(toJSON(list(limit=recent, closed=closed, old=with_old),
                      auto_unbox=T),
               file=paste(output_dir, "sprints.json", sep="/"))
+        metrics <- unlist(lapply(result$items,
+                                 function(item) {
+                                     if (!is.null(item$metric)) {
+                                         return(item$column)
+                                     }
+                                     return(NULL)
+                                 }))
+        if (is.null(metrics)) {
+            metrics <- list()
+        }
         write(toJSON(list(default=default_features,
                           all=known_features,
                           details=unique(details_features),
-                          metrics=unlist(lapply(result$items,
-                                                function(item) {
-                                                    if (!is.null(item$metric)) {
-                                                        return(item$column)
-                                                    }
-                                                    return(NULL)
-                                                })),
+                          metrics=metrics,
                           meta=sprint_meta)),
               file=paste(output_dir, "features.json", sep="/"))
         write(toJSON(get_expressions_metadata(result$items, sprint_data),
