@@ -217,12 +217,13 @@ if (get_arg('--project', default=F)) {
     old_features <- c(old_features, unlist(cat_features))
     details_features <- c()
 
-    sprint_data <- arrange(result$data, result$data$project_name,
-                           result$data$start_date)
+    id_column <- ifelse(!identical(combine, F), "team_id", "project_id")
     if (project_ids != '0') {
-        sprint_data$project_name <- paste("Proj", sprint_data$project_id,
+        result$data$project_name <- paste("Proj", result$data[, id_column],
                                           sep="")
     }
+    sprint_data <- arrange(result$data, result$data$project_name,
+                           result$data$start_date)
     if (split) {
         output_dir <- paste(output_directory, 'recent_sprint_features', sep="/")
         if (!dir.exists(output_dir)) {
@@ -271,7 +272,9 @@ if (get_arg('--project', default=F)) {
             }
 
             # There may be multiple original project IDs for team projects.
-            project_id <- result$projects[result$projects$name == project,
+            team_id <- sprint_data[sprint_data$project_name == project,
+                                   id_column][[1]]
+            project_id <- result$projects[result$projects$project_id == team_id,
                                           'project_ids'][[1]]
             team_projects <- result$team_projects[[project]]
             if (length(team_projects) == 1) {
