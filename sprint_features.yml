@@ -1158,6 +1158,9 @@ files:
     units:
         nl: "%s storypoints op de product backlog"
         en: "%s story points on the product backlog"
+    short_units:
+        nl: "%s"
+        en: "%s"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
     category: tracking
@@ -1185,6 +1188,9 @@ files:
     units:
         nl: "%s geschatte extra storypoints op de product backlog"
         en: "%s estimated additional story points on the product backlog"
+    short_units:
+        nl: "%s extra points"
+        en: "%s additional points"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
     category: tracking
