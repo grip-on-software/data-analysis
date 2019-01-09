@@ -1153,8 +1153,8 @@ files:
         nl: Storypoints op backlog
         en: Story points on backlog
     long_descriptions:
-        nl: Het totaal aantal storypoints (inclusief een schatting voor ongepokerde stories) in de projecttracker dat op de product backlog staat bij het begin van de sprint
-        en: The total number of story points (including an estimate for stories that are not pokered) in the project tracker that is on the product backlog at the start of the sprint
+        nl: Het totaal aantal storypoints op de product backlog in de projecttracker bij het begin van de sprint
+        en: The number of story points on the product backlog in the project tracker at the start of the sprint
     units:
         nl: "%s storypoints op de product backlog"
         en: "%s story points on the product backlog"
@@ -1180,11 +1180,11 @@ files:
         project: sum
         sprint: max
     descriptions:
-        nl: Geschatte storypoints op backlog
-        en: Estimated story points on backlog
+        nl: Ongepokerde storypoints op backlog
+        en:  story points on backlog
     long_descriptions:
-        nl: De schatting van het totaal aantal ongepokerde storypoints dat op de product backlog in de projecttracker staat bij het begin van de sprint
-        en: The estimate of the total number of story points that are not pokered that is on the product backlog in the project tracker at the start of the sprint
+        nl: Een automatische schatting van het aantal ongepokerde storypoints op de product backlog in de projecttracker bij het begin van de sprint
+        en: An automated estimate of the number of story points that are not pokered on the product backlog in the project tracker at the start of the sprint
     units:
         nl: "%s geschatte extra storypoints op de product backlog"
         en: "%s estimated additional story points on the product backlog"
@@ -1209,4 +1209,3 @@ files:
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
     category: tracking
-
