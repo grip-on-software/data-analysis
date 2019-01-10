@@ -37,13 +37,17 @@ if (!exists('INC_DATABASE_R')) {
                 variables[[name]] <- arg
             }
         }
-        primary_source <- "jira"
-        sources <- list(jira=c("issue", "sprint", "project"),
-                        tfs=c("tfs_work_item", "tfs_sprint", "tfs_team"))
+        sources <- list(jira=list(issue="issue",
+                                  sprint="sprint",
+                                  project="project"),
+                        tfs=list(issue="tfs_work_item",
+                                 sprint="tfs_sprint",
+                                 project="tfs_team"))
+        variables <- c(variables, sources[[config$db$primary_source]])
 
         get_define <- function(define, field) {
-            if (!is.null(define[[primary_source]])) {
-                return(define[[primary_source]][[field]])
+            if (!is.null(define[[config$db$primary_source]])) {
+                return(define[[config$db$primary_source]][[field]])
             }
             return(define[[field]])
         }
@@ -58,9 +62,9 @@ if (!exists('INC_DATABASE_R')) {
             str_interp(string, c(as.list(parent.frame()), patterns, list(...)))
         }
         var_str_interp <- function(variable, ...) {
-            variables <- c(as.list(parent.frame()), list(...))
-            if (!is.null(variables[[variable]])) {
-                return(variables[[variable]])
+            vars <- c(variables, as.list(parent.frame()), list(...))
+            if (!is.null(vars[[variable]])) {
+                return(vars[[variable]])
             }
             return(variable)
         }
@@ -74,8 +78,8 @@ if (!exists('INC_DATABASE_R')) {
                 }
                 var_table <- get_define(definition, "table")
                 if (length(var_table) > 1) {
-                    tables <- var_table %in% sources[[primary_source]]
-                    var_table <- var_table[tables][1]
+                    tables <- var_table %in% sources[[config$db$primary_source]]
+                    var_table <- var_table[as.character(tables)][1]
                 }
                 field <- get_define(definition, "column")
             }

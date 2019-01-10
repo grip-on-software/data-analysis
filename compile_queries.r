@@ -16,13 +16,20 @@ analysis_definitions <- c(lapply(definitions$fields,
                                  function(define) { define$field }),
                           list(project_ids=project_ids))
 
+config <- get_config()
+if (config$db$primary_source == "tfs") {
+    join_cols <- c('team_id', 'sprint_id')
+} else {
+    join_cols <- c('project_id', 'sprint_id')
+}
+
 export(load_queries('sprint_features.yml', 'sprint_definitions.yml',
                     list(sprint_conditions='',
-                         join_cols=c('project_id', 'sprint_id'))),
+                         join_cols=join_cols)),
        'feature', 'table')
 export(load_queries('sprint_events.yml', 'sprint_definitions.yml',
                     list(project_ids=project_ids,
-                         join_cols=c('project_id', 'sprint_id'))),
+                         join_cols=join_cols)),
        'event', 'type')
 export(load_queries('analysis_reports.yml', 'sprint_definitions.yml',
                     analysis_definitions),
