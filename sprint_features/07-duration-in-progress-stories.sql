@@ -1,14 +1,15 @@
 SELECT ${f(join_cols, "startdata")}, startdata.key, enddata.story_points,
 	EXTRACT(day FROM enddata.end_date - startdata.start_date) AS num
 FROM (
-	SELECT ${f(join_cols, "issue")}, ${t("issue")}.issue_id, ${s(issue_key)},
-		MIN(${t("issue")}.updated) AS start_date
+	SELECT ${f(join_cols, "issue")}, ${t("issue")}.issue_id,
+		${s(issue_key)} AS key, MIN(${t("issue")}.updated) AS start_date
 	FROM gros.${t("issue")}
 	${s(issue_join)}
 	WHERE ${s(issue_story_subtask)} AND ${s(issue_in_progress)}
 	${g(join_cols, "issue")}, ${t("issue")}.issue_id, ${f("issue_key")}
 ) AS startdata, (
-	SELECT ${f(join_cols, "issue")}, ${t("issue")}.issue_id, ${s(issue_key)},
+	SELECT ${f(join_cols, "issue")}, ${t("issue")}.issue_id,
+		${s(issue_key)} AS key,
 		MAX(${s(story_points)}) AS story_points,
 		MIN(${t("issue")}.updated) AS end_date
 	FROM gros.${t("issue")}

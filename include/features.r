@@ -89,7 +89,6 @@ get_combined_features <- function(items, data, colnames, details, join_cols,
 
             project <- projects[projects$name == component$project, ]
             metadata <- data.frame(project_id=project_id,
-                                   project_ids=project$project_ids,
                                    project_names=project$project_names,
                                    name=component$name,
                                    quality_display_name=component$display_name,
@@ -98,7 +97,9 @@ get_combined_features <- function(items, data, colnames, details, join_cols,
                                    core=project$core,
                                    team=F,
                                    component=T,
-                                   stringsAsFactors=F)[, colnames(projects)]
+                                   stringsAsFactors=F)
+            metadata$project_ids <- project$project_ids
+            metadata <- metadata[, colnames(projects)]
             if (component$name %in% projects$name) {
                 projects[projects$name == component$name, ] <- metadata
             }
@@ -430,6 +431,16 @@ update_combine_interval <- function(items, old_data, data, row_num, details,
     return(result)
 }
 
+include_feature <- function(item, features, exclude) {
+    if (all(item$column %in% features)) {
+        if (!is.null(item$expression)) {
+            return(length(grep(exclude, item$column)) == 0)
+        }
+        return(length(grep(exclude, item$table)) == 0)
+    }
+    return(F)
+}
+
 get_features <- function(conn, features, exclude, items, data, colnames,
                          join_cols, details=F, required=c(), components=NULL) {
     if (length(features) == 1) {
@@ -446,8 +457,7 @@ get_features <- function(conn, features, exclude, items, data, colnames,
     selected_items <- c()
     expressions <- c()
     for (item in items) {
-        if (all(item$column %in% features) &&
-            length(grep(exclude, item$table)) == 0) {
+        if (include_feature(item, features, exclude)) {
             selected_items <- c(selected_items, list(item))
             columns <- item$column
             by <- join_cols
@@ -482,7 +492,12 @@ get_features <- function(conn, features, exclude, items, data, colnames,
             }
             if (!is.null(item$summarize)) {
                 summarize <- item$summarize
-                group_names <- summarize$group
+                if (length(summarize$group) == length(by)) {
+                    group_names <- by
+                }
+                else {
+                    group_names <- summarize$group
+                }
                 group_cols <- lapply(result[, group_names], factor)
                 if (!is.null(components) && !is.null(result$component)) {
                     component_names <- get_component_names(components)
@@ -745,24 +760,29 @@ get_sprint_features <- function(conn, features, exclude, variables, latest_date,
     patterns <- load_definitions('sprint_definitions.yml',
                                  list(sprint_days=sprint_days))
 
-    # TODO: Adjust for jira/tfs primary source
-    fields <- c('sprint.project_id', 'sprint.sprint_id')
-    join_cols <- c("project_id", "sprint_id")
-    colnames <- c("project_id", "sprint_num")
+    fields <- c('${f(join_cols, "sprint")}')
+    if (config$db$primary_source == "tfs") {
+        join_cols <- c("team_id", "sprint_id")
+    } else {
+        join_cols <- c("project_id", "sprint_id")
+    }
+    colnames <- c(join_cols, "sprint_num")
     if (time) {
         fields <- c(fields,
                     paste('CAST(${s(sprint_open)} AS DATE) -',
                           'date \'1970-01-01\' AS time'))
         colnames <- c(colnames, 'time')
     }
+    order_by <- c('${f(join_cols, "sprint", mask=1)}', '${s(sprint_open)}',
+               '${t("sprint")}.name')
     query <- paste('SELECT', paste(fields, collapse=', '),
-                   'FROM gros.sprint
-                    JOIN gros.project
-                    ON project.project_id = sprint.project_id',
+                   'FROM gros.${t("sprint")}
+                    JOIN gros.${t("project")}
+                    ON ${j(join_cols, "project", "sprint", mask=1)}',
                    where_clause,
-                   'ORDER BY sprint.project_id, ${s(sprint_open)}, sprint.name')
+                   'ORDER BY', paste(order_by, collapse=', '))
     sprint_query <- load_query(list(query=query),
-                               patterns)
+                               c(patterns, list(join_cols=join_cols)))
 
     sprint_data <- dbGetQuery(conn, sprint_query$query)
 
@@ -785,36 +805,40 @@ get_sprint_features <- function(conn, features, exclude, variables, latest_date,
     return(result)
 }
 
-get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T,
-                                       sprint_meta=c(), sprint_conditions='',
-                                       project_fields=c('project_id'),
+get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
+                                       limit=5, closed=T, sprint_conditions='',
+                                       project_fields=list('project_id'),
                                        project_meta=list(), old=F, details=F,
                                        combine=F, teams=list(), components=NULL,
                                        prediction=list()) {
-    if (!missing(date)) {
-        project_meta$recent <- date
+    fields <- list(project_name='${t("project")}.name',
+                   sprint_name='${t("sprint")}.name',
+                   start_date='${t("sprint")}.start_date',
+                   close_date='${s(sprint_close)}',
+                   old='${old}')
+
+    names(project_fields) <- project_fields
+    if (config$db$primary_source == "tfs") {
+        join_cols <- c("team_id", "sprint_id")
+        project_fields$project_id <- "team_id"
+        project_fields$quality_display_name <- NULL
+    } else {
+        join_cols <- c("project_id", "sprint_id")
+        fields <- c(fields,
+                    list(quality_display_name='project.quality_display_name',
+                         quality_name='project.quality_name',
+                         board_id='sprint.board_id'))
     }
-    else {
-        project_meta$recent <- T
-    }
-    projects <- get_projects_meta(conn, fields=project_fields,
-                                  metadata=c(project_meta, list(main=T)))
-    projects$project_ids <- projects$project_id
-    projects$project_names <- projects$name
-    projects <- projects[projects$main, ]
-    if (!old) {
-        projects <- projects[projects$recent, ]
-    }
+    colnames <- c(join_cols, names(fields)[names(fields) != ""])
+    order_by <- c('${f(join_cols, "sprint", mask=1)}',
+                  '${s(sprint_open)} DESC',
+                  '${t("sprint")}.name DESC')
 
     if (closed) {
         sprint_conditions <- paste(sprint_conditions, 'AND',
                                    '${s(sprint_close)} < CURRENT_TIMESTAMP()')
     }
 
-    # TODO: Adjust for jira/tfs primary source
-    colnames <- c("project_name", "quality_display_name", "quality_name",
-                  "board_id", sprint_meta, "old")
-    join_cols <- c("project_id", "sprint_id")
     variables <- list(sprint_conditions=sprint_conditions,
                       join_cols=list(default=join_cols),
                       jira_='',
@@ -843,26 +867,36 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T,
                                       collapse=", ")
         colnames <- c(colnames, "component")
     }
-    query <- 'SELECT ${f(join_cols, "sprint")},
-              project.name AS project_name, project.quality_display_name,
-              project.quality_name, sprint.name AS sprint_name,
-              sprint.start_date, ${s(sprint_close)} AS close_date,
-              sprint.board_id, ${old} AS "old"
-              FROM gros.sprint
-              JOIN gros.project
-              ON project.project_id = sprint.project_id
-              ${s(component_join)}
-              WHERE sprint.start_date IS NOT NULL
-              AND ${project_condition}
-              ${s(sprint_conditions)}
-              ORDER BY sprint.project_id, ${s(sprint_open)} DESC,
-              sprint.name DESC
-              ${limit}'
+    query <- paste('SELECT ${f(join_cols, "sprint")}, ',
+                   paste(format_aliases(fields), collapse=", "),
+                   'FROM gros.${t("sprint")}
+                    JOIN gros.${t("project")}
+                    ON ${j(join_cols, "project", "sprint", mask=1)}
+                    ${s(component_join)}
+                    WHERE ${t("sprint")}.start_date IS NOT NULL
+                    AND ${s(project_condition)}
+                    ${s(sprint_conditions)}
+                    ORDER BY', paste(order_by, collapse=", "), '${limit}')
 
     patterns <- load_definitions('sprint_definitions.yml', variables)
+
+    if (!is.na(date)) {
+        project_meta$recent <- date
+    }
+    else {
+        project_meta$recent <- T
+    }
+    projects <- get_projects_meta(conn, fields=project_fields,
+                                  metadata=c(project_meta, list(main=T)),
+                                  join_cols=join_cols, patterns=patterns)
+    projects$project_ids <- lapply(projects$project_id,
+                                   function(project_id) { list(project_id) })
+    projects$project_names <- projects$name
+    projects <- projects[projects$main, ]
+
     if (old) {
         # Old value is calculated by combined data later on
-        condition <- paste('sprint.project_id IN (',
+        condition <- paste('${f(join_cols, "sprint", mask=1)} IN (',
                            paste(projects$project_id, collapse=','), ')')
         item <- load_query(list(query=query),
                            c(patterns, list(project_condition=condition,
@@ -873,13 +907,14 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T,
         sprint_data <- dbGetQuery(conn, item$query)
     }
     else {
+        projects <- projects[projects$recent, ]
         sprint_data <- data.frame()
         for (project in projects$project_id) {
-            project_condition <- paste("sprint.project_id =", project)
+            condition <- paste('${f(join_cols, "sprint", mask=1)} =', project)
 
             item <- load_query(list(query=query),
                                c(patterns,
-                                 list(project_condition=project_condition,
+                                 list(project_condition=condition,
                                       old='FALSE',
                                       limit=paste('LIMIT', limit),
                                       source='jira')))
@@ -900,14 +935,14 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T,
     data <- yaml.load_file('sprint_features.yml')
     items <- list()
     for (item in data$files) {
-        if (all(item$column %in% features)) {
+        if (include_feature(item, features, exclude)) {
             items <- c(items, list(load_query(item, patterns, data$path)))
         }
     }
 
-    result <- get_features(conn, features, '^$', items, sprint_data, colnames,
-                           join_cols, details=details, required=c("sprint_num"),
-                           components=components)
+    result <- get_features(conn, features, exclude, items, sprint_data,
+                           colnames, join_cols, details=details,
+                           required=c("sprint_num"), components=components)
     expressions <- result$expressions
 
     result$projects <- projects
@@ -955,6 +990,7 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T,
                                  item$column)
         }
     }
+    result$project_fields <- project_fields
     return(result)
 }
 

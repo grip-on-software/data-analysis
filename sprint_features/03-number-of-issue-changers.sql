@@ -18,7 +18,7 @@ FROM (
     ) AS maxdata
     ON updaters.issue_id = maxdata.issue_id
     JOIN gros.${t("issue")}
-    ON maxdata.issue_id = issue.issue_id AND maxdata.changelog_id = issue.changelog_id
+    ON ${j(issue_changelog, "maxdata", "issue")}
     ${s(issue_join)}
     WHERE ${t("issue")}.sprint_id <> 0
     ${g(join_cols, "issue")}, ${t("issue")}.issue_id

@@ -25,18 +25,18 @@ FROM (
     LEFT JOIN gros.subtask ON ${t("issue")}.issue_id = subtask.id_subtask
 	${s(issue_join)}
     WHERE (
-        (older_issue.changelog_id = 0 AND older_issue.sprint_id IS NOT NULL AND issue.sprint_id = older_issue.sprint_id)
+        (older_issue.changelog_id = 0 AND older_issue.sprint_id IS NOT NULL AND ${t("issue")}.sprint_id = older_issue.sprint_id)
         OR (
             older_issue.updated <= ${s(planned_end)}
             AND (
                 older_issue.sprint_id IS NULL
-                OR older_issue.sprint_id <> issue.sprint_id
+                OR older_issue.sprint_id <> ${t("issue")}.sprint_id
                 OR older_issue.story_points IS NULL
-                OR older_issue.story_points <> issue.story_points
+                OR older_issue.story_points <> ${t("issue")}.story_points
             )
         )
     )
-    AND ${story_point_types}
+    AND ${s(story_point_types)}
     AND ${t("issue")}.story_points IS NOT NULL
     AND ${t("issue")}.sprint_id IS NOT NULL
     AND ${t("issue")}.updated <= ${s(planned_late)}

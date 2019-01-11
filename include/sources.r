@@ -96,7 +96,7 @@ get_source_pattern <- function(item, project_urls) {
 
 build_source_urls <- function(project_id, project_name, items=list(),
                               patterns=c(), conn=NULL, team_projects=c(),
-                              components=NULL, component=NULL) {
+                              components=NULL, component=NA) {
     project_links <- list()
     names(project_links) <- list()
     if (is.list(conn) || is.null(conn)) {
@@ -108,7 +108,7 @@ build_source_urls <- function(project_id, project_name, items=list(),
 
     jira_keys <- paste(team_projects, collapse=',')
     jira_project <- paste('project in (', jira_keys, ')', sep='')
-    if (!is.null(component)) {
+    if (!is.na(component)) {
         for (filters in components) {
             if (filters$name == component) {
                 if (!is.null(filters$jira$include)) {
@@ -195,7 +195,7 @@ build_project_source_urls <- function(conn, project_id, project_name, patterns,
 build_sprint_source_urls <- function(conn, project_id, project_name,
                                      quality_name, sprint,
                                      items, patterns, team_projects=c(),
-                                     components=NULL, component=NULL) {
+                                     components=NULL, component=NA) {
     if (is.list(conn) || is.null(conn)) {
         source_urls <- conn
     }

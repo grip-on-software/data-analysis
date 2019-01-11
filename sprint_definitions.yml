@@ -55,6 +55,31 @@ fields:
         column: [complete_date, end_date]
         field: CASE WHEN ${t("issue")}.story_points IN (99, 100, 122, 999) THEN 0 ELSE ${t("issue")}.story_points END
 conditions:
+    project_recent:
+        description: "Projects that have recent sprints"
+        table: [sprint, tfs_sprint]
+        column: [start_date]
+        condition: MAX(${t("sprint")}.start_date) >= CAST('${date}' AS TIMESTAMP)
+    project_core:
+        description: "Projects that are not support teams"
+        jira:
+            table: project
+            column: [is_support_team]
+            condition: NOT COALESCE(${t("project")}.is_support_team, false)
+        tfs:
+            table: tfs_team
+            column: [name]
+            condition: 'true'
+    project_main:
+        description: "Projects that do not have a parent project"
+        jira:
+            table: project
+            column: [main_project]
+            condition: CASE WHEN ${t("project")}.main_project IS NULL THEN true ELSE false END
+        tfs:
+            table: tfs_team
+            column: [name]
+            condition: 'true'
     issue_in_progress:
         description: "Issues that are in progress"
         jira:

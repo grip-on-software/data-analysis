@@ -32,7 +32,7 @@ if (!exists('INC_DATABASE_R')) {
 
     format_aliases <- function(fields) {
         return(mapply(function(alias, expression) {
-                          paste(expression, 'AS', alias)
+                          paste(expression, ' AS "', alias, '"', sep='')
                       },
                       names(fields), fields))
     }
@@ -74,7 +74,16 @@ if (!exists('INC_DATABASE_R')) {
                       list(join_cols=c("project_id", "sprint_id"),
                            issue_join='', component_join='', source=''))
         recursive_str_interp <- function(string, ...) {
-            str_interp(string, c(..., as.list(parent.frame()), patterns))
+            vars <- c(..., as.list(parent.frame()), patterns)
+            if (is.list(string)) {
+                if (!is.null(vars$source) && !is.null(string[[vars$source]])) {
+                    string <- string[[vars$source]]
+                }
+                else {
+                    string <- ''
+                }
+            }
+            return(str_interp(string, vars))
         }
         var_str_interp <- function(variable, ...) {
             vars <- c(..., as.list(parent.frame()), variables)
@@ -171,7 +180,7 @@ if (!exists('INC_DATABASE_R')) {
                                       item$table, '")}', sep=''))
         }
         else if (!is.null(item$metric)) {
-            columns <- c('metric_value.project_id', 'metric_value.sprint_id')
+            columns <- c('${f(join_cols, "metric_value")}')
             if (is.null(item$source)) {
                 metric_history <- '${metric_history_url}/${metric_history_file}'
                 item$source <- list(quality='${quality_url}/${quality_name}',
@@ -197,7 +206,10 @@ if (!exists('INC_DATABASE_R')) {
                 aggregate <- paste(toupper(item$aggregate), "(value) AS ",
                                    field, collapse=", ", sep="")
             }
-            item$table <- item$metric
+            table <- sub("(.)([A-Z][a-z]+)", "\\1_\\2", item$metric)
+            table <- tolower(sub("([a-z0-9])([A-Z])", "\\1_\\2", table))
+            table <- paste("metric", table, sep="_")
+            item$table <- table
             item$category <- "metrics"
             if (!("combine" %in% names(item))) {
                 item$combine <- "sum"
@@ -214,24 +226,23 @@ if (!exists('INC_DATABASE_R')) {
                                  GROUP BY', paste(columns, collapse=","))
 
             if (item$aggregate == "end") {
-                colnames <- paste(lapply(strsplit(columns[-length(columns)],
-                                                  ".", fixed=TRUE),
-                                         function(column) {
-                                             column[[length(column)]]
-                                         }),
+                colnames <- sub("^.*\\.", "", columns[-c(1, length(columns))])
+                table_cols <- c(paste('${f(join_cols, "', table, '")}', sep=''),
+                                colnames)
+                row_cols <- paste(c('${f(join_cols, "metric_rows")}', colnames),
                                   collapse=",")
-                item$query <- paste('SELECT', colnames, ',',
-                                    'MAX(value) AS', field,
+                item$query <- paste('SELECT', paste(table_cols, collapse=","),
+                                    ', MAX(value) AS', field,
                                     'FROM (
-                                        SELECT', colnames, ', value,',
+                                        SELECT', row_cols, ', value,',
                                         'ROW_NUMBER() OVER (
-                                            PARTITION BY', colnames, 'ORDER BY',
-                                            colnames, ', end_date DESC
+                                            PARTITION BY', row_cols, 'ORDER BY',
+                                            row_cols, ', end_date DESC
                                         ) AS rev_row
                                         FROM (', item$query, ') AS metric_rows
-                                    ) AS ', item$metric,
+                                    ) AS', table,
                                     'WHERE rev_row = 1
-                                     GROUP BY', paste(colnames, collapse=","))
+                                     GROUP BY', paste(table_cols, collapse=","))
             }
         }
         else if (!is.null(item$filename)) {
@@ -243,6 +254,10 @@ if (!exists('INC_DATABASE_R')) {
         if (!is.null(item$query)) {
             item$patterns <- c(item$patterns, patterns)
             item$patterns$source <- names(item$source)[1]
+            if (!is.null(item$patterns$source) &&
+                item$patterns$source %in% c("jira", "tfs")) {
+                item$patterns$source <- config$db$primary_source
+            }
             item$query <- str_interp(item$query, item$patterns)
         }
         return(item)

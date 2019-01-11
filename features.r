@@ -28,11 +28,11 @@ patterns <- load_definitions('sprint_definitions.yml', config$fields)
 
 project_metadata <- get_arg('--project-metadata', default='recent,core,main')
 metadata <- get_meta_keys(project_metadata)
-fields <- c('project_id', 'name', 'quality_display_name')
+fields <- list('project_id', 'name', 'quality_display_name')
 
 map_details <- function(details, project_ids, sprint_ids, component) {
     project <- Filter(function(detail) {
-                          if (is.null(component)) {
+                          if (is.na(component)) {
                               cond <- !("component" %in% colnames(detail)) ||
                                   is.null(detail$component) ||
                                   is.na(detail$component)
@@ -199,9 +199,9 @@ if (get_arg('--project', default=F)) {
     }
     result <- get_recent_sprint_features(conn,
                                          unique(c(meta_features, features)),
+                                         exclude,
                                          limit=recent,
                                          closed=closed,
-                                         sprint_meta=sprint_meta,
                                          sprint_conditions=sprint_conditions,
                                          project_fields=fields,
                                          project_meta=metadata,
@@ -211,6 +211,10 @@ if (get_arg('--project', default=F)) {
                                          teams=teams,
                                          components=config$components,
                                          prediction=prediction)
+    default_features <- default_features[default_features %in% result$colnames]
+    old_features <- old_features[old_features %in% result$colnames]
+    extra_features <- extra_features[extra_features %in% result$colnames]
+    sprint_meta <- sprint_meta[sprint_meta %in% result$colnames]
 
     for (cat in names(specifications$categories)) {
         cat_mask <- sapply(result$items, function(item) {
@@ -229,7 +233,12 @@ if (get_arg('--project', default=F)) {
     old_features <- c(old_features, unlist(cat_features))
     details_features <- c()
 
-    id_column <- ifelse(!identical(combine, F), "team_id", "project_id")
+    if (identical(combine, F) && config$db$primary_source != "tfs") {
+        id_column <- "project_id"
+    }
+    else {
+        id_column <- "team_id"
+    }
     if (project_ids != '0') {
         result$data$project_name <- paste("Proj", result$data[, id_column],
                                           sep="")
@@ -298,12 +307,16 @@ if (get_arg('--project', default=F)) {
                 team_ids <- new$team_id[[1]]
             }
             # Get latest sprint properties
+            quality_name <- new$quality_name[[1]]
+            if (is.null(quality_name)) {
+                quality_name <- NA
+            }
             sprint <- c(new[nrow(new), sprint_meta],
-                        list(quality_name=new$quality_name[[1]]))
+                        list(quality_name=quality_name))
 
             component <- new$component[[1]]
-            if (is.na(component)) {
-                component <- NULL
+            if (is.null(component)) {
+                component <- NA
             }
             new_details <- lapply(result$details, map_details,
                                   team_ids, unlist(new$sprint_id), component)
@@ -329,7 +342,7 @@ if (get_arg('--project', default=F)) {
             names(project_urls) <- NULL
             project_urls <- do.call("c", project_urls)
             write(toJSON(build_sprint_source_urls(project_urls, project_id,
-                                                  project, sprint$quality_name,
+                                                  project, quality_name,
                                                   NULL, result$items,
                                                   patterns, team_projects,
                                                   config$components,
@@ -387,7 +400,7 @@ if (get_arg('--project', default=F)) {
         if (isTRUE(metadata$team) && project_ids != '1') {
             metadata$project_names <- T
         }
-        write_projects_metadata(conn, fields, metadata,
+        write_projects_metadata(conn, result$project_fields, metadata,
                                 projects=result$projects,
                                 project_ids=project_ids,
                                 output_directory=output_dir)

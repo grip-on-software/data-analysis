@@ -5,7 +5,7 @@ FROM gros.${t("issue")}
 LEFT JOIN gros.${t("issue")} AS newer_issue
 ON ${j(issue_next_changelog, "newer_issue", "issue")}
 LEFT JOIN gros.${t("sprint")} ON ${j(join_cols, "issue", "sprint")}
-JOIN gros.sprint AS interval_sprint
+JOIN gros.${t("sprint")} AS interval_sprint
 ON ${j(join_cols, "issue", "interval_sprint", 1)}
 ${s(issue_join)}
 WHERE ${t("issue")}.epic IS NOT NULL

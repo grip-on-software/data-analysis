@@ -1,7 +1,7 @@
 SELECT ${f(join_cols, "issue")}, COUNT(*) AS num_links
 FROM gros.${t("issue")}
 JOIN gros.issuelink
-ON ${s(issue_key)} = issuelink.from_key --OR issue.key = issuelink.to_key
+ON ${s(issue_key)} = issuelink.from_key --OR ${s(issue_key)} = issuelink.to_key
 JOIN (
 	SELECT ${t("issue")}.issue_id,
 		MAX(${t("issue")}.changelog_id) AS changelog_id
