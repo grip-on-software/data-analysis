@@ -17,8 +17,8 @@ if (!exists('INC_DATABASE_R')) {
             organization <- get_arg('--org',
                                     default=Sys.getenv("ANALYSIS_ORGANIZATION"))
             config <<- yaml.load_file(config_file)
-            if (!is.null(config$organization)) {
-                config <<- config$organization
+            if (!is.null(config[[organization]])) {
+                config <<- config[[organization]]
             }
         }
         return(config)
