@@ -254,6 +254,7 @@ get_combined_team <- function(team, team_id, data, projects, team_projects,
 
     metadata <- data.frame(project_id=team_id,
                            project_ids=0,
+                           project_names=0,
                            name=team$name,
                            quality_display_name=team$display_name,
                            recent=recent,
@@ -263,6 +264,7 @@ get_combined_team <- function(team, team_id, data, projects, team_projects,
                                        as.logical(team$team)),
                            stringsAsFactors=F)[, colnames(projects)]
     metadata$project_ids <- list(project_id)
+    metadata$project_names <- list(project_names)
 
     if (team$name %in% projects$name) {
         projects[projects$name == team$name, ] <- as.list(metadata)
@@ -676,6 +678,7 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T,
     projects <- get_projects_meta(conn, fields=project_fields,
                                   metadata=c(project_meta, list(main=T)))
     projects$project_ids <- projects$project_id
+    projects$project_names <- projects$name
     projects <- projects[projects$main, ]
     if (!old) {
         projects <- projects[projects$recent, ]
