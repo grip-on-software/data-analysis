@@ -299,6 +299,26 @@ files:
     sources:
         quality: "${quality_url}/${quality_name}"
         metric_history: "${metric_history_url}/${metric_history_file}"
+  - metric: UnittestBranchCoverage
+    column: unittest_branch_coverage
+    aggregate: end
+    summarize: [min, max]
+    combine: [min, max]
+    descriptions:
+        nl: Unittest branch coverage
+        en: Unittest branch coverage
+    long_descriptions:
+        nl: Het percentage regels condities dat in de producten door tests wordt bereikt aan het einde van de sprint
+        en: The percentage of lines of conditions in the products that is reached by tests at the end of the sprint
+    units:
+        nl: "%s%% unittest branch coverage"
+        en: "%s%% unittest branch coverage"
+    short_units:
+        nl: "%s%%"
+        en: "%s%%"
+    sources:
+        quality: "${quality_url}/${quality_name}"
+        metric_history: "${metric_history_url}/${metric_history_file}"
   - metric: Vulnerabilities
     column: vulnerabilities
     aggregate: end
@@ -854,6 +874,19 @@ files:
         en: "%s done items that are not stories or subtasks"
     source:
         jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=project in (${jira_keys}) and sprint in (${jira_sprint_ids}) and ${issue_other} and resolution < %22${sprint_end_date}%22&runQuery=true"
+    category: tracking
+  - expression: 'num_done_stories + other_done_issues'
+    column: num_done_items
+    default: 0
+    combine: sum
+    descriptions:
+        nl: Gerealiseerde items
+        en: Done items
+    long_descriptions:
+        nl: Het aantal items dat in de sprint wordt afgerond
+        en: The number of items that are completed in the sprint
+    source:
+        jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
     category: tracking
   - filename: 07-concurrent-in-progress-stories.sql
     table: concurrent_in_progress_stories
