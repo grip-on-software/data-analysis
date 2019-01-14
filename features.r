@@ -255,7 +255,9 @@ if (get_arg('--project', default=F)) {
                   file=paste(project_dir, 'old.json', sep='/'))
 
             for (feature in extra_features) {
-                write(toJSON(new[[feature]], auto_unbox=T,
+                values <- as.list(new[[feature]])
+                names(values) <- NULL
+                write(toJSON(values, auto_unbox=T,
                              na="null", null="null"),
                       file=paste(project_dir,
                                    paste(feature, 'json', sep='.'),
