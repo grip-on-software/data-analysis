@@ -1214,7 +1214,7 @@ files:
         sprint: max
     descriptions:
         nl: Ongepokerde storypoints op backlog
-        en:  story points on backlog
+        en: Non-pokered story points on backlog
     long_descriptions:
         nl: Een automatische schatting van het aantal ongepokerde storypoints op de product backlog in de projecttracker bij het begin van de sprint
         en: An automated estimate of the number of story points that are not pokered on the product backlog in the project tracker at the start of the sprint
