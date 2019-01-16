@@ -134,6 +134,8 @@ files:
         nl: "%s complete sprint"
         en: "%s complete sprint"
     category: general
+    source:
+        jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
   - filename: 01-number-of-vcs-committers.sql
     table: sprint_vcs_dev_count
     column: number_of_vcs_devs
@@ -390,6 +392,8 @@ files:
         nl: "%s item-updaters"
         en: "%s item updaters"
     category: tracking
+    source:
+        jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=project in (${jira_keys}) and sprint in (${jira_sprint_ids}) and reporter !%3D currentUser()&runQuery=true"
   - filename: 04-expected-story-points.sql
     table: expected_story_points
     column: num_story_points
@@ -528,6 +532,8 @@ files:
     units:
         nl: "%s gewogen storypoints"
         en: "%s weighted story points"
+    source:
+        jira: "${jira_url}/secure/BrowseProjects.jspa"
     category: tracking
   - filename: 04-attachments.sql
     table: attachments

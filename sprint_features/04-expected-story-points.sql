@@ -5,8 +5,8 @@ FROM (
     SELECT ${f(join_cols, "issue")}, ${t("issue")}.issue_id,
 		${s(issue_key)} AS key, ${s(story_points)} AS story_points,
         ROW_NUMBER() OVER (
-            PARTITION BY ${f(join_cols, "issue")}, ${t("issue")}.issue_id
-            ORDER BY ${f(join_cols, "issue")}, ${t("issue")}.issue_id, ${t("issue")}.changelog_id DESC
+            PARTITION BY ${f(join_cols, "issue", alias=F)}, ${t("issue")}.issue_id
+            ORDER BY ${f(join_cols, "issue", alias=F)}, ${t("issue")}.issue_id, ${t("issue")}.changelog_id DESC
         ) AS rev_row
     FROM gros.${t("issue")}
     JOIN gros.${t("sprint")} ON ${j(join_cols, "issue", "sprint")}
@@ -23,6 +23,7 @@ FROM (
     LEFT JOIN gros.${t("issue")} AS newer_issue
 	ON ${j(issue_next_changelog, "newer_issue", "later_issue")}
     LEFT JOIN gros.subtask ON ${t("issue")}.issue_id = subtask.id_subtask
+	${s(issue_join)}
     WHERE (
         (older_issue.changelog_id = 0 AND older_issue.sprint_id IS NOT NULL AND issue.sprint_id = older_issue.sprint_id)
         OR (

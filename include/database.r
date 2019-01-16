@@ -30,6 +30,13 @@ if (!exists('INC_DATABASE_R')) {
                   user=config$db$user, password=config$db$password)
     }
 
+    format_aliases <- function(fields) {
+        return(mapply(function(alias, expression) {
+                          paste(expression, 'AS', alias)
+                      },
+                      names(fields), fields))
+    }
+
     load_definitions <- function(definition_file, variables) {
         definitions <- yaml.load_file(definition_file)
         if (missing(variables)) {
@@ -48,7 +55,8 @@ if (!exists('INC_DATABASE_R')) {
                         tfs=list(issue="tfs_work_item",
                                  sprint="tfs_sprint",
                                  project="tfs_team"))
-        variables <- c(variables, sources[[config$db$primary_source]])
+        primary_tables <- sources[[config$db$primary_source]]
+        variables <- c(variables, primary_tables)
 
         get_define <- function(define, field) {
             if (!is.null(define[[config$db$primary_source]])) {
@@ -62,18 +70,21 @@ if (!exists('INC_DATABASE_R')) {
                       lapply(definitions$conditions, get_define, "condition"),
                       list(issue_next_changelog=issue_next_changelog,
                            issue_changelog=issue_next_changelog$left),
-                      variables)
+                      variables,
+                      list(join_cols=c("project_id", "sprint_id"),
+                           issue_join='', component_join='', source=''))
         recursive_str_interp <- function(string, ...) {
-            str_interp(string, c(as.list(parent.frame()), patterns, list(...)))
+            str_interp(string, c(..., as.list(parent.frame()), patterns))
         }
         var_str_interp <- function(variable, ...) {
-            vars <- c(variables, as.list(parent.frame()), list(...))
+            vars <- c(..., as.list(parent.frame()), variables)
             if (!is.null(vars[[variable]])) {
                 return(vars[[variable]])
             }
             return(variable)
         }
-        field_str_interp <- function(field, table=NULL, ...) {
+        field_str_interp <- function(field, table=NULL, mask=T, alias=NA, ...) {
+            extra_fields <- c()
             if (is.null(table)) {
                 if (!is.null(definitions$fields[[field]])) {
                     definition <- definitions$fields[[field]]
@@ -83,17 +94,46 @@ if (!exists('INC_DATABASE_R')) {
                 }
                 var_table <- get_define(definition, "table")
                 if (length(var_table) > 1) {
-                    tables <- var_table %in% sources[[config$db$primary_source]]
+                    tables <- var_table %in% primary_tables
                     var_table <- var_table[as.character(tables)][1]
                 }
                 field <- get_define(definition, "column")
             }
             else {
-                var_table <- var_str_interp(table, ...)
+                var <- c(..., as.list(parent.frame()), variables)
+                if (is.list(field)) {
+                    if (!is.null(var$source) && !is.null(field[[var$source]])) {
+                        extra_fields <- field[[var$source]]
+                        if (isTRUE(alias) ||
+                            (is.na(alias) && table %in% names(primary_tables))
+                        ) {
+                            extra_fields <- format_aliases(extra_fields)
+                        }
+                        else if (!identical(alias, F)) {
+                            extra_fields <- names(extra_fields)
+                        }
+                    }
+                    field <- field$default
+                }
+                var_table <- var_str_interp(table, var)
             }
-            return(paste(var_table, field, sep=".", collapse=", "))
+            all_fields <- c(paste(var_table, field, sep="."), extra_fields)
+            return(paste(all_fields[mask], collapse=", "))
         }
-        join_str_interp <- function(field, left, right, ...) {
+        group_str_interp <- function(field, table, extra="", ...) {
+            if (extra != "") {
+                extra <- paste(",", extra)
+            }
+            vars <- c(..., as.list(parent.frame()), variables)
+            fields <- field_str_interp(field, table, mask=T, alias="only", vars)
+            return(paste('GROUP BY ', fields, extra, sep=""))
+        }
+        join_str_interp <- function(field, left, right, mask=T, ...) {
+            if (is.list(field) && !is.null(field$default)) {
+                field <- field$default
+            }
+            field <- field[mask]
+
             if (is.list(field)) {
                 left_fields <- field$left
                 right_fields <- field$right
@@ -110,6 +150,7 @@ if (!exists('INC_DATABASE_R')) {
         }
         patterns <- c(patterns, list(s=recursive_str_interp,
                                      f=field_str_interp,
+                                     g=group_str_interp,
                                      j=join_str_interp,
                                      t=var_str_interp))
 
@@ -118,20 +159,29 @@ if (!exists('INC_DATABASE_R')) {
 
     load_query <- function(item, patterns, path) {
         if (!is.null(item$definition)) {
-            fields <- list(paste('${f(join_cols, "', item$table, '")}'))
+            fields <- list(paste('${f(join_cols, "', item$table, '")}', sep=""))
             define <- patterns[[item$definition]]
             fields <- c(fields, paste(define, "AS", item$column, sep=" "))
             item$query <- paste('SELECT', paste(fields, collapse=", "),
-                                'FROM', paste('gros', item$table, sep='.'))
+                                'FROM', paste('gros.${t("', item$table, '")}',
+                                              sep=''),
+                                paste('${s(component_join, project="',
+                                      item$table, '")}', sep=''))
         }
         else if (!is.null(item$metric)) {
             columns <- c('metric_value.project_id', 'metric_value.sprint_id')
+            if (is.null(item$source)) {
+                metric_history <- '${metric_history_url}/${metric_history_file}'
+                item$source <- list(quality='${quality_url}/${quality_name}',
+                                    metric_history=metric_history)
+            }
             if (!is.null(item$summarize)) {
                 columns <- c(columns, 'metric.domain_name')
                 field <- paste(item$aggregate, 'value', sep="_")
                 item$summarize <- list(operation=item$summarize,
                                        field=field,
                                        group=c('project_id', 'sprint_id'),
+                                       component='domain_name',
                                        details=c('domain_name', field))
             }
             else {
@@ -190,6 +240,7 @@ if (!exists('INC_DATABASE_R')) {
 
         if (!is.null(item$query)) {
             item$patterns <- c(item$patterns, patterns)
+            item$patterns$source <- names(item$source)[1]
             item$query <- str_interp(item$query, item$patterns)
         }
         return(item)

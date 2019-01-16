@@ -5,4 +5,4 @@ FROM (
     JOIN gros.${t("sprint")} ON ${j(join_cols, "metric_value", "sprint")}
     WHERE metric_value.value = -1
 ) AS sprint_metrics
-GROUP BY ${f(join_cols, "sprint_metrics")}
+${g(join_cols, "sprint_metrics")}

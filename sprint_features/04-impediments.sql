@@ -4,7 +4,8 @@ FROM (
 	SELECT ${f(join_cols, "issue")}, ${t("issue")}.issue_id,
 		MAX(${t("issue")}.impediment) AS impediment
 	FROM gros.${t("issue")}
+	${s(issue_join)}
     WHERE ${t("issue")}.sprint_id <> 0
-    GROUP BY ${f(join_cols, "issue")}, ${t("issue")}.issue_id
+    ${g(join_cols, "issue")}, ${t("issue")}.issue_id
 ) AS issue_impediment
-GROUP BY ${f(join_cols, "issue_impediment")}
+${g(join_cols, "issue_impediment")}

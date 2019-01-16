@@ -23,12 +23,12 @@ FROM (
             LEFT JOIN gros.vcs_developer AS developer2
 			ON commits2.developer_id = developer2.alias_id
 
-        ON ${j(join_cols[1], "commits2", "commits1")}
+        ON ${j(join_cols, "commits2", "commits1", 1)}
         AND (commits1.developer_id = -commits2.developer_id OR vcs_developer.alias_id = developer2.alias_id)
         AND commits2.sprint_id < commits1.sprint_id
         WHERE commits1.sprint_id <> 0 AND commits2.sprint_id <> 0
         AND vcs_developer.jira_dev_id <> -1
     ) AS sprint_prev_dev
-    GROUP BY ${f(join_cols, "sprint_prev_dev")}, sprint_prev_dev.developer_id
+    ${g(join_cols, "sprint_prev_dev", "sprint_prev_dev.developer_id")}
 ) AS sprint_prev_devs
-GROUP BY ${f(join_cols, "sprint_prev_devs")}
+${g(join_cols, "sprint_prev_devs")}

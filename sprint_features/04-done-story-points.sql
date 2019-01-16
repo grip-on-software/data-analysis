@@ -11,6 +11,7 @@ ON ${j(issue_changelog, "resolve_issue", "max_issue")}
 LEFT JOIN gros.${t("issue")} AS later_issue
 ON ${j(issue_next_changelog, "later_issue", "resolve_issue")}
 LEFT JOIN gros.subtask ON resolve_issue.issue_id = subtask.id_subtask
+${s(issue_join)}
 WHERE ${s(issue_done)}
 AND ${s(issue_done, issue="resolve_issue")}
 AND ${t("issue")}.sprint_id = resolve_issue.sprint_id

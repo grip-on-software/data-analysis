@@ -50,10 +50,7 @@ if (!exists('INC_PROJECT_R')) {
             group_by <- paste('GROUP BY', paste(c(fields, groups),
                                                 collapse=', '))
         }
-        fields <- c(fields, mapply(function(alias, expression) {
-                                       paste(expression, 'AS', alias)
-                                   },
-                                   names(aliases), aliases))
+        fields <- c(fields, format_aliases(aliases))
 
         query <- paste('SELECT', paste(fields, collapse=', '),
                        'FROM gros.project',
