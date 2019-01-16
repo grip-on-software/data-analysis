@@ -7,7 +7,9 @@ ON ${j(issue_next_changelog, "new_issue", "issue")}
 LEFT JOIN gros.subtask ON ${t("issue")}.issue_id = subtask.id_subtask
 WHERE ${t("issue")}.story_points IS NOT NULL
 AND ${t("issue")}.sprint_id IS NOT NULL
+AND new_issue.sprint_id IS NOT NULL
 AND ${t("issue")}.sprint_id <> new_issue.sprint_id
-AND ${t("issue")}.updated > ${s(planned_end)}
+AND new_issue.updated > ${s(planned_end)}
+AND new_issue.updated <= ${s(sprint_close)} + interval '1' day
 AND ${s(issue_not_done)}
 AND subtask.id_parent IS NULL

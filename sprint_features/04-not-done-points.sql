@@ -1,13 +1,18 @@
 SELECT DISTINCT ${f(join_cols, "issue")}, ${s(issue_key)} AS key,
-	${s(story_points)} AS story_points
+    ${s(story_points)} AS story_points
 FROM gros.${t("issue")}
 JOIN gros.${t("sprint")} ON ${j(join_cols, "issue", "sprint")}
-JOIN (SELECT issue_id, MAX(changelog_id) AS changelog_id
-	FROM gros.${t("issue")} GROUP BY issue_id
-) AS max_issue
-ON ${j(issue_changelog, "issue", "max_issue")}
+LEFT JOIN gros.${t("issue")} AS new_issue
+ON ${j(issue_next_changelog, "new_issue", "issue")}
 LEFT JOIN gros.subtask ON ${t("issue")}.issue_id = subtask.id_subtask
-WHERE ${t("issue")}.updated > ${s(sprint_open)}
-AND ${s(issue_not_done)} AND ${s(issue_overdue)}
-AND ${t("issue")}.story_points IS NOT NULL
+WHERE ${t("issue")}.story_points IS NOT NULL
+AND ${t("issue")}.sprint_id IS NOT NULL
+AND (
+  (new_issue.issue_id IS NULL AND ${s(sprint_close)} + interval '1' day > NOW())
+  OR (
+    new_issue.issue_id IS NOT NULL AND new_issue.sprint_id IS NULL
+    AND new_issue.updated > ${s(planned_end)}
+  )
+)
+AND ${s(issue_not_done)}
 AND subtask.id_parent IS NULL

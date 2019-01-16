@@ -606,14 +606,14 @@ files:
         details: [key, story_points]
     combine: sum
     descriptions:
-        nl: Niet afgeronde storypoints
+        nl: Onvoltooide storypoints
         en: Unfinished story points
     long_descriptions:
-        nl: Het totaal aantal storypoints dat niet tijdens de sprint zijn afgerond
-        en: The total number of story points that are not done during the sprint
+        nl: Het totaal aantal storypoints dat nog niet tijdens de sprint zijn afgerond
+        en: The total number of story points that are not yet done during the sprint
     units:
-        nl: "%s storypoints die niet afgerond zijn"
-        en: "%s story points that are not done"
+        nl: "%s storypoints die nog niet afgerond zijn"
+        en: "%s story points that are not yet done"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
     category: tracking
@@ -672,14 +672,30 @@ files:
         details: [key, story_points]
     combine: sum
     descriptions:
-        nl: Weggehaalde storypoints
+        nl: Doorgeschoven storypoints
         en: Removed story points
     long_descriptions:
-        nl: Het totaal aantal storypoints dat tijdens de sprint wordt weggehaald
-        en: The total number of story points that is removed during the sprint
+        nl: Het totaal aantal storypoints dat tijdens de sprint wordt weggehaald of doorgeschoven
+        en: The total number of story points that is (re)moved during the sprint
     units:
-        nl: "%s storypoints weggehaald tijdens sprint"
-        en: "%s story points removed during sprint"
+        nl: "%s doorgeschoven storypoints"
+        en: "%s removed story points"
+    source:
+        jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
+    category: tracking
+  - expression: 'num_not_done_points + num_removed_points'
+    column: num_incomplete_points
+    default: 0
+    combine: sum
+    descriptions:
+        nl: Incomplete storypoints
+        en: Incomplete story points
+    long_descriptions:
+        nl: Het totaal aantal storypoints dat niet afgerond is tijdens de sprint
+        en: The total number of story points that is not completed during the sprint
+    units:
+        nl: "%s incomplete storypoints"
+        en: "%s incomplete story points"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
     category: tracking
@@ -864,7 +880,7 @@ files:
     default: 0
     combine: sum
     descriptions:
-        nl: Afgeronde niet-story item
+        nl: Afgeronde niet-story items
         en: Done non-story items
     long_descriptions:
         nl: Het aantal items dat is afgerond in de sprint en geen story of subtask zijn
