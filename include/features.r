@@ -443,17 +443,23 @@ get_features <- function(conn, features, exclude, items, data, colnames,
                 if (length(columns) == 1 && length(operation) > 1) {
                     columns <- paste(columns, operation, sep="_")
                 }
-                result <- do.call("rbind", lapply(groups, function(group) {
-                    group_result <- data.frame(group[1, group_names])
-                    summarizer <- function(operation, field, with_missing) {
-                        do.call(operation, c(list(group[, field]),
-                                             list(na.rm=!with_missing)))
-                    }
-                    group_result[, columns] <- mapply(summarizer, operation,
-                                                      summarize$field,
-                                                      with_missing)
-                    return(group_result)
-                }))
+                if (nrow(result) == 0) {
+                    result <- result[, group_names]
+                    result[, columns] <- numeric()
+                }
+                else {
+                    result <- do.call("rbind", lapply(groups, function(group) {
+                        group_result <- data.frame(group[1, group_names])
+                        summarizer <- function(operation, field, with_missing) {
+                            do.call(operation, c(list(group[, field]),
+                                                 list(na.rm=!with_missing)))
+                        }
+                        group_result[, columns] <- mapply(summarizer, operation,
+                                                          summarize$field,
+                                                          with_missing)
+                        return(group_result)
+                    }))
+                }
 
                 if (is.list(details)) {
                     if (!is.null(summarize$filter)) {
