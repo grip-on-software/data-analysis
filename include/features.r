@@ -206,7 +206,7 @@ get_combined_team <- function(team, team_id, data, projects, team_projects,
             if (!is.null(project$board)) {
                 team_conditions <- team_conditions &
                     (data$project_name != project$key |
-                     data$board_id == project$board)
+                     data$board_id %in% project$board)
             }
             if (isTRUE(project$replace)) {
                 replace <- c(replace, project$key)
