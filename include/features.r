@@ -280,9 +280,11 @@ get_combined_team <- function(team, team_id, data, projects, team_projects,
         data <- rbind(data, team_data)
     }
 
-    project_id <- projects[projects$name %in% project_names, 'project_id']
-    core <- any(projects[projects$name %in% project_names, 'core'])
-    component <- any(projects[projects$name %in% project_names, 'component'])
+    meta_condition <- projects$name %in% project_names
+    project_id <- unique(c(projects[meta_condition, 'project_id'],
+                           unlist(projects[meta_condition, 'project_ids'])))
+    core <- any(projects[meta_condition, 'core'])
+    component <- any(projects[projects$name == team$name, 'component'])
     recent <- ifelse(!is.null(team$recent), team$recent,
                      any(as.Date(team_data[, 'start_date']) >= recent_date))
 
@@ -305,7 +307,7 @@ get_combined_team <- function(team, team_id, data, projects, team_projects,
         projects[projects$name == team$name, ] <- as.list(metadata)
     }
     else {
-        projects[projects$name %in% project_names, 'team'] <- F
+        projects[meta_condition, 'team'] <- F
         if (length(replace) > 0) {
             projects <- projects[!(projects$name %in% replace), ]
         }
@@ -543,7 +545,6 @@ get_features <- function(conn, features, exclude, items, data, colnames,
                     by <- c(by, "component")
                 }
                 else {
-                    print("matching ALL")
                     match <- "all"
                 }
             }
