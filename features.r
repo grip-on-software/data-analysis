@@ -30,15 +30,25 @@ project_metadata <- get_arg('--project-metadata', default='recent,core,main')
 metadata <- get_meta_keys(project_metadata)
 fields <- c('project_id', 'name', 'quality_display_name')
 
-map_details <- function(details, project_ids, sprint_ids) {
+map_details <- function(details, project_ids, sprint_ids, component) {
     project <- Filter(function(detail) {
+                          if (is.null(component) || is.na(component)) {
+                              cond <- !("component" %in% colnames(detail)) ||
+                                  is.null(detail$component) ||
+                                  is.na(detail$component)
+                          }
+                          else {
+                              cond <- "component" %in% colnames(detail) &&
+                                  detail$component == component
+                          }
                           return(detail$project_id %in% project_ids &&
-                                 detail$sprint_id %in% sprint_ids)
+                                 detail$sprint_id %in% sprint_ids && cond)
                       },
                       details)
     feature_details <- Map(function(detail) {
                                detail$project_id <- NULL
                                detail$sprint_id <- NULL
+                               detail$component <- NULL
                                return(unbox(detail))
                            },
                            project)
@@ -129,6 +139,7 @@ if (get_arg('--project', default=F)) {
 
     if (get_arg('--teams', default=F)) {
         metadata$team <- T
+        metadata$component <- T
         teams <- config$teams
     }
     else {
@@ -198,6 +209,7 @@ if (get_arg('--project', default=F)) {
                                          details=split,
                                          combine=combine,
                                          teams=teams,
+                                         components=config$components,
                                          prediction=prediction)
 
     for (cat in names(specifications$categories)) {
@@ -276,10 +288,10 @@ if (get_arg('--project', default=F)) {
             # There may be multiple original project IDs for team projects.
             team_id <- sprint_data[sprint_data$project_name == project,
                                    id_column][[1]]
-            project_id <- result$projects[result$projects$project_id == team_id,
-                                          'project_ids'][[1]]
+            meta <- result$projects[result$projects$project_id == team_id, ]
+            project_id <- meta$project_ids[[1]]
             team_projects <- result$team_projects[[project]]
-            if (length(team_projects) == 1) {
+            if (length(team_projects) == 1 || meta$component) {
                 team_ids <- c(new$team_id[[1]], project_id)
             }
             else {
@@ -289,10 +301,11 @@ if (get_arg('--project', default=F)) {
             sprint <- c(new[nrow(new), sprint_meta],
                         list(quality_name=new$quality_name[[1]]))
 
+            component <- new$component[[1]]
             new_details <- lapply(result$details, map_details,
-                                  team_ids, unlist(new$sprint_id))
+                                  team_ids, unlist(new$sprint_id), component)
             old_details <- lapply(result$details, map_details,
-                                  team_ids, unlist(old$sprint_id))
+                                  team_ids, unlist(old$sprint_id), component)
             details_features <- c(details_features, names(new_details))
             default_details <- default[default %in% names(new_details)]
             write(toJSON(new_details[default_details]),

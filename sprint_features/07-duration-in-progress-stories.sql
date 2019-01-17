@@ -4,15 +4,17 @@ FROM (
 	SELECT ${f(join_cols, "issue")}, ${t("issue")}.issue_id, ${s(issue_key)},
 		MIN(${t("issue")}.updated) AS start_date
 	FROM gros.${t("issue")}
+	${s(issue_join)}
 	WHERE ${s(issue_story_subtask)} AND ${s(issue_in_progress)}
-	GROUP BY ${f(join_cols, "issue")}, ${t("issue")}.issue_id, ${f("issue_key")}
+	${g(join_cols, "issue")}, ${t("issue")}.issue_id, ${f("issue_key")}
 ) AS startdata, (
 	SELECT ${f(join_cols, "issue")}, ${t("issue")}.issue_id, ${s(issue_key)},
 		MAX(${s(story_points)}) AS story_points,
 		MIN(${t("issue")}.updated) AS end_date
 	FROM gros.${t("issue")}
+	${s(issue_join)}
 	WHERE ${s(issue_story_subtask)} AND ${s(issue_done)}
-	GROUP BY ${f(join_cols, "issue")}, ${t("issue")}.issue_id, ${f("issue_key")}
+	${g(join_cols, "issue")}, ${t("issue")}.issue_id, ${f("issue_key")}
 ) AS enddata, gros.${t("sprint")}
 WHERE startdata.issue_id = enddata.issue_id
 AND ${j(join_cols, "startdata", "enddata")}

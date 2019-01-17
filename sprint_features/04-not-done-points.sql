@@ -5,6 +5,7 @@ JOIN gros.${t("sprint")} ON ${j(join_cols, "issue", "sprint")}
 LEFT JOIN gros.${t("issue")} AS new_issue
 ON ${j(issue_next_changelog, "new_issue", "issue")}
 LEFT JOIN gros.subtask ON ${t("issue")}.issue_id = subtask.id_subtask
+${s(issue_join)}
 WHERE ${t("issue")}.story_points IS NOT NULL
 AND ${t("issue")}.sprint_id IS NOT NULL
 AND (

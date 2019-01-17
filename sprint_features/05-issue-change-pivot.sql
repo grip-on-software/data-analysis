@@ -1,5 +1,7 @@
 SELECT ${f(join_cols, "issue")}, AVG(EXTRACT(day FROM ${t("issue")}.updated - ${s(sprint_open)})) AS avg_change_day
-FROM gros.${t("issue")}, gros.${t("sprint")}
-WHERE ${j(join_cols, "issue", "sprint")}
-AND ${t("issue")}.updated < sprint.end_date
-GROUP BY ${f(join_cols, "issue")}
+FROM gros.${t("issue")}
+JOIN gros.${t("sprint")}
+ON ${j(join_cols, "issue", "sprint")}
+${s(issue_join)}
+WHERE ${t("issue")}.updated < sprint.end_date
+${g(join_cols, "issue")}

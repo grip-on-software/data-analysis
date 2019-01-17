@@ -69,11 +69,45 @@ get_feature_locales <- function(items, field='descriptions') {
 
 get_combined_features <- function(items, data, colnames, details, join_cols,
                                   combine=T, teams=list(), limit=5,
-                                  date=T, projects=data.frame()) {
+                                  date=T, projects=data.frame(),
+                                  components=NULL) {
     if (isTRUE(combine)) {
         combine <- 10
     }
     team_projects <- list()
+    projects$team <- T
+    projects$component <- F
+
+    if (!is.null(components)) {
+        project_id <- max(data$project_id + 1)
+        for (component in components) {
+            condition <- data$project_name == component$project &
+                !is.na(data$component) & data$component == component$name
+            data[condition, "project_id"] <- project_id
+            data[condition, "project_name"] <- component$name
+            data[condition, "quality_display_name"] <- component$display_name
+
+            project <- projects[projects$name == component$project, ]
+            metadata <- data.frame(project_id=project_id,
+                                   project_ids=project$project_ids,
+                                   project_names=project$project_names,
+                                   name=component$name,
+                                   quality_display_name=component$display_name,
+                                   recent=project$recent,
+                                   main=project$main,
+                                   core=project$core,
+                                   team=F,
+                                   component=T,
+                                   stringsAsFactors=F)[, colnames(projects)]
+            if (component$name %in% projects$name) {
+                projects[projects$name == component$name, ] <- metadata
+            }
+            else {
+                projects <- rbind(projects, metadata)
+            }
+            project_id <- project_id + 1
+        }
+    }
 
     if (is.character(combine)) {
         teams <- get_combined_teams(data, teams, date, projects, colnames)
@@ -157,7 +191,6 @@ get_combined_features <- function(items, data, colnames, details, join_cols,
 
 get_combined_teams <- function(data, teams, date, projects, colnames) {
     recent_date <- get_recent_date(date)
-    projects$team <- T
     data$team_id <- data$project_id
     colnames <- c(colnames, "team_id")
     data$duplicate <- rep(F, nrow(data))
@@ -249,6 +282,7 @@ get_combined_team <- function(team, team_id, data, projects, team_projects,
 
     project_id <- projects[projects$name %in% project_names, 'project_id']
     core <- any(projects[projects$name %in% project_names, 'core'])
+    component <- any(projects[projects$name %in% project_names, 'component'])
     recent <- ifelse(!is.null(team$recent), team$recent,
                      any(as.Date(team_data[, 'start_date']) >= recent_date))
 
@@ -262,6 +296,7 @@ get_combined_team <- function(team, team_id, data, projects, team_projects,
                            core=core,
                            team=ifelse(is.null(team$team), team$board,
                                        as.logical(team$team)),
+                           component=component,
                            stringsAsFactors=F)[, colnames(projects)]
     metadata$project_ids <- list(project_id)
     metadata$project_names <- list(project_names)
@@ -392,7 +427,7 @@ update_combine_interval <- function(items, old_data, data, row_num, details,
 }
 
 get_features <- function(conn, features, exclude, items, data, colnames,
-                         join_cols, details=F, required=c()) {
+                         join_cols, details=F, required=c(), components=NULL) {
     if (length(features) == 1) {
         if (is.na(features)) {
             features <- unlist(sapply(items, function(item) { item$column }))
@@ -411,6 +446,8 @@ get_features <- function(conn, features, exclude, items, data, colnames,
             length(grep(exclude, item$table)) == 0) {
             selected_items <- c(selected_items, list(item))
             columns <- item$column
+            by <- join_cols
+            match <- "first"
             if (!is.null(item$result)) {
                 result <- item$result
             }
@@ -431,10 +468,24 @@ get_features <- function(conn, features, exclude, items, data, colnames,
                 loginfo('Query for table %s took %f seconds', item$table,
                         time['elapsed'])
             }
+            if (!is.null(components) && (!is.null(result$component) ||
+                                         !is.null(item$summarize$component))) {
+                component_field <- ifelse(!is.null(result$component),
+                                          "component", item$summarize$component)
+                result <- get_components(data, result, components,
+                                         names(item$source)[1],
+                                         component_field)
+            }
             if (!is.null(item$summarize)) {
                 summarize <- item$summarize
                 group_names <- summarize$group
                 group_cols <- lapply(result[, group_names], factor)
+                if (!is.null(components) && !is.null(result$component)) {
+                    component_names <- get_component_names(components)
+                    group_cols$component <- addNA(factor(result$component,
+                                                         component_names))
+                    group_names <- c(group_names, "component")
+                }
                 groups <- split(result, as.list(group_cols), drop=T)
                 operation <- summarize$operation
                 with_missing <- ifelse(is.null(summarize$with_missing),
@@ -487,7 +538,16 @@ get_features <- function(conn, features, exclude, items, data, colnames,
                     details[[item$column[1]]] <- lapply(groups, detailer)
                 }
             }
-            data <- join(data, result, by=join_cols, type="left", match="first")
+            if (!is.null(components)) {
+                if ("component" %in% colnames(result)) {
+                    by <- c(by, "component")
+                }
+                else {
+                    print("matching ALL")
+                    match <- "all"
+                }
+            }
+            data <- join(data, result, by=by, type="left", match=match)
             if (!is.null(item$default)) {
                 for (column in columns) {
                     if (!(column %in% names(data))) {
@@ -611,6 +671,60 @@ get_sprint_conditions <- function(latest_date='', core=F, sprint_days=NA,
     return(conditions)
 }
 
+get_components <- function(data, result, components, source_type, field) {
+    if (is.null(result$component)) {
+        result$component <- rep(NA, nrow(result))
+    }
+    if (is.null(source_type)) {
+        return(result)
+    }
+
+    for (component in components) {
+        source_filter <- component[[source_type]]
+        if (is.list(source_filter)) {
+            project_id <- data[data$project_name == component$project,
+                               "project_id"][[1]]
+            conditions <- result$project_id == project_id
+            project_count <- length(which(conditions))
+            if (!is.null(source_filter$include)) {
+                conditions <- conditions &
+                    result[, field] %in% source_filter$include
+            }
+            if (!is.null(source_filter$exclude)) {
+                conditions <- conditions &
+                    !(result[, field] %in% source_filter$exclude)
+            }
+            loginfo('Setting %d results to component %s',
+                    length(which(conditions)), component$name)
+            if (project_count == length(which(conditions)) &&
+                is.null(source_filter$exclude)) {
+                result[conditions, "component"] <- NA
+                rows <- result[conditions, ]
+                rows$component <- component$name
+                result <- rbind(result, rows)
+            }
+            else {
+                result[conditions, "component"] <- component$name
+            }
+        }
+    }
+    return(result)
+}
+
+get_component_names <- function(components, source_type="name") {
+    return(unique(unlist(lapply(components,
+                                function(component) {
+                                    source_filter <- component[[source_type]]
+                                    if (!is.list(source_filter)) {
+                                        return(source_filter)
+                                    }
+                                    if (!is.null(source_filter$include)) {
+                                        return(source_filter$include)
+                                    }
+                                    return(source_filter$exclude)
+                                }))))
+}
+
 get_sprint_features <- function(conn, features, exclude, variables, latest_date,
                                 core=F, sprint_days=NA, sprint_patch=NA,
                                 future=T, combine=F, details=F, time=F,
@@ -672,9 +786,8 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T,
                                        sprint_meta=c(), sprint_conditions='',
                                        project_fields=c('project_id'),
                                        project_meta=list(), old=F, details=F,
-                                       combine=F, teams=list(),
+                                       combine=F, teams=list(), components=NULL,
                                        prediction=list()) {
-    patterns <- load_definitions('sprint_definitions.yml')
     if (!missing(date)) {
         project_meta$recent <- date
     }
@@ -699,32 +812,61 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T,
     colnames <- c("project_name", "quality_display_name", "quality_name",
                   "board_id", sprint_meta, "old")
     join_cols <- c("project_id", "sprint_id")
-    query <- 'SELECT sprint.project_id, project.name AS project_name,
-              project.quality_display_name, project.quality_name,
-              sprint.sprint_id, sprint.name AS sprint_name,
+    variables <- list(sprint_conditions=sprint_conditions,
+                      join_cols=list(default=join_cols),
+                      jira_='',
+                      jira_join='',
+                      component_join='')
+    query_join <- ''
+    if (identical(combine, F)) {
+        components <- NULL
+    }
+    if (!is.null(components)) {
+        jira_join <- 'LEFT JOIN gros.issue_component
+                      ON ${t("issue")}.issue_id = issue_component.issue_id
+                      AND issue_component.end_date IS NULL
+                      ${s(component_join, project="issue")}
+                      AND issue_component.component_id = component.component_id'
+        component_join <- 'LEFT JOIN gros.component
+                           ON ${t("project")}.project_id = component.project_id
+                           AND component.name IN (${components})'
+
+        component_names <- get_component_names(components, "jira")
+
+        variables$issue_join <- jira_join
+        variables$component_join <- component_join
+        variables$join_cols$jira <- list(component="component.name")
+        variables$components <- paste(dbQuoteString(conn, component_names),
+                                      collapse=", ")
+        colnames <- c(colnames, "component")
+    }
+    query <- 'SELECT ${f(join_cols, "sprint")},
+              project.name AS project_name, project.quality_display_name,
+              project.quality_name, sprint.name AS sprint_name,
               sprint.start_date, ${s(sprint_close)} AS close_date,
               sprint.board_id, ${old} AS "old"
               FROM gros.sprint
               JOIN gros.project
               ON project.project_id = sprint.project_id
+              ${s(component_join)}
               WHERE sprint.start_date IS NOT NULL
               AND ${project_condition}
               ${s(sprint_conditions)}
               ORDER BY sprint.project_id, ${s(sprint_open)} DESC,
-                  sprint.name DESC
+              sprint.name DESC
               ${limit}'
 
-    variables <- c(patterns, list(sprint_conditions=sprint_conditions,
-                                  join_cols=join_cols))
+    patterns <- load_definitions('sprint_definitions.yml', variables)
     if (old) {
         # Old value is calculated by combined data later on
         condition <- paste('sprint.project_id IN (',
                            paste(projects$project_id, collapse=','), ')')
         item <- load_query(list(query=query),
-                           c(variables, list(project_condition=condition,
-                                             old='TRUE',
-                                             pager='',
-                                             limit='')))
+                           c(patterns, list(project_condition=condition,
+                                            old='TRUE',
+                                            pager='',
+                                            limit='',
+                                            source='jira')))
         sprint_data <- dbGetQuery(conn, item$query)
     }
     else {
@@ -733,12 +875,19 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T,
             project_condition <- paste("sprint.project_id =", project)
 
             item <- load_query(list(query=query),
-                               c(variables,
+                               c(patterns,
                                  list(project_condition=project_condition,
                                       old='FALSE',
-                                      limit=paste('LIMIT', limit))))
+                                      limit=paste('LIMIT', limit),
+                                      source='jira')))
             sprint_data <- rbind(sprint_data, dbGetQuery(conn, item$query))
         }
+    }
+    if (!is.null(components)) {
+        # Ensure projects that are missing/combining components are still
+        # distributed into components according to include/exclude conditions
+        sprint_data <- get_components(sprint_data, sprint_data, components,
+                                      "jira", "component")
     }
     sprint_data$start_date <- as.POSIXct(sprint_data$start_date)
     sprint_data$close_date <- as.POSIXct(sprint_data$close_date)
@@ -749,12 +898,13 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T,
     items <- list()
     for (item in data$files) {
         if (all(item$column %in% features)) {
-            items <- c(items, list(load_query(item, variables, data$path)))
+            items <- c(items, list(load_query(item, patterns, data$path)))
         }
     }
 
     result <- get_features(conn, features, '^$', items, sprint_data, colnames,
-                           join_cols, details=details, required=c("sprint_num"))
+                           join_cols, details=details, required=c("sprint_num"),
+                           components=components)
     expressions <- result$expressions
 
     result$projects <- projects
@@ -766,7 +916,8 @@ get_recent_sprint_features <- function(conn, features, date, limit=5, closed=T,
                                         result$colnames, result$details,
                                         join_cols, combine=combine, teams=teams,
                                         limit=limit, date=project_meta$recent,
-                                        projects=result$projects)
+                                        projects=result$projects,
+                                        components=components)
     }
     if (old) {
         result$data <- do.call("rbind",
