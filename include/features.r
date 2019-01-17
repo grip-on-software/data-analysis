@@ -301,12 +301,14 @@ get_combined_team <- function(team, team_id, data, projects, team_projects,
                            component=component,
                            stringsAsFactors=F)[, colnames(projects)]
     metadata$project_ids <- list(project_id)
-    metadata$project_names <- list(project_names)
 
     if (team$name %in% projects$name) {
+        metadata$project_names <- projects[projects$name == team$name,
+                                           "project_names"]
         projects[projects$name == team$name, ] <- as.list(metadata)
     }
     else {
+        metadata$project_names <- list(project_names)
         projects[meta_condition, 'team'] <- F
         if (length(replace) > 0) {
             projects <- projects[!(projects$name %in% replace), ]
