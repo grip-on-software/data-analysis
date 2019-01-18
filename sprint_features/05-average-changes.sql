@@ -1,5 +1,5 @@
 SELECT ${f(join_cols, "issue")}, AVG(max_issue.num_changes) AS avg_changes
-FROM gros.issue
+FROM gros.${t("issue")}
 JOIN (
     SELECT ${t("issue")}.issue_id, MAX(${t("issue")}.changelog_id) AS changelog_id, COUNT(*) AS num_changes
     FROM gros.${t("issue")}

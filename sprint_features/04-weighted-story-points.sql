@@ -34,7 +34,7 @@ AND ${t("issue")}.sprint_id = done_data.done_sprint
 JOIN (SELECT
 	${t("issue")}.sprint_id, MAX(${s(story_points)}) AS max_points
 	FROM gros.${t("issue")}
-    --WHERE issue.story_points <= sprint_points_normalization
+    --WHERE ${t("issue")}.story_points <= sprint_points_normalization
     GROUP BY ${t("issue")}.sprint_id
 ) AS sprint_points
 ON ${t("issue")}.sprint_id = sprint_points.sprint_id

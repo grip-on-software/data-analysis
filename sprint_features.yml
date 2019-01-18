@@ -398,7 +398,9 @@ files:
     table: expected_story_points
     column: num_story_points
     patterns:
-        story_point_types: "issue.type NOT IN (1,12)"
+        story_point_types:
+            jira: ${t("issue")}.type NOT IN (1,12)
+            tfs: ${t("issue")}.type <> 'Bug' 
     default: 0
     summarize:
         operation: sum
@@ -422,7 +424,9 @@ files:
     table: done_story_points
     column: done_story_points
     patterns:
-        story_point_types: "issue.type NOT IN (1,12)"
+        story_point_types:
+            jira: ${t("issue")}.type NOT IN (1,12)
+            tfs: ${t("issue")}.type <> 'Bug'
     default: 0
     summarize:
         operation: sum
@@ -446,7 +450,9 @@ files:
     table: expected_bug_points
     column: planned_bug_points
     patterns:
-        story_point_types: "issue.type IN (1,12)"
+        story_point_types:
+            jira: ${t("issue")}.type IN (1,12)
+            tfs: ${t("issue")}.type = 'Bug'
     default: 0
     summarize:
         operation: sum
@@ -470,7 +476,9 @@ files:
     table: done_bug_points
     column: done_bug_points
     patterns:
-        story_point_types: "issue.type IN (1,12)"
+        story_point_types:
+            jira: ${t("issue")}.type IN (1,12)
+            tfs: ${t("issue")}.type = 'Bug'
     default: 0
     summarize:
         operation: sum
@@ -1168,7 +1176,9 @@ files:
     column: backlog_items
     default: 0
     patterns:
-        issue_backlog: 'issue."type" NOT IN (5, 6, 9, 10, 12, 20, 22, 10301)'
+        issue_backlog:
+            jira: ${t("issue")}."type" NOT IN (5, 6, 9, 10, 12, 20, 22, 10301)
+            tfs: ${t("issue")}."type" NOT IN ('Task', 'Test Case', 'Test Suite', 'Test Plan', 'Use Case')
     summarize:
         operation: count
         with_missing: true
@@ -1195,7 +1205,7 @@ files:
     column: backlog_story_points
     default: 0
     patterns:
-        issue_backlog: 'issue."type" = 7 and issue.story_points IS NOT NULL'
+        issue_backlog: ${s(issue_story)} AND ${t("issue")}.story_points IS NOT NULL
     summarize:
         operation: sum
         field: story_points
@@ -1224,7 +1234,7 @@ files:
     column: backlog_expected_story_points
     default: 0
     patterns:
-        issue_backlog: 'issue."type" = 7'
+        issue_backlog: ${s(issue_story)}
     summarize:
         operation: sum_of_na_avg
         field: story_points

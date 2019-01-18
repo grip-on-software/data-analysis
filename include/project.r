@@ -16,53 +16,65 @@ if (!exists('INC_PROJECT_R')) {
         return(date)
     }
 
-    get_projects_meta <- function(conn, fields=c('project_id', 'name'),
-                                  metadata=list(), by='project_id') {
+    get_projects_meta <- function(conn, fields=list('project_id', 'name'),
+                                  metadata=list(), join_cols=NULL,
+                                  patterns=list(), by=NULL) {
         joins <- list()
         aliases <- list()
         groups <- c()
         must_group <- F
+        if (is.null(names(fields))) {
+            names(fields) <- fields
+        }
 
+        variables <- c(patterns, list(join_cols=join_cols))
         if (!is.null(metadata$recent)) {
             date <- get_recent_date(metadata$recent)
-            aliases$recent <- paste('MAX(start_date) >= CAST(', date,
-                                    ' AS TIMESTAMP)', sep='\'')
-            joins$sprint <- 'sprint.project_id = project.project_id'
+            variables$date <- date
+            aliases$recent <- '${s(project_recent)}'
+            joins$sprint <- '${j(join_cols, "project", "sprint", mask=1)}'
             must_group <- T
         }
         if (!is.null(metadata$core)) {
-            aliases$core <- 'NOT COALESCE(is_support_team, false)'
-            groups <- c(groups, 'is_support_team')
+            aliases$core <- '${s(project_core)}'
+            groups <- c(groups, '${f("project_core")}')
         }
         if (!is.null(metadata$main)) {
-            aliases$main <- paste('CASE WHEN main_project IS NULL',
-                                  'THEN true ELSE false END')
-            groups <- c(groups, 'main_project')
+            aliases$main <- '${s(project_main)}'
+            groups <- c(groups, '${f("project_main")}')
         }
 
+        if (is.null(join_cols)) {
+            join_cols <- c('project_id', 'sprint_id')
+        }
+        if (is.null(by)) {
+            by <- join_cols[1]
+        }
         if (length(joins) > 0) {
-            fields <- sprintf('project.%s', fields)
-            groups <- sprintf('project.%s', groups)
-            by <- sprintf('project.%s', by)
+            project_fields <- names(fields)
+            fields <- sprintf('${t("project")}.%s', fields)
+            names(fields) <- project_fields
+
+            by <- sprintf('${t("project")}.%s', by)
         }
         group_by <- ''
         if (must_group) {
             group_by <- paste('GROUP BY', paste(c(fields, groups),
                                                 collapse=', '))
         }
-        fields <- c(fields, format_aliases(aliases))
+        fields <- c(fields, aliases)
 
-        query <- paste('SELECT', paste(fields, collapse=', '),
-                       'FROM gros.project',
+        query <- paste('SELECT', paste(format_aliases(fields), collapse=', '),
+                       'FROM gros.${t("project")}',
                        paste(mapply(function(table, cond) {
-                                        paste('JOIN',
-                                              paste('gros', table, sep='.'),
-                                              'ON', cond)
+                                        paste('JOIN gros.${t("', table, '")} ',
+                                              'ON ', cond, sep="")
                              },
                              names(joins), joins), collapse=' '),
                        group_by,
                        'ORDER BY', paste(by, collapse=', '))
-        dbGetQuery(conn, query)
+        item <- load_query(list(query=query), variables)
+        dbGetQuery(conn, item$query)
     }
 
     get_projects <- function(conn, by='project_id') {
@@ -171,7 +183,10 @@ if (!exists('INC_PROJECT_R')) {
                                           metadata=metadata)
         }
         else {
-            projects <- projects[, c(fields, names(metadata))]
+            if (!is.null(names(fields))) {
+                fields <- names(fields)
+            }
+            projects <- projects[, c(as.character(fields), names(metadata))]
         }
 
         if (length(project_sources) > 0) {

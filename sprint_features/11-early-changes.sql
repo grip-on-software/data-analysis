@@ -11,6 +11,5 @@ AND ${t("issue")}.changelog_id <= max_issue.changelog_id
 JOIN gros.${t("sprint")}
 ON ${j(join_cols, "max_issue", "sprint")}
 ${s(issue_join)}
-AND ${t("issue")}.rank_change IS NULL
-AND ${t("issue")}.updated < ${s(planned_early)}
+WHERE ${t("issue")}.updated < ${s(planned_early)}
 ${g(join_cols, "max_issue")}
