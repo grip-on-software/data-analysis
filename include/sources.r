@@ -95,7 +95,8 @@ get_source_pattern <- function(item, project_urls) {
 }
 
 build_source_urls <- function(project_id, project_name, items=list(),
-                              patterns=c(), conn=NULL, team_projects=c()) {
+                              patterns=c(), conn=NULL, team_projects=c(),
+                              components=NULL, component=NULL) {
     project_links <- list()
     names(project_links) <- list()
     if (is.list(conn) || is.null(conn)) {
@@ -104,10 +105,33 @@ build_source_urls <- function(project_id, project_name, items=list(),
     else {
         project_urls <- get_source_urls(conn, project_id)
     }
+
+    jira_keys <- paste(team_projects, collapse=',')
+    jira_project <- paste('project in (', jira_keys, ')', sep='')
+    if (!is.null(component)) {
+        for (filters in components) {
+            if (filters$name == component) {
+                if (!is.null(filters$jira$include)) {
+                    jira_project <- paste(jira_project, 'and component in (',
+                                          paste(filters$jira$include,
+                                                collapse=','), ')', sep='')
+                }
+                if (!is.null(filters$jira$exclude)) {
+                    jira_project <- paste(jira_project,
+                                          'and component not in (',
+                                          paste(filters$jira$exclude,
+                                                collapse=','), ')', sep='')
+                }
+                break
+            }
+        }
+    }
+
     project_patterns <- c(list(jira_key=ifelse(length(team_projects) > 0,
                                                team_projects[[1]],
                                                project_name),
-                               jira_keys=paste(team_projects, collapse=',')),
+                               jira_project=jira_project,
+                               jira_keys=jira_keys),
                           project_urls, patterns)
 
     for (item in items) {
@@ -170,7 +194,8 @@ build_project_source_urls <- function(conn, project_id, project_name, patterns,
 
 build_sprint_source_urls <- function(conn, project_id, project_name,
                                      quality_name, sprint,
-                                     items, patterns, team_projects=c()) {
+                                     items, patterns, team_projects=c(),
+                                     components=NULL, component=NULL) {
     if (is.list(conn) || is.null(conn)) {
         source_urls <- conn
     }
@@ -212,7 +237,8 @@ build_sprint_source_urls <- function(conn, project_id, project_name,
                                            quality_name)
     return(build_source_urls(project_id, project_name, items=source_items,
                              patterns=c(patterns, sprint_patterns),
-                             conn=source_urls, team_projects=team_projects))
+                             conn=source_urls, team_projects=team_projects,
+                             components=components, component=component))
 }
 
 get_source_ids <- function(conn, project_id) {

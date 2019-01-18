@@ -148,10 +148,12 @@ if (!exists('INC_DATABASE_R')) {
                          paste(right_table, right_fields, sep="."),
                          sep=" = ", collapse=" AND "))
         }
+        query_str_interp <- function(string, ...) { sub("\\S+\\.", "", string) }
         patterns <- c(patterns, list(s=recursive_str_interp,
                                      f=field_str_interp,
                                      g=group_str_interp,
                                      j=join_str_interp,
+                                     q=query_str_interp,
                                      t=var_str_interp))
 
         return(patterns)

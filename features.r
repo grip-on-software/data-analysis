@@ -32,7 +32,7 @@ fields <- c('project_id', 'name', 'quality_display_name')
 
 map_details <- function(details, project_ids, sprint_ids, component) {
     project <- Filter(function(detail) {
-                          if (is.null(component) || is.na(component)) {
+                          if (is.null(component)) {
                               cond <- !("component" %in% colnames(detail)) ||
                                   is.null(detail$component) ||
                                   is.na(detail$component)
@@ -290,7 +290,7 @@ if (get_arg('--project', default=F)) {
                                    id_column][[1]]
             meta <- result$projects[result$projects$project_id == team_id, ]
             project_id <- meta$project_ids[[1]]
-            team_projects <- result$team_projects[[project]]
+            team_projects <- meta$project_names[[1]]
             if (length(team_projects) == 1 || meta$component) {
                 team_ids <- c(new$team_id[[1]], project_id)
             }
@@ -302,6 +302,9 @@ if (get_arg('--project', default=F)) {
                         list(quality_name=new$quality_name[[1]]))
 
             component <- new$component[[1]]
+            if (is.na(component)) {
+                component <- NULL
+            }
             new_details <- lapply(result$details, map_details,
                                   team_ids, unlist(new$sprint_id), component)
             old_details <- lapply(result$details, map_details,
@@ -328,7 +331,9 @@ if (get_arg('--project', default=F)) {
             write(toJSON(build_sprint_source_urls(project_urls, project_id,
                                                   project, sprint$quality_name,
                                                   NULL, result$items,
-                                                  patterns, team_projects)),
+                                                  patterns, team_projects,
+                                                  config$components,
+                                                  component)),
                   file=paste(project_dir, "links.json", sep="/"))
 
             project_source_ids <- source_ids[as.character(project_id)]
