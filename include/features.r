@@ -979,15 +979,15 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
         if (!is.null(item$summarize) && length(item$summarize$operation) > 1) {
             loginfo("Wrapping column %s", item$column)
             operations <- item$summarize$operation
-            columns <- paste(item$column, operations, sep="_")
-            result$data[[item$column]] <- apply(result$data[, columns], 1,
+            cols <- paste(item$column, operations, sep="_")
+            result$data[[item$column]] <- apply(result$data[, cols], 1,
                                                 function(...) {
                                                     args <- as.list(...)
                                                     names(args) <- operations
                                                     return(I(args))
                                                 })
-            result$data[, columns] <- NULL
-            result$colnames <- c(result$columns[!(result$columns %in% columns)],
+            result$data[, cols] <- NULL
+            result$colnames <- c(result$colnames[!(result$colnames %in% cols)],
                                  item$column)
         }
     }
