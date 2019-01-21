@@ -30,9 +30,9 @@ fields <- list('project_id', 'name', 'quality_display_name')
 project_sources <- strsplit(get_arg('--project-sources', default=''), ',')[[1]]
 
 run_reports <- function(definitions) {
-    items <- get_analysis_reports(definitions)
+    reports <- get_analysis_reports(definitions)
 
-    for (item in items) {
+    for (item in reports$items) {
         if (length(grep(report, item$table)) > 0) {
             loginfo('Executing query for report %s', item$table)
             time <- system.time(result <- dbGetQuery(conn, item$query))
@@ -43,6 +43,7 @@ run_reports <- function(definitions) {
                     time['elapsed'])
         }
     }
+    return(reports)
 }
 
 if (interval != '') {
@@ -69,13 +70,16 @@ if (interval != '') {
                                    interval_condition=condition))
               })
 } else if (projects_list == '') {
-    run_reports(list(id='all', project_ids=project_ids))
+    reports <- run_reports(list(id='all', project_ids=project_ids))
     write_projects_metadata(conn, fields, metadata, projects=NA,
                             project_ids=project_ids,
                             project_sources=project_sources,
-                            output_directory=output_directory)
+                            output_directory=output_directory,
+                            patterns=reports$patterns)
 } else {
-    projects <- get_projects_meta(conn, fields=fields, metadata=metadata)
+    patterns <- load_definitions('sprint_definitions.yml', list())
+    projects <- get_projects_meta(conn, fields=fields, metadata=metadata,
+                                  patterns=patterns)
     if (projects_list == 'main') {
         projects <- projects[projects$main, ]
     }

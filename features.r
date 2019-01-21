@@ -124,7 +124,8 @@ if (get_arg('--project', default=F)) {
 
     write_projects_metadata(conn, fields, metadata, projects=NA,
                             project_ids=project_ids,
-                            output_directory=output_directory)
+                            output_directory=output_directory,
+                            patterns=result$patterns)
 } else if (recent) {
     if (isTRUE(recent)) {
         recent <- 5

@@ -177,10 +177,11 @@ if (!exists('INC_PROJECT_R')) {
 
     write_projects_metadata <- function(conn, fields, metadata, projects=NA,
                                         project_ids='0', project_sources=c(),
-                                        output_directory='output') {
+                                        output_directory='output',
+                                        patterns=list()) {
         if (is.atomic(projects) && is.na(projects)) {
             projects <- get_projects_meta(conn, fields=fields,
-                                          metadata=metadata)
+                                          metadata=metadata, patterns=patterns)
         }
         else {
             if (!is.null(names(fields))) {

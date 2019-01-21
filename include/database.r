@@ -265,7 +265,12 @@ if (!exists('INC_DATABASE_R')) {
 
     load_queries <- function(specification_file, definition_file, variables) {
         data <- yaml.load_file(specification_file)
-        patterns <- load_definitions(definition_file, variables)
+        if (is.null(definition_file)) {
+            patterns <- variables
+        }
+        else {
+            patterns <- load_definitions(definition_file, variables)
+        }
 
         lapply(data$files, load_query, patterns, data$path)
     }

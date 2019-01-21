@@ -802,6 +802,7 @@ get_sprint_features <- function(conn, features, exclude, variables, latest_date,
     }
     result$data <- get_expressions(result$items, result$data, expressions)
     result$colnames <- c(result$colnames, expressions)
+    result$patterns <- patterns
     return(result)
 }
 
@@ -991,6 +992,7 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
         }
     }
     result$project_fields <- project_fields
+    result$patterns <- patterns
     return(result)
 }
 
@@ -1027,18 +1029,23 @@ get_prediction_feature <- function(prediction, result) {
 }
 
 get_project_features <- function(conn, features, exclude, variables, core=F) {
-    if (core) {
-        data <- get_core_projects(conn, by='name')
+    fields <- list(project_id='project_id', name='name')
+    if (config$db$primary_source == "tfs") {
+        join_cols <- c("team_id")
+        fields$project_id <- "team_id"
     }
     else {
-        data <- get_projects(conn, by='name')
+        join_cols <- c("project_id")
     }
+    patterns <- load_definitions('sprint_definitions.yml',
+                                 c(variables, list(join_cols=join_cols)))
+    data <- get_projects_meta(conn, fields, list(core=core), join_cols,
+                              patterns, by='name')
 
-    join_cols <- c("project_id")
-    colnames <- c()
-    items <- load_queries('project_features.yml', 'sprint_definitions.yml',
-                          c(variables, list(join_cols=join_cols)))
-    get_features(conn, features, exclude, items, data, colnames, join_cols)
+    items <- load_queries('project_features.yml', NULL, patterns)
+    result <- get_features(conn, features, exclude, items, data, c(), join_cols)
+    result$patterns <- patterns
+    return(result)
 }
 
 write_feature_metadata <- function(projects, specifications, output_directory,

@@ -538,10 +538,12 @@ get_analysis_reports <- function(analysis_variables) {
                                                   define$field
                                               }),
                                        analysis_variables)
-    items <- load_queries('analysis_reports.yml', 'sprint_definitions.yml',
-                          analysis_definitions)
-    lapply(items, function(item) {
-        item$report <- reports[[item$table]]
-        return(item)
-    })
+    patterns <- load_definitions('sprint_definitions.yml', analysis_definitions)
+    items <- load_queries('analysis_reports.yml', NULL, patterns)
+    reports <- list(patterns=patterns,
+                    items=lapply(items, function(item) {
+                                     item$report <- reports[[item$table]]
+                                     return(item)
+                                 }))
+    return(reports)
 }
