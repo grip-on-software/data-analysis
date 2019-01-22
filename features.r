@@ -37,6 +37,9 @@ map_details <- function(details, project_ids, sprint_ids, component) {
                                   is.null(detail$component) ||
                                   is.na(detail$component)
                           }
+                          else if (identical(component, F)) {
+                              cond <- T
+                          }
                           else {
                               cond <- "component" %in% colnames(detail) &&
                                   detail$component == component
@@ -54,7 +57,7 @@ map_details <- function(details, project_ids, sprint_ids, component) {
                            project)
     names(feature_details) <- Map(function(detail) { detail$sprint_id },
                                   project)
-    return(feature_details)
+    return(feature_details[!duplicated(names(feature_details))])
 }
 
 if (get_arg('--project', default=F)) {
@@ -319,6 +322,10 @@ if (get_arg('--project', default=F)) {
             if (is.null(component)) {
                 component <- NA
             }
+            else if (length(team_projects) > 1) {
+                component <- F
+            }
+
             new_details <- lapply(result$details, map_details,
                                   team_ids, unlist(new$sprint_id), component)
             old_details <- lapply(result$details, map_details,

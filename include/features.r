@@ -75,6 +75,7 @@ get_combined_features <- function(items, data, colnames, details, join_cols,
         combine <- 10
     }
     team_projects <- list()
+    data$original_project_id <- data$project_id
     projects$team <- T
     projects$component <- F
 
@@ -389,13 +390,26 @@ update_combine_interval <- function(items, old_data, data, row_num, details,
                 feature <- details[[item$column[1]]]
                 team_id <- old_data[range[1], 'team_id']
                 sprint_id <- old_data[range[1], 'sprint_id']
-                project_ids <- old_data[range, 'project_id']
+                project_ids <- old_data[range, 'original_project_id']
                 sprint_ids <- old_data[range, 'sprint_id']
+                components <- old_data[range, 'component']
                 detail_name <- paste(team_id, sprint_id, sep=".")
-                detail_names <- paste(project_ids, sprint_ids, sep=".")
+                if (!is.null(components)) {
+                    detail_names <- unique(c(paste(project_ids,
+                                                   sprint_ids,
+                                                   components,
+                                                   sep=".")))
+                }
+                else {
+                    detail_names <- unique(c(paste(project_ids,
+                                                   sprint_ids,
+                                                   sep=".")))
+                }
+
                 if (is.null(feature[[detail_name]])) {
                     current <- data.frame(project_id=team_id,
-                                          sprint_id=sprint_id)
+                                          sprint_id=sprint_id,
+                                          component=NA)
                 }
                 else {
                     current <- feature[[detail_name]]
