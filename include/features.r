@@ -712,6 +712,11 @@ get_components <- function(data, result, components, source_type, field) {
     }
 
     for (component in components) {
+        if (!(component$project %in% data$project_name)) {
+            loginfo("No project %s for component %s found", component$project,
+                    component$name)
+            next
+        }
         source_filter <- component[[source_type]]
         if (is.list(source_filter)) {
             project_id <- data[data$project_name == component$project,
