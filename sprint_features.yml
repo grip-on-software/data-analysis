@@ -247,7 +247,7 @@ files:
   - metric: TeamSpirit
     column: team_spirit
     aggregate: end
-    combine: mean
+    combine: median
     descriptions:
         nl: Teamstemming
         en: Team spirit
