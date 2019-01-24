@@ -1098,8 +1098,8 @@ write_feature_metadata <- function(projects, specifications, output_directory,
                 cat <- ifelse("category" %in% names(item), item$category,
                               "other")
                 cats[[cat]]$items <- c(cats[[cat]]$items, feature)
-                if (!is.null(item$value_icon)) {
-                    values[[item$column]] <- item$value_icon
+                if (!is.null(item$values)) {
+                    values[[item$column]] <- item$values
                 }
             }
         }
@@ -1116,7 +1116,7 @@ write_feature_metadata <- function(projects, specifications, output_directory,
                              cats, names(cats), SIMPLIFY=F, USE.NAMES=F)
         write(toJSON(categories, auto_unbox=T),
               file=paste(output_directory, "categories.json", sep="/"))
-        write(toJSON(values),
-              file=paste(output_directory, "value_icons.json", sep="/"))
+        write(toJSON(values, auto_unbox=T),
+              file=paste(output_directory, "values.json", sep="/"))
     }
 }

@@ -254,10 +254,12 @@ files:
     long_descriptions:
         nl: De stemming van het team tijdens de sprint
         en: The mood of the team during the sprint
-    value_icons:
-        0: [far, fa-frown]
-        1: [far, fa-meh]
-        2: [far, fa-grin]
+    values:
+        type: icon
+        icons:
+            0: [far, fa-frown]
+            1: [far, fa-meh]
+            2: [far, fa-grin]
     units:
         nl: "Stemming van %s"
         en: "Spirit %s"
@@ -360,6 +362,31 @@ files:
     units:
         nl: "%s code smells"
         en: "%s code smells"
+  - metric: SqaleIndex
+    column: technical_debt
+    aggregate: end
+    summarize: sum
+    descriptions:
+        nl: Technische schuldtijd
+        en: Technical debt time
+    long_descriptions:
+        nl: De hoeveelheid tijd die ingeschat wordt om problemen omtrent technische schuld in code in de producten op te lossen aan het einde van de sprint
+        en: The amount of time that is estimated to resolve technical debt issues in code in the products at the end of the sprint
+    values:
+        type: duration
+        intervals:
+            - unit: minutes
+              key: m
+              num: 60
+            - unit: hours
+              key: h
+              num: 8
+            - unit: days
+              key: d
+              num: 5
+    units:
+        nl: "%s technische schuld"
+        en: "%s of technical debt"
   - filename: 03-story-watchers.sql
     table: watchers
     column: num_watchers
