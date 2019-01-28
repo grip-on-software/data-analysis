@@ -21,14 +21,19 @@ fields:
             field: CONCAT('#', ${t("issue")}.issue_id)
     sprint_days:
         description: "Number of days in a sprint"
-        table: [sprint, tfs_sprint]
-        column: [end_date, start_date]
-        field: EXTRACT(day FROM ${t("sprint")}.end_date - ${t("sprint")}.start_date)
+        jira:
+            table: [sprint, tfs_sprint]
+            column: [end_date, start_date]
+            field: EXTRACT(day FROM ${t("sprint")}.end_date - ${t("sprint")}.start_date)
+        jira_version:
+            table: [fixversion]
+            column: [start_date, release_date]
+            field: EXTRACT(day FROM ${t("sprint")}.release_date - ${t("sprint")}.start_date)
     sprint_weekdays:
         description: "Number of weekdays in a sprint"
         table: [sprint, tfs_sprint]
         column: [start_date]
-        field: CAST(EXTRACT(day FROM ${s(sprint_close)} - ${t("sprint")}.start_date) * 5.0 / 7 AS INT) + 1 - 2 * CAST(TIMESTAMP_TO_STR(${s(sprint_close)}, '%u') < TIMESTAMP_TO_STR(${t("sprint")}.start_date, '%u') AS INT)
+        field: CAST(EXTRACT(day FROM ${s(sprint_close)} - CAST(${t("sprint")}.start_date AS TIMESTAMP)) * 5.0 / 7 AS INT) + 1 - 2 * CAST(TIMESTAMP_TO_STR(${s(sprint_close)}, '%u') < TIMESTAMP_TO_STR(CAST(${t("sprint")}.start_date AS TIMESTAMP), '%u') AS INT)
     velocity:
         description: "Velocity of a sprint (or average of multiple sprints in aggregate queries)"
         table: [issue, tfs_work_item]
@@ -38,13 +43,17 @@ fields:
         description: "The open date of a sprint"
         table: [sprint, tfs_sprint]
         column: [start_date]
-        field: COALESCE(${t("sprint")}.start_date, NOW())
+        field: COALESCE(CAST(${t("sprint")}.start_date AS TIMESTAMP), NOW())
     sprint_close:
         description: "The close date of a sprint"
         jira:
             table: sprint
             column: [complete_date, end_date]
             field: CASE WHEN ${t("sprint")}.complete_date IS NOT NULL AND ${t("sprint")}.complete_date < ${t("sprint")}.end_date THEN ${t("sprint")}.complete_date ELSE ${t("sprint")}.end_date END
+        jira_version:
+            table: fixversion
+            column: [release_date]
+            field: CAST(${t("sprint")}.release_date AS TIMESTAMP)
         tfs:
             table: tfs_sprint
             column: [end_date]
@@ -56,10 +65,16 @@ fields:
         field: CASE WHEN ${t("issue")}.story_points IN (99, 100, 122, 999) THEN 0 ELSE ${t("issue")}.story_points END
 conditions:
     project_recent:
-        description: "Projects that have recent sprints"
-        table: [sprint, tfs_sprint]
-        column: [start_date]
-        condition: MAX(${t("sprint")}.start_date) >= CAST('${date}' AS TIMESTAMP)
+        jira:
+            description: "Projects that have recent sprints"
+            table: [sprint, tfs_sprint]
+            column: [start_date]
+            condition: MAX(${t("sprint")}.start_date) >= CAST('${date}' AS TIMESTAMP)
+        jira_version:
+            description: "Projects that have recent sprints"
+            table: fixversion
+            column: [start_date]
+            condition: MAX(${t("sprint")}.start_date) >= CAST('${date}' AS DATE)
     project_core:
         description: "Projects that are not support teams"
         jira:
@@ -85,7 +100,7 @@ conditions:
         jira:
             table: issue
             column: [status]
-            condition: ${t("issue")}.status = 3
+            condition: ${t("issue")}.status IN (3, 10108)
         tfs:
             table: tfs_work_item
             column: [status]
@@ -95,7 +110,7 @@ conditions:
         jira:
             table: issue
             column: [resolution, status]
-            condition: (${t("issue")}.resolution = 1 OR ${t("issue")}.status = 6)
+            condition: (${t("issue")}.resolution IN (1, 10000) OR ${t("issue")}.status IN (6, 10008))
         tfs:
             table: tfs_work_item
             column: [status]
@@ -105,7 +120,7 @@ conditions:
         jira:
             table: issue
             column: [resolution, status]
-            condition: COALESCE(${t("issue")}.resolution, 0) <> 1 AND COALESCE(${t("issue")}.status, 0) <> 6
+            condition: COALESCE(${t("issue")}.resolution, 0) NOT IN (1, 10000) AND COALESCE(${t("issue")}.status, 0) NOT IN (6, 10008)
         tfs:
             table: tfs_work_item
             column: [status]
@@ -115,7 +130,7 @@ conditions:
         jira:
             table: issue
             column: [status]
-            condition: ${t("issue")}.status = 6
+            condition: ${t("issue")}.status IN (6, 10008)
         tfs:
             table: tfs_work_item
             column: [status]
@@ -124,13 +139,17 @@ conditions:
         description: "Issues that are in a certain state after the sprint ended (use in combination with other conditions)"
         table: [issue, sprint, max_issue, tfs_work_item, tfs_sprint]
         column: [update, changelog_id]
-        condition: (${t("issue")}.updated > ${t("sprint")}.end_date OR (${t("issue")}.changelog_id = ${t("max_issue")}.changelog_id AND ${t("sprint")}.end_date < CURRENT_TIMESTAMP()))
+        condition: (${t("issue")}.updated > ${t("sprint")}.end_date OR (${t("issue")}.changelog_id = ${t("max_issue")}.changelog_id AND CAST(${t("sprint")}.end_date AS TIMESTAMP) < NOW()))
     issue_story:
         description: "Issues that are stories"
         jira:
             table: issue
             column: [type]
             condition: ${t("issue")}."type" = 7
+        jira_version:
+            table: issue
+            column: [type]
+            condition: ${t("issue")}."type" IN (3, 10100)
         tfs:
             table: tfs_work_item
             column: [type]
@@ -141,6 +160,10 @@ conditions:
             table: issue
             column: [type]
             condition: ${t("issue")}."type" IN (5,7)
+        jira_version:
+            table: issue
+            column: [type]
+            condition: ${t("issue")}."type" IN (3, 5, 10100)
         tfs:
             table: tfs_work_item
             column: [type]
@@ -151,6 +174,10 @@ conditions:
             table: issue
             column: [type]
             condition: ${t("issue")}."type" NOT IN (5,7)
+        jira_version:
+            table: issue
+            column: [type]
+            condition: ${t("issue")}."type" NOT IN (3, 5, 10100)
         tfs:
             table: tfs_work_item
             column: [type]
@@ -171,6 +198,10 @@ conditions:
             table: sprint
             column: [complete_date, end_date]
             condition: COALESCE(COALESCE(${t("sprint")}.complete_date, ${t("sprint")}.end_date), NOW()) < NOW()
+        jira_version:
+            table: fixversion
+            column: [release_date]
+            condition: COALESCE(CAST(${t("sprint")}.release_date AS TIMESTAMP), NOW()) < NOW()
         tfs:
             table: tfs_sprint
             column: [end_date]
@@ -179,19 +210,29 @@ conditions:
         description: "Earliest time for stories that are planned for a sprint to start work on"
         table: [sprint, tfs_sprint]
         column: [start_date]
-        condition: COALESCE(${t("sprint")}.start_date, NOW()) - interval '1' day
+        condition: COALESCE(CAST(${t("sprint")}.start_date AS TIMESTAMP), NOW()) - interval '1' day
     planned_end:
         description: "Latest time for stories to be planned for a sprint"
         table: [sprint, tfs_sprint]
         column: [start_date]
-        condition: COALESCE(${t("sprint")}.start_date, NOW()) + interval '1' day
+        condition: COALESCE(CAST(${t("sprint")}.start_date AS TIMESTAMP), NOW()) + interval '1' day
     planned_late:
         description: "Latest time for stories that are planned for a sprint to have been worked on"
-        table: [sprint, tfs_sprint]
-        column: [start_date, end_date]
-        condition: COALESCE(${t("sprint")}.start_date + (${t("sprint")}.end_date - ${t("sprint")}.start_date)/7, NOW())
+        jira:
+            table: [sprint, tfs_sprint]
+            column: [start_date, end_date]
+            condition: COALESCE(${t("sprint")}.start_date + (${t("sprint")}.end_date - ${t("sprint")}.start_date)/7, NOW())
+        jira_version:
+            table: [fixversion]
+            column: [start_date, release_date]
+            condition: COALESCE(CAST(${t("sprint")}.start_date + (${t("sprint")}.release_date - ${t("sprint")}.start_date)/7 AS TIMESTAMP), NOW())
     sprint_patch:
         description: "Sprints that have patch names"
-        table: [sprint, tfs_sprint]
-        column: [name]
-        condition: 'false'
+        jira:
+            table: [sprint, tfs_sprint]
+            column: [name]
+            condition: 'false'
+        jira_version:
+            table: fixversion
+            column: [name]
+            condition: 'false'

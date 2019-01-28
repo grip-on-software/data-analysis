@@ -98,6 +98,7 @@ build_source_urls <- function(project_id, project_name, items=list(),
                               patterns=c(), conn=NULL, team_projects=c(),
                               components=NULL, component=NA) {
     project_links <- list()
+    config <- get_config()
     names(project_links) <- list()
     if (is.list(conn) || is.null(conn)) {
         project_urls <- conn
@@ -112,13 +113,13 @@ build_source_urls <- function(project_id, project_name, items=list(),
         for (filters in components) {
             if (filters$name == component) {
                 if (!is.null(filters$jira$include)) {
-                    jira_project <- paste(jira_project, 'and component in (',
+                    jira_project <- paste(jira_project, ' and component in (',
                                           paste(filters$jira$include,
                                                 collapse=','), ')', sep='')
                 }
                 if (!is.null(filters$jira$exclude)) {
                     jira_project <- paste(jira_project,
-                                          'and component not in (',
+                                          ' and component not in (',
                                           paste(filters$jira$exclude,
                                                 collapse=','), ')', sep='')
                 }
@@ -126,11 +127,20 @@ build_source_urls <- function(project_id, project_name, items=list(),
             }
         }
     }
+    if (config$db$primary_source == "jira_version") {
+        sprint <- 'fixversion'
+    }
+    else {
+        sprint <- 'sprint'
+    }
 
     project_patterns <- c(list(jira_key=ifelse(length(team_projects) > 0,
                                                team_projects[[1]],
                                                project_name),
                                jira_project=jira_project,
+                               jira_sprint=paste(sprint, ' in (',
+                                                 patterns$jira_sprint_ids, ')',
+                                                 sep=''),
                                jira_keys=jira_keys),
                           project_urls, patterns)
 
@@ -184,7 +194,9 @@ build_project_source_urls <- function(conn, project_id, project_name, patterns,
     for (name in names(source_urls)) {
         if (name %in% names(urls)) {
             type <- gsub('_url$', '', name)
-            patterns <- c(list(project_name=project_name),
+            patterns <- c(list(project_name=ifelse(length(team_projects) > 0,
+                                                   team_projects[[1]],
+                                                   project_name)),
                           source_urls, patterns, config$fields)
             project_links[[type]] <- str_interp(urls[[name]], patterns)
         }
@@ -203,13 +215,19 @@ build_sprint_source_urls <- function(conn, project_id, project_name,
         source_urls <- get_source_urls(conn, project_id)
     }
     source_items <- list()
+    config <- get_config()
     for (item in items) {
         if (is.list(item$source)) {
             urls <- url_names(names(item$source))
-            index <- which(urls %in% names(source_urls))
-            if (length(index) > 0) {
-                new_item <- list(source=item$source[[index[1]]],
-                                 type=names(item$source)[[index[1]]])
+            if (config$db$primary_source %in% names(item$source)) {
+                type <- config$db$primary_source
+            }
+            else {
+                type <- names(source_urls)[urls %in% names(source_urls)]
+            }
+            if (length(type) > 0) {
+                new_item <- list(source=item$source[[type[1]]],
+                                 type=type[1])
                 source_items[[item$column]] <- c(item, new_item)
             }
         }

@@ -21,7 +21,7 @@ categories:
         en: Code
         icon: [fas, fa-server]
 files:
-  - expression: '1:length(sprint_id)'
+  - expression: '1:length(get(ls()[1]))'
     window:
         dimension: 1
         group: project_id
@@ -39,6 +39,7 @@ files:
         en: "Sprint #%s"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=burndownChart&sprint=${jira_sprint_id}"
+        jira_version: "${jira_url}/jira/projects/${jira_key}?selectedItem=com.atlassian.jira.jira-projects-plugin%3Arelease-page&status=released-unreleased"
     category: general
   - definition: sprint_days
     table: sprint
@@ -59,6 +60,7 @@ files:
         en: "%s days"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
+        jira_version: "${jira_url}/jira/projects/${jira_key}/versions/${jira_sprint_id}"
     category: general
   - definition: sprint_weekdays
     table: sprint
@@ -78,6 +80,7 @@ files:
         en: "%s days"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
+        jira_version: "${jira_url}/jira/projects/${jira_key}/versions/${jira_sprint_id}"
     category: general
   - filename: 00-sprint-closed.sql
     table: sprint_close
@@ -98,6 +101,7 @@ files:
         en: "%s closed sprint"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
+        jira_version: "${jira_url}/jira/projects/${jira_key}?selectedItem=com.atlassian.jira.jira-projects-plugin%3Arelease-page&status=released-unreleased"
     category: general
   - expression: "1 - sprint_is_closed"
     column: sprint_is_open
@@ -136,6 +140,7 @@ files:
     category: general
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
+        jira_version: "${jira_url}/jira/projects/${jira_key}?selectedItem=com.atlassian.jira.jira-projects-plugin%3Arelease-page&status=released-unreleased"
   - filename: 01-number-of-vcs-committers.sql
     table: sprint_vcs_dev_count
     column: number_of_vcs_devs
@@ -402,7 +407,7 @@ files:
         nl: "%s story-watchers"
         en: "%s story watchers"
     source:
-        jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=${jira_project} and sprint in (${jira_sprint_ids}) and type = Story and watchers %3E 0&runQuery=true"
+        jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=${jira_project} and ${jira_sprint} and type = Story and watchers %3E 0&runQuery=true"
     category: tracking
   - filename: 03-number-of-issue-changers.sql
     table: updaters
@@ -420,7 +425,7 @@ files:
         en: "%s item updaters"
     category: tracking
     source:
-        jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=${jira_project} and sprint in (${jira_sprint_ids}) and reporter !%3D currentUser()&runQuery=true"
+        jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=${jira_project} and ${jira_sprint} and reporter !%3D currentUser()&runQuery=true"
   - filename: 04-expected-story-points.sql
     table: expected_story_points
     column: num_story_points
@@ -585,7 +590,7 @@ files:
         nl: "%s bijlagen"
         en: "%s attachments"
     source:
-        jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=${jira_project} and sprint in (${jira_sprint_ids}) and attachments is not empty&runQuery=true"
+        jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=${jira_project} and ${jira_sprint} and attachments is not empty&runQuery=true"
     category: tracking
   - filename: 04-labels.sql
     table: labels
@@ -602,7 +607,7 @@ files:
         nl: "%s labels"
         en: "%s labels"
     source:
-        jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=${jira_project} and sprint in (${jira_sprint_ids}) and labels is not empty&runQuery=true"
+        jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=${jira_project} and ${jira_sprint} and labels is not empty&runQuery=true"
     category: tracking
   - filename: 04-impediments.sql
     table: impediments
@@ -619,7 +624,7 @@ files:
         nl: "%s impediments"
         en: "%s impediments"
     source:
-        jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=${jira_project} and sprint in (${jira_sprint_ids}) and Flagged %3D Impediment&runQuery=true"
+        jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=${jira_project} and ${jira_sprint} and Flagged %3D Impediment&runQuery=true"
     category: tracking
   - filename: 04-late-rank-changes.sql
     table: rank_changes
@@ -789,7 +794,7 @@ files:
         nl: "%s item-links"
         en: "%s item links"
     source:
-        jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=${jira_project} and sprint in (${jira_sprint_ids}) and issueFunction in hasLinks()&runQuery=true"
+        jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=${jira_project} and ${jira_sprint} and issueFunction in hasLinks()&runQuery=true"
     category: tracking
   - filename: 05-number-of-comments.sql
     table: issue_comments
@@ -806,7 +811,7 @@ files:
         nl: "%s commentaren bij items"
         en: "%s item comments"
     source:
-        jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=${jira_project} and sprint in (${jira_sprint_ids}) and issueFunction in hasComments()&runQuery=true"
+        jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=${jira_project} and ${jira_sprint} and issueFunction in hasComments()&runQuery=true"
     category: tracking
   - filename: 05-average-changes.sql
     table: issue_changes
@@ -930,7 +935,7 @@ files:
         nl: "%s afgeronde items die geen story of subtask zijn"
         en: "%s done items that are not stories or subtasks"
     source:
-        jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=${jira_project} and sprint in (${jira_sprint_ids}) and ${q(issue_other)} and resolution < %22${sprint_end_date}%22&runQuery=true"
+        jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=${jira_project} and ${jira_sprint} and ${q(issue_other)} and resolution < %22${sprint_end_date}%22&runQuery=true"
     category: tracking
   - expression: 'num_done_stories + other_done_issues'
     column: num_done_items
@@ -944,6 +949,7 @@ files:
         en: The number of items that are completed in the sprint
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
+        jira_version: "${jira_url}/projects/${jira_key}/versions/${jira_sprint_id}"
     category: tracking
   - filename: 07-concurrent-in-progress-stories.sql
     table: concurrent_in_progress_stories

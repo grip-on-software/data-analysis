@@ -18,6 +18,7 @@ project_ids <- get_arg('--project-ids', default='0')
 if (project_ids != '0') {
     project_ids <- '1'
 }
+projects <- strsplit(get_arg('--projects', default=''), ',')[[1]]
 features <- get_arg('--features', default=NA)
 exclude <- get_arg('--exclude', default='^$')
 core <- get_arg('--core', default=F)
@@ -30,7 +31,10 @@ project_metadata <- get_arg('--project-metadata', default='recent,core,main')
 metadata <- get_meta_keys(project_metadata)
 fields <- list('project_id', 'name', 'quality_display_name')
 
-map_details <- function(details, project_ids, sprint_ids, component) {
+map_details <- function(details, project_ids, sprint_ids, component,
+                        join_cols) {
+    project_col <- join_cols[1]
+    sprint_col <- join_cols[2]
     project <- Filter(function(detail) {
                           if (is.na(component)) {
                               cond <- !("component" %in% colnames(detail)) ||
@@ -44,19 +48,24 @@ map_details <- function(details, project_ids, sprint_ids, component) {
                               cond <- "component" %in% colnames(detail) &&
                                   detail$component == component
                           }
-                          return(detail$project_id %in% project_ids &&
-                                 detail$sprint_id %in% sprint_ids && cond)
+                          return(detail[[project_col]] %in% project_ids &&
+                                 detail[[sprint_col]] %in% sprint_ids && cond)
                       },
                       details)
     feature_details <- Map(function(detail) {
-                               detail$project_id <- NULL
-                               detail$sprint_id <- NULL
+                               detail[[project_col]] <- NULL
+                               detail[[sprint_col]] <- NULL
                                detail$component <- NULL
                                return(unbox(detail))
                            },
                            project)
-    names(feature_details) <- Map(function(detail) { detail$sprint_id },
-                                  project)
+    if (length(project) == 0) {
+        names(feature_details) <- character(0)
+    }
+    else {
+        names(feature_details) <- Map(function(detail) { detail[[sprint_col]] },
+                                      project)
+    }
     return(feature_details[!duplicated(names(feature_details))])
 }
 
@@ -161,11 +170,12 @@ if (get_arg('--project', default=F)) {
         features <- all_features
     }
     else {
-        features <- strsplit(features, ",")[[1]]
+        features <- expand_feature_names(features, specifications$files,
+                                        specifications$categories)
     }
 
     if (split) {
-        sprint_meta <- c('sprint_name', 'sprint_num', 'sprint_id', 'board_id',
+        sprint_meta <- c('sprint_name', 'sprint_num', 'board_id',
                          'start_date', 'close_date')
     }
     else {
@@ -213,6 +223,7 @@ if (get_arg('--project', default=F)) {
                                          details=split,
                                          combine=combine,
                                          teams=teams,
+                                         project_names=projects,
                                          components=config$components,
                                          prediction=prediction)
     default_features <- default_features[default_features %in% result$colnames]
@@ -237,19 +248,21 @@ if (get_arg('--project', default=F)) {
     old_features <- c(old_features, unlist(cat_features))
     details_features <- c()
 
-    if (identical(combine, F) && config$db$primary_source != "tfs") {
-        id_column <- "project_id"
+    if (!identical(combine, F)) {
+        project_column <- "team_id"
     }
     else {
-        id_column <- "team_id"
+        project_column <- result$join_cols[1]
     }
+    sprint_column <- result$join_cols[2]
     if (project_ids != '0') {
-        result$data$project_name <- paste("Proj", result$data[, id_column],
+        result$data$project_name <- paste("Proj", result$data[, project_column],
                                           sep="")
     }
     sprint_data <- arrange(result$data, result$data$project_name,
                            result$data$start_date)
     if (split) {
+        sprint_meta <- c(sprint_meta, result$join_cols[2])
         output_dir <- paste(output_directory, 'recent_sprint_features', sep="/")
         if (!dir.exists(output_dir)) {
             dir.create(output_dir)
@@ -300,7 +313,7 @@ if (get_arg('--project', default=F)) {
 
             # There may be multiple original project IDs for team projects.
             team_id <- sprint_data[sprint_data$project_name == project,
-                                   id_column][[1]]
+                                   project_column][[1]]
             meta <- result$projects[result$projects$project_id == team_id, ]
             project_id <- meta$project_ids[[1]]
             team_projects <- meta$project_names[[1]]
@@ -327,9 +340,11 @@ if (get_arg('--project', default=F)) {
             }
 
             new_details <- lapply(result$details, map_details,
-                                  team_ids, unlist(new$sprint_id), component)
+                                  team_ids, unlist(new[[sprint_column]]),
+                                  component, result$join_cols)
             old_details <- lapply(result$details, map_details,
-                                  team_ids, unlist(old$sprint_id), component)
+                                  team_ids, unlist(old[[sprint_column]]),
+                                  component, result$join_cols)
             details_features <- c(details_features, names(new_details))
             default_details <- default[default %in% names(new_details)]
             write(toJSON(new_details[default_details]),
@@ -367,7 +382,9 @@ if (get_arg('--project', default=F)) {
                                               sprint,
                                               team_projects=team_projects)
             write(toJSON(mapply(function(date, url) {
-                                    list(date=unbox(date), url=unbox(url))
+                                    if (!is.null(url)) {
+                                        list(date=unbox(date), url=unbox(url))
+                                    }
                                 },
                                 dates, urls[names(dates)],
                                 USE.NAMES=T, SIMPLIFY=F)),

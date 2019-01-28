@@ -74,6 +74,7 @@ if (!exists('INC_PROJECT_R')) {
                        group_by,
                        'ORDER BY', paste(by, collapse=', '))
         item <- load_query(list(query=query), variables)
+        logdebug(item$query)
         dbGetQuery(conn, item$query)
     }
 
