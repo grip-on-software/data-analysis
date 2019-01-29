@@ -52,10 +52,6 @@ map_details <- function(details, project_ids, sprint_ids, component,
                                  detail[[sprint_col]] %in% sprint_ids & cond)
                       },
                       details)
-    print(project_ids)
-    print(sprint_ids)
-    print(component)
-    print(length(project))
     feature_details <- Map(function(detail) {
                                detail[[project_col]] <- NULL
                                detail[[sprint_col]] <- NULL
@@ -265,7 +261,6 @@ if (get_arg('--project', default=F)) {
     }
     sprint_data <- arrange(result$data, result$data$project_name,
                            result$data$start_date)
-    print(result$details)
     if (split) {
         default_features <- c(default_features, result$join_cols[2])
         old_features <- c(old_features, result$join_cols[2])
