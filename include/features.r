@@ -399,14 +399,15 @@ update_combine_interval <- function(items, old_data, data, row_num, details,
                 project_ids <- old_data[range, 'original_project_id']
                 sprint_ids <- old_data[range, sprint_col]
                 components <- old_data[range, 'component']
-                detail_name <- paste(team_id, sprint_id, sep=".")
                 if (!is.null(components)) {
+                    detail_name <- paste(team_id, sprint_id, NA, sep=".")
                     detail_names <- unique(c(paste(project_ids,
                                                    sprint_ids,
                                                    components,
                                                    sep=".")))
                 }
                 else {
+                    detail_name <- paste(team_id, sprint_id, sep=".")
                     detail_names <- unique(c(paste(project_ids,
                                                    sprint_ids,
                                                    sep=".")))
@@ -414,7 +415,7 @@ update_combine_interval <- function(items, old_data, data, row_num, details,
 
                 if (is.null(feature[[detail_name]])) {
                     row <- list()
-                    row[[project_col]] <- team_id
+                    row[[join_cols[1]]] <- team_id
                     row[[sprint_col]] <- sprint_id
                     row$component <- NA
                     current <- as.data.frame(row)
