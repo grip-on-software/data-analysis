@@ -37,21 +37,25 @@ map_details <- function(details, project_ids, sprint_ids, component,
     sprint_col <- join_cols[2]
     project <- Filter(function(detail) {
                           if (is.na(component)) {
-                              cond <- !("component" %in% colnames(detail)) ||
-                                  is.null(detail$component) ||
+                              cond <- !("component" %in% colnames(detail)) |
+                                  is.null(detail$component) |
                                   is.na(detail$component)
                           }
                           else if (identical(component, F)) {
                               cond <- T
                           }
                           else {
-                              cond <- "component" %in% colnames(detail) &&
+                              cond <- "component" %in% colnames(detail) &
                                   detail$component == component
                           }
-                          return(detail[[project_col]] %in% project_ids &&
-                                 detail[[sprint_col]] %in% sprint_ids && cond)
+                          return(detail[[project_col]] %in% project_ids &
+                                 detail[[sprint_col]] %in% sprint_ids & cond)
                       },
                       details)
+    print(project_ids)
+    print(sprint_ids)
+    print(component)
+    print(length(project))
     feature_details <- Map(function(detail) {
                                detail[[project_col]] <- NULL
                                detail[[sprint_col]] <- NULL
@@ -261,7 +265,10 @@ if (get_arg('--project', default=F)) {
     }
     sprint_data <- arrange(result$data, result$data$project_name,
                            result$data$start_date)
+    print(result$details)
     if (split) {
+        default_features <- c(default_features, result$join_cols[2])
+        old_features <- c(old_features, result$join_cols[2])
         sprint_meta <- c(sprint_meta, result$join_cols[2])
         output_dir <- paste(output_directory, 'recent_sprint_features', sep="/")
         if (!dir.exists(output_dir)) {
@@ -318,7 +325,7 @@ if (get_arg('--project', default=F)) {
             project_id <- meta$project_ids[[1]]
             team_projects <- meta$project_names[[1]]
             if (length(team_projects) == 1 || meta$component) {
-                team_ids <- c(new$team_id[[1]], project_id)
+                team_ids <- unlist(c(new$team_id[[1]], project_id))
             }
             else {
                 team_ids <- new$team_id[[1]]
