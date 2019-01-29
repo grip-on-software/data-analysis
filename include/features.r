@@ -69,7 +69,7 @@ get_feature_locales <- function(items, field='descriptions') {
 
 get_combined_features <- function(items, data, colnames, details, join_cols,
                                   combine=T, teams=list(), limit=5,
-                                  date=T, projects=data.frame(),
+                                  date=T, main=T, projects=data.frame(),
                                   components=NULL) {
     if (isTRUE(combine)) {
         combine <- 10
@@ -103,12 +103,14 @@ get_combined_features <- function(items, data, colnames, details, join_cols,
                                    component=T,
                                    stringsAsFactors=F)
             metadata$project_ids <- project$project_ids
-            metadata <- metadata[, colnames(projects)]
-            if (component$name %in% projects$name) {
-                projects[projects$name == component$name, ] <- metadata
-            }
-            else {
-                projects <- rbind(projects, metadata)
+            if (!main || metadata$main) {
+                metadata <- metadata[, colnames(projects)]
+                if (component$name %in% projects$name) {
+                    projects[projects$name == component$name, ] <- metadata
+                }
+                else {
+                    projects <- rbind(projects, metadata)
+                }
             }
             project_id <- project_id + 1
         }
@@ -277,6 +279,7 @@ get_combined_team <- function(team, team_id, data, projects, team_projects,
                 length(which(overlap)))
     }
 
+    team_meta <- team_meta[names(team_meta) %in% colnames(data)]
     team_data <- data[team_conditions, ]
     if (length(replace) > 0) {
         data[team_conditions, names(team_meta)] <- team_meta
@@ -1037,7 +1040,7 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
                                         result$colnames, result$details,
                                         join_cols, combine=combine, teams=teams,
                                         limit=limit, date=project_meta$recent,
-                                        projects=result$projects,
+                                        main=T, projects=result$projects,
                                         components=components)
     }
     if (old) {

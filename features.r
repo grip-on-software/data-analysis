@@ -269,7 +269,7 @@ if (get_arg('--project', default=F)) {
         if (!dir.exists(output_dir)) {
             dir.create(output_dir)
         }
-        projects <- levels(factor(sprint_data$project_name))
+        projects <- levels(factor(result$projects$name))
         ids <- unique(do.call("c", result$projects$project_ids))
 
         source_urls <- get_source_urls(conn, ids, multi=T)
