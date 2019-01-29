@@ -17,5 +17,5 @@ AND (
 	newer_issue.updated IS NULL OR
 	newer_issue.updated > ${s(sprint_open, sprint="interval_sprint")}
 )
-${s(project_condition)}
+${s(project_condition, project="issue")}
 ${g(join_cols, "sprint", f("issue_key"), sprint="interval_sprint")}

@@ -8,5 +8,6 @@ JOIN (
 ON ${j(issue_changelog, "issue", "maxdata")}
 ${s(issue_join)}
 WHERE ${s(issue_story)}
-AND ${t("issue")}.sprint_id <> 0
+AND ${s(sprint_id, sprint="issue")} <> 0
+${s(project_condition, project="issue")}
 ${g(join_cols, "issue")}

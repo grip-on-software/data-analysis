@@ -13,4 +13,5 @@ ON ${j(join_cols, "max_issue", "sprint")}
 ${s(issue_join)}
 WHERE ${t("issue")}.rank_change IS NOT NULL
 AND ${t("issue")}.updated < ${s(planned_early)}
+${s(project_condition, project="issue")}
 ${g(join_cols, "max_issue")}

@@ -9,6 +9,7 @@ SELECT ${f(join_cols, "done_stories")}, COUNT(*) AS num_done_stories FROM
 		--AND NOT ${s(issue_overdue)}
 		AND ${t("issue")}.updated > ${s(sprint_open)}
 		AND ${s(issue_story)}
-		AND ${t("issue")}.sprint_id <> 0
+		AND ${s(sprint_id, sprint="issue")} <> 0
+		${s(project_condition, project="issue")}
 	) AS done_stories
 ${g(join_cols, "done_stories")}

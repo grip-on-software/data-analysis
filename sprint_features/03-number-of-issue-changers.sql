@@ -20,7 +20,8 @@ FROM (
     JOIN gros.${t("issue")}
     ON ${j(issue_changelog, "maxdata", "issue")}
     ${s(issue_join)}
-    WHERE ${t("issue")}.sprint_id <> 0
+    WHERE ${s(sprint_id, sprint="issue")} <> 0
+	${s(project_condition, project="issue")}
     ${g(join_cols, "issue")}, ${t("issue")}.issue_id
 ) AS issue_updaters
 ${g(join_cols, "issue_updaters")}

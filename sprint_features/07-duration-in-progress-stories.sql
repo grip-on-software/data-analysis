@@ -18,8 +18,8 @@ FROM (
 	${g(join_cols, "issue")}, ${t("issue")}.issue_id, ${f("issue_key")}
 ) AS enddata, gros.${t("sprint")}
 WHERE startdata.issue_id = enddata.issue_id
-AND ${j(join_cols, "startdata", "enddata")}
+AND ${j(join_cols, "startdata", "enddata", source="jira")}
 AND ${j(join_cols, "startdata", "sprint")}
 AND enddata.end_date > startdata.start_date
-AND enddata.end_date <= ${s(sprint_close)} +
-	(${t("sprint")}.end_date - ${t("sprint")}.start_date)/7
+AND enddata.end_date <= ${s(planned_late)} - ${s(sprint_open)} + ${s(sprint_close)}
+${s(project_condition, project="startdata")}

@@ -4,5 +4,6 @@ SELECT ${f(join_cols, "backlog_sprint")}, COUNT(*) AS backlog_size FROM (
 	${s(issue_join)}
 	JOIN gros.${t("sprint")} ON ${j(join_cols, "issue", "sprint")}
 	AND ${t("issue")}.updated < ${s(planned_end)}
+	${s(project_condition, project="issue")}
 ) AS backlog_sprint
 ${g(join_cols, "backlog_sprint")}

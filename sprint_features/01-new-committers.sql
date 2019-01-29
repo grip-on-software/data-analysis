@@ -20,9 +20,11 @@ SELECT ${f(join_cols, "new_developer")}, COUNT(*) AS num_new_developers FROM (
 
     ON ${j(join_cols, "commits2", "commits1", 1)}
     AND (commits1.developer_id = -commits2.developer_id OR vcs_developer.alias_id = developer2.alias_id)
-    AND commits2.sprint_id < commits1.sprint_id
-    AND commits2.sprint_id <> 0
-    WHERE commits1.sprint_id <> 0 AND commits2.sprint_id IS NULL
+    AND ${s(sprint_id, sprint="commits2")} < ${s(sprint_id, sprint="commits1")}
+    AND ${s(sprint_id, sprint="commits2")} <> 0
+    WHERE ${s(sprint_id, sprint="commits1")} <> 0
+	AND ${f(join_cols, "commits2", mask=2, alias="alias")} IS NULL
     AND vcs_developer.jira_dev_id <> -1
+	${s(project_condition, project="commits1")}
 ) AS new_developer
 ${g(join_cols, "new_developer")}

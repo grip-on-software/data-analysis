@@ -543,6 +543,8 @@ files:
     units:
         nl: "%s punten"
         en: "%s points"
+    source:
+        jira: null
     category: tracking
   - expression: "done_story_points - num_story_points"
     column: over_expectation
@@ -557,6 +559,8 @@ files:
     units:
         nl: "%s toegevoegde storypoints"
         en: "%s added story points"
+    source:
+        jira: null
     category: tracking
   - filename: 04-weighted-story-points.sql
     table: weighted_story_points
@@ -640,6 +644,8 @@ files:
     units:
         nl: "%s rangwijzigingen na begin van sprint"
         en: "%s rank changes after start of sprint"
+    source:
+        jira: null
     category: tracking
   - filename: 04-not-done-points.sql
     table: not_done
@@ -827,6 +833,8 @@ files:
     units:
         nl: "gemiddeld %s wijzigingen per item"
         en: "average of %s changes per item"
+    source:
+        jira: null
     category: tracking
   - filename: 05-issue-change-pivot.sql
     table: issue_change_pivot
@@ -841,6 +849,8 @@ files:
     units:
         nl: "middelpunt van itemwijzigingen op %s dagen na begin van sprint"
         en: "midpoint of item changes at %s days after start of sprint"
+    source:
+        jira: null
     category: tracking
   - expression: "done_story_points / sprint_weekdays"
     column: velocity
@@ -902,6 +912,8 @@ files:
     short_units:
         nl: "%s punten/sprint"
         en: "%s points/sprint"
+    source:
+        jira: null
     category: tracking
   - expression: "num_story_points - velocity_three"
     column: over_value
@@ -919,6 +931,8 @@ files:
     short_units:
         nl: "%s extra points"
         en: "%s extra points"
+    source:
+        jira: null
     category: tracking
   - filename: 06-other-issues-done.sql
     table: other_done_issues
@@ -970,6 +984,8 @@ files:
     units:
         nl: "gemiddeld %s stories die gelijktijdig in progress zijn"
         en: "average of %s stories that are concurrently in progress"
+    source:
+        jira: null
     category: tracking
   - filename: 07-duration-in-progress-stories.sql
     table: duration_in_progress_stories
@@ -993,6 +1009,8 @@ files:
     short_units:
         nl: "%s dagen/story"
         en: "%s days/story"
+    source:
+        jira: null
     category: tracking
   - filename: 08-vcs-statistics.sql
     table: vcs_statistics
@@ -1143,6 +1161,8 @@ files:
     units:
         nl: "%s rangwijzigingen voor begin van sprint"
         en: "%s rank changes before start of sprint"
+    source:
+        jira: null
     category: tracking
   - filename: 11-early-storypoint-changes.sql
     table: early_storypoint_changes
@@ -1158,6 +1178,8 @@ files:
     units:
         nl: "%s wijzigingen aan storypoints voor begin van sprint"
         en: "%s story point changes before start of sprint"
+    source:
+        jira: null
     category: tracking
   - filename: 11-early-changes.sql
     table: early_changes
@@ -1173,6 +1195,8 @@ files:
     units:
         nl: "%s overige wijzigingen aan issues voor begin van sprint"
         en: "%s other issue changes before start of sprint"
+    source:
+        jira: null
     category: tracking
   - filename: 11-backlog-sprint.sql
     table: backlog_sprint
@@ -1188,6 +1212,8 @@ files:
     units:
         nl: "%s items voor de sprint op de backlog"
         en: "%s items for the sprint on the backlog"
+    source:
+        jira: null
     category: tracking
   - filename: 11-backlog-ready-status.sql
     table: backlog_ready_status
@@ -1203,6 +1229,8 @@ files:
     units:
         nl: "%s items met readystatus voor de sprint op de backlog"
         en: "%s items with ready status for the sprint on the backlog"
+    source:
+        jira: null
     category: tracking
   - filename: 11-backlog-all.sql
     table: backlog_all

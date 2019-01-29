@@ -6,6 +6,7 @@ FROM (
 	${s(issue_join)}
 	WHERE ${s(issue_story)}
 	AND ${t("issue")}.updated > ${s(sprint_open)}
-	AND ${t("issue")}.sprint_id <> 0
+	AND ${s(sprint_id, sprint="issue")} <> 0
+	${s(project_condition, project="issue")}
 ) AS stories
 ${g(join_cols, "stories")}

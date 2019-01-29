@@ -126,11 +126,25 @@ if (!exists('INC_DATABASE_R')) {
             }
             else {
                 var <- c(..., as.list(parent.frame()), variables)
+                if (table %in% names(var) &&
+                    var[[table]] %in% names(primary_tables)) {
+                    table <- var[[table]]
+                    primary_table <- primary_tables[[var[[table]]]]
+                }
+                else if (table %in% names(primary_tables)) {
+                    primary_table <- primary_tables[[table]]
+                }
+                var_table <- var_str_interp(table, var)
+
                 if (is.list(field)) {
                     if (!is.null(var$source) && !is.null(field[[var$source]])) {
                         extra_fields <- field[[var$source]]
                         if (has_aliasing(alias, table)) {
                             extra_fields <- format_aliases(extra_fields)
+                        }
+                        else if (is.na(alias) || is.null(primary_table)) {
+                            extra_fields <- paste(var_table,
+                                                  names(extra_fields), sep=".")
                         }
                         else if (!identical(alias, F)) {
                             extra_fields <- names(extra_fields)
@@ -138,10 +152,6 @@ if (!exists('INC_DATABASE_R')) {
                     }
                     field <- field$default
                 }
-                if (table %in% names(primary_tables)) {
-                    primary_table <- primary_tables[[table]]
-                }
-                var_table <- var_str_interp(table, var)
             }
             primary_id <- field == primary_table
             fields <- paste(var_table, field, sep=".")
@@ -169,9 +179,16 @@ if (!exists('INC_DATABASE_R')) {
                                        vars)
             return(paste('GROUP BY ', fields, extra, sep=""))
         }
-        join_str_interp <- function(field, left, right, mask=T, ...) {
+        join_str_interp <- function(field, left, right, mask=T, source=NULL,
+                                    ...) {
             if (is.list(field) && !is.null(field$default)) {
-                field <- field$default
+                if (!is.null(source) && !is.null(field[[source]])) {
+                    extra_fields <- names(field[[source]])
+                }
+                else {
+                    extra_fields <- NULL
+                }
+                field <- unlist(c(field$default, extra_fields))
             }
             field <- field[mask]
 

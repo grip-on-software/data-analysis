@@ -32,8 +32,9 @@ FROM (
 	WHERE ${s(issue_story)} AND ${s(issue_done)}
 	${g(join_cols, "issue")}, ${t("issue")}.issue_id
 ) AS enddata
-WHERE ${j(join_cols, "startdata", "enddata")}
-AND ${j(join_cols, "updatedata", "startdata")}
+WHERE ${j(join_cols, "startdata", "enddata", source="jira")}
+AND ${j(join_cols, "updatedata", "startdata", source="jira")}
 AND updatedata.issue_id <> startdata.issue_id
 AND "date" BETWEEN start_date and end_date
+${s(project_condition, project="updatedata")}
 ${g(join_cols, "updatedata", "updatedata.key")}

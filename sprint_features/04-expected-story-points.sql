@@ -13,24 +13,31 @@ FROM (
     JOIN gros.${t("issue")} AS older_issue
 	ON ${j(issue_next_changelog, "issue", "older_issue")}
     JOIN (
-        SELECT issue_id, sprint_id, story_points,
+        SELECT issue_id, ${f(join_cols, "issue", mask=2, alias="alias")},
+			story_points,
             MAX(updated) AS updated,
             MAX(changelog_id) AS changelog_id
-        FROM gros.${t("issue")} GROUP BY issue_id, sprint_id, story_points
+        FROM gros.${t("issue")}
+		GROUP BY issue_id, ${f(join_cols, "issue", mask=2, alias="alias")},
+			story_points
     ) AS later_issue
         ON ${t("issue")}.issue_id = later_issue.issue_id
-        AND ${t("issue")}.sprint_id = later_issue.sprint_id
+        AND ${j(join_cols, "issue", "later_issue", mask=2)}
     LEFT JOIN gros.${t("issue")} AS newer_issue
 	ON ${j(issue_next_changelog, "newer_issue", "later_issue")}
     LEFT JOIN gros.subtask ON ${t("issue")}.issue_id = subtask.id_subtask
 	${s(issue_join)}
     WHERE (
-        (older_issue.changelog_id = 0 AND older_issue.sprint_id IS NOT NULL AND ${t("issue")}.sprint_id = older_issue.sprint_id)
+        (
+			older_issue.changelog_id = 0
+			AND ${f(join_cols, "older_issue", mask=2, alias="alias")} IS NOT NULL
+			AND ${j(join_cols, "issue", "older_issue", mask=2)}
+		)
         OR (
             older_issue.updated <= ${s(planned_end)}
             AND (
-                older_issue.sprint_id IS NULL
-                OR older_issue.sprint_id <> ${t("issue")}.sprint_id
+				${f(join_cols, "older_issue", mask=2, alias="alias")} IS NULL
+                OR ${s(sprint_id, sprint="issue", issue="older_issue")} <> ${s(sprint_id, sprint="issue")}
                 OR older_issue.story_points IS NULL
                 OR older_issue.story_points <> ${t("issue")}.story_points
             )
@@ -38,7 +45,7 @@ FROM (
     )
     AND ${s(story_point_types)}
     AND ${t("issue")}.story_points IS NOT NULL
-    AND ${t("issue")}.sprint_id IS NOT NULL
+    AND ${s(sprint_id, sprint="issue")} <> 0
     AND ${t("issue")}.updated <= ${s(planned_late)}
     AND ${s(issue_not_done)}
     AND (
@@ -52,9 +59,10 @@ FROM (
     AND (
         newer_issue.issue_id IS NULL
         OR newer_issue.updated > ${s(planned_late)}
-        OR (newer_issue.sprint_id = later_issue.sprint_id
+        OR (${j(join_cols, "newer_issue", "later_issue", mask=2)}
             AND NOT (${s(sprint_closed)}))
     )
     AND subtask.id_parent IS NULL
+	${s(project_condition, project="issue")}
 ) AS initial_stories
 WHERE rev_row = 1

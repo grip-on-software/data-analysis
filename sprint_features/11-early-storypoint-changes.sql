@@ -18,4 +18,5 @@ AND ${t("issue")}.story_points IS NOT NULL
 AND (${t("issue")}.changelog_id = 0
 	OR ${t("issue")}.story_points <> prev_issue.story_points)
 AND ${t("issue")}.updated < ${s(planned_early)}
+${s(project_condition, project="issue")}
 ${g(join_cols, "max_issue")}

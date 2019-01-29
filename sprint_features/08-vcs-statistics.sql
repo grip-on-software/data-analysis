@@ -6,4 +6,4 @@ SELECT ${f(join_cols, "commits")},
     AVG(commits.number_of_files) AS avg_files,
     AVG(commits.number_of_lines) AS avg_lines
 FROM gros.commits
-${g(join_cols, "commits")} HAVING commits.sprint_id <> 0
+${g(join_cols, "commits")} HAVING ${s(sprint_id, sprint="commits")} <> 0

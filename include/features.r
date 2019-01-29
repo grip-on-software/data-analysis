@@ -472,13 +472,13 @@ expand_feature_names <- function(feature, items, categories=list()) {
     sources <- unique(unlist(lapply(items,
                                     function(item) { names(item$source) })))
 
-    filter_source <- function(item) {
+    filter_source <- function(item, feature) {
         if (!is.null(item$source) && feature %in% names(item$source)) {
             return(item$column)
         }
     }
 
-    filter_category <- function(item) {
+    filter_category <- function(item, feature) {
         if (!is.null(item$category) && item$category == feature) {
             return(item$column)
         }
@@ -487,10 +487,12 @@ expand_feature_names <- function(feature, items, categories=list()) {
     features <- unlist(lapply(features,
                               function(feature) {
                                   if (feature %in% sources) {
-                                      return(lapply(items, filter_source))
+                                      return(lapply(items, filter_source,
+                                                    feature))
                                   }
                                   if (feature %in% names(categories)) {
-                                      return(lapply(items, filter_category))
+                                      return(lapply(items, filter_category,
+                                                    feature))
                                   }
                                   return(feature)
                               }))
@@ -953,7 +955,7 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
                     JOIN gros.${t("project")}
                     ON ${j(join_cols, "project", "sprint", mask=1)}
                     ${s(component_join)}
-                    WHERE ${t("sprint")}.start_date IS NOT NULL
+                    WHERE ${s(sprint_open)} < NOW()
                     ${s(project_condition)}
                     ${s(sprint_conditions)}
                     ORDER BY', paste(order_by, collapse=", "), '${limit}')
@@ -977,7 +979,7 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
         projects <- projects[projects$name %in% project_names, ]
     }
 
-    project_condition <- paste('AND ${f(join_cols, "sprint", mask=1)} IN (',
+    project_condition <- paste('AND ${f(join_cols, "project", mask=1)} IN (',
                                paste(projects$project_id, collapse=','), ')')
     patterns$project_condition <- project_condition
     if (old) {

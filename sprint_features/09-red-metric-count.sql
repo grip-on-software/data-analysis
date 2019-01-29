@@ -4,5 +4,6 @@ FROM (
     FROM gros.metric_value
     JOIN gros.${t("sprint")} ON ${j(join_cols, "metric_value", "sprint")}
     WHERE metric_value.category = 'red'
+	${s(project_condition, project="metric_value")}
 ) AS sprint_metrics
 ${g(join_cols, "sprint_metrics")}

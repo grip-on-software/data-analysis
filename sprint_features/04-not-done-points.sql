@@ -7,13 +7,15 @@ ON ${j(issue_next_changelog, "new_issue", "issue")}
 LEFT JOIN gros.subtask ON ${t("issue")}.issue_id = subtask.id_subtask
 ${s(issue_join)}
 WHERE ${t("issue")}.story_points IS NOT NULL
-AND ${t("issue")}.sprint_id IS NOT NULL
+AND ${s(sprint_id, sprint="issue")} IS NOT NULL
 AND (
   (new_issue.issue_id IS NULL AND ${s(sprint_close)} + interval '1' day > NOW())
   OR (
-    new_issue.issue_id IS NOT NULL AND new_issue.sprint_id IS NULL
+    new_issue.issue_id IS NOT NULL
+	AND ${f(join_cols, "new_issue", mask=2, alias="alias")} IS NULL
     AND new_issue.updated > ${s(planned_end)}
   )
 )
 AND ${s(issue_not_done)}
 AND subtask.id_parent IS NULL
+${s(project_condition, project="issue")}

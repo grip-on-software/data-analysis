@@ -9,6 +9,11 @@ fields:
             table: tfs_team
             column: [team_id, name]
             field: CASE WHEN ${project_ids} THEN CONCAT('Team', ${t("project")}.team_id) ELSE ${t("project")}.name END
+    sprint_id:
+        description: "Ascending identifier of a sprint"
+        table: [sprint, tfs_sprint, fixversion]
+        column: [sprint_id]
+        field: COALESCE(${f(join_cols, "sprint", mask=2, alias="alias")}, 0)
     issue_key:
         description: "Human-readable identifier of an issue"
         jira:

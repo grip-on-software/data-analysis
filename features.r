@@ -171,7 +171,7 @@ if (get_arg('--project', default=F)) {
     }
     else {
         features <- expand_feature_names(features, specifications$files,
-                                        specifications$categories)
+                                         specifications$categories)
     }
 
     if (split) {

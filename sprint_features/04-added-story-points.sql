@@ -7,8 +7,10 @@ ON ${j(issue_next_changelog, "issue", "old_issue")}
 LEFT JOIN gros.subtask ON ${t("issue")}.issue_id = subtask.id_subtask
 ${s(issue_join)}
 WHERE ${t("issue")}.story_points IS NOT NULL
-AND old_issue.sprint_id IS NOT NULL AND ${t("issue")}.sprint_id IS NOT NULL
-AND ${t("issue")}.sprint_id <> old_issue.sprint_id
+AND ${f(join_cols, "issue", mask=2, alias="alias", issue="old_issue")} IS NOT NULL
+AND ${s(sprint_id, sprint="issue")} <> 0
+AND ${s(sprint_id, sprint="issue")} <> ${s(sprint_id, sprint="issue", issue="old_issue")}
 AND ${t("issue")}.updated <= ${s(planned_end)}
 AND ${s(issue_not_done)}
 AND subtask.id_parent IS NULL
+${s(project_condition, project="issue")}

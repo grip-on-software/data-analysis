@@ -7,5 +7,6 @@ JOIN (
 ) AS max_issue
 ON ${j(issue_changelog, "issue", "max_issue")}
 ${s(issue_join)}
-WHERE ${t("issue")}.sprint_id <> 0
+WHERE ${s(sprint_id, sprint="issue")} <> 0
+${s(project_condition, project="issue")}
 ${g(join_cols, "issue")}
