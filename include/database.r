@@ -182,31 +182,39 @@ if (!exists('INC_DATABASE_R')) {
         join_str_interp <- function(field, left, right, mask=T, source=NULL,
                                     ...) {
             if (is.list(field) && !is.null(field$default)) {
-                if (!is.null(source) && !is.null(field[[source]])) {
-                    extra_fields <- names(field[[source]])
-                }
-                else {
-                    extra_fields <- NULL
-                }
-                field <- unlist(c(field$default, extra_fields))
-            }
-            field <- field[mask]
-
-            if (is.list(field)) {
-                left_fields <- field$left
-                right_fields <- field$right
+                fields <- field$default
             }
             else {
-                left_fields <- field
-                right_fields <- field
+                fields <- field
+            }
+            fields <- fields[mask]
+
+            if (is.list(fields)) {
+                left_fields <- fields$left
+                right_fields <- fields$right
+            }
+            else {
+                left_fields <- fields
+                right_fields <- fields
             }
             left_table <- var_str_interp(left, ...)
             right_table <- var_str_interp(right, ...)
             left_fields[left_fields == left_table] <- "id"
             right_fields[right_fields == right_table] <- "id"
-            return(paste(paste(left_table, left_fields, sep="."),
-                         paste(right_table, right_fields, sep="."),
-                         sep=" = ", collapse=" AND "))
+
+            joins <- paste(paste(left_table, left_fields, sep="."),
+                           paste(right_table, right_fields, sep="."),
+                           sep=" = ", collapse=" AND ")
+            if (!is.null(source) && !is.null(field[[source]])) {
+                extra <- names(field[[source]])
+                joins <- paste(joins, "AND",
+                               paste(paste("COALESCE(", left_table, ".", extra,
+                                           ", '')", sep=""),
+                                     paste("COALESCE(", right_table, ".", extra,
+                                           ", '')", sep=""),
+                                     sep=" = ", collapse=" AND "))
+            }
+            return(joins)
         }
         query_str_interp <- function(string, ...) { sub("\\S+\\.", "", string) }
         patterns <- c(patterns, list(s=recursive_str_interp,
