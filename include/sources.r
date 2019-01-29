@@ -218,15 +218,18 @@ build_sprint_source_urls <- function(conn, project_id, project_name,
     config <- get_config()
     for (item in items) {
         if (is.list(item$source)) {
+            type <- NULL
             if (config$db$primary_source %in% names(item$source)) {
                 type <- config$db$primary_source
             }
             else {
                 urls <- url_names(names(item$source))
                 index <- which(urls %in% names(source_urls))
-                type <- names(item$source)[[index[1]]]
+                if (length(index) > 0) {
+                    type <- names(item$source)[[index[1]]]
+                }
             }
-            if (length(type) > 0) {
+            if (!is.null(type)) {
                 new_item <- list(source=item$source[[type[1]]],
                                  type=ifelse(type[1] == "jira_version", "jira",
                                              type[1]))
