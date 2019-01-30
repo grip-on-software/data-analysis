@@ -30,6 +30,11 @@ count <- function(data, na.rm=F) {
     return(length(data))
 }
 
+count_unique <- function(data, na.rm=F) {
+    return(length(which(!duplicated(data, incomparables=NA) &
+                        (!na.rm | !is.na(data)))))
+}
+
 sum_of_na_avg <- function(data, na.rm=F) {
     sub <- sum(data, na.rm=na.rm)
     return(sub / length(which(!is.na(data))) * length(which(is.na(data))))
@@ -550,7 +555,8 @@ get_features <- function(conn, features, exclude, items, data, colnames,
                                           "component", item$summarize$component)
                 result <- get_components(data, result, components,
                                          names(item$source)[1],
-                                         component_field)
+                                         component_field,
+                                         summarize=item$summarize)
             }
             if (!is.null(item$summarize)) {
                 summarize <- item$summarize
@@ -751,7 +757,8 @@ get_sprint_conditions <- function(latest_date='', core=F, sprint_days=NA,
     return(conditions)
 }
 
-get_components <- function(data, result, components, source_type, field) {
+get_components <- function(data, result, components, source_type, field,
+                           summarize=NULL) {
     if (is.null(result$component)) {
         result$component <- rep(NA, nrow(result))
     }
@@ -772,11 +779,12 @@ get_components <- function(data, result, components, source_type, field) {
         if (is.list(source_filter)) {
             project_id <- data[data$project_name == component$project,
                                "project_id"][[1]]
-            conditions <- result$project_id == project_id
-            project_count <- length(which(conditions))
+            project_condition <- result$project_id == project_id
+            project_count <- length(which(project_condition))
             if (project_count == 0) {
                 next
             }
+            conditions <- project_condition
             if (!is.null(source_filter$include)) {
                 conditions <- conditions &
                     result[, field] %in% source_filter$include
@@ -789,7 +797,8 @@ get_components <- function(data, result, components, source_type, field) {
             loginfo('Setting %d results to component %s',
                     component_count, component$name)
             if (project_count == component_count &&
-                is.null(source_filter$exclude)) {
+                is.null(source_filter$exclude) &&
+                !isTRUE(component$remove)) {
                 result[conditions, "component"] <- NA
                 rows <- result[conditions, ]
                 rows$component <- component$name
@@ -797,6 +806,14 @@ get_components <- function(data, result, components, source_type, field) {
             }
             else {
                 result[conditions, "component"] <- component$name
+            }
+            if (isTRUE(component$remove) && !is.null(summarize)) {
+                key <- ifelse(!is.null(summarize$key), summarize$key, "key")
+                remove <- project_condition & !conditions &
+                    result[[key]] %in% result[conditions, key]
+                loginfo('Removing %d from other components than %s',
+                        length(which(remove)), component$name)
+                result <- result[!remove, ]
             }
         }
     }

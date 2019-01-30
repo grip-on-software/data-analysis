@@ -252,6 +252,7 @@ if (!exists('INC_DATABASE_R')) {
                                        field=field,
                                        group=c('project_id', 'sprint_id'),
                                        component='domain_name',
+                                       key='domain_name',
                                        details=c('domain_name', field))
             }
             else {

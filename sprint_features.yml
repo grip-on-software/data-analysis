@@ -731,6 +731,28 @@ files:
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
     category: tracking
+  - filename: 04-added-stories.sql
+    table: added_stories
+    column: num_added_stories
+    default: 0
+    summarize:
+        operation: count_unique
+        field: key
+        group: [project_id, sprint_id]
+        details: [key]
+    combine: sum
+    descriptions:
+        nl: Heringeplande stories
+        en: Replanned stories
+    long_descriptions:
+        nl: Het totaal aantal stories dat uit een eerdere sprint wordt toegevoegd aan de sprint
+        en: The total number of stories that is added from an earlier sprint to the sprint
+    units:
+        nl: "%s stories toegevoegd uit eerdere sprint"
+        en: "%s stories added from earlier sprint"
+    source:
+        jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
+    category: tracking
   - filename: 04-added-story-points.sql
     table: added_story_points
     column: num_added_points
@@ -750,6 +772,28 @@ files:
     units:
         nl: "%s storypoints toegevoegd uit eerdere sprint"
         en: "%s story points added from earlier sprint"
+    source:
+        jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
+    category: tracking
+  - filename: 04-removed-stories.sql
+    table: removed_stories
+    column: num_removed_stories
+    default: 0
+    summarize:
+        operation: count_unique
+        field: key
+        group: [project_id, sprint_id]
+        details: [key]
+    combine: sum
+    descriptions:
+        nl: Doorgeschoven stories
+        en: Removed stories
+    long_descriptions:
+        nl: Het totaal aantal stories dat tijdens de sprint wordt weggehaald of doorgeschoven
+        en: The total number of stories that is (re)moved during the sprint
+    units:
+        nl: "%s doorgeschoven stories"
+        en: "%s removed stories"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
     category: tracking
@@ -795,6 +839,11 @@ files:
     table: stories
     column: num_stories
     default: 0
+    summarize:
+        operation: count_unique
+        field: key
+        group: [project_id, sprint_id]
+        details: [key]
     combine: sum
     descriptions:
         nl: User stories
@@ -812,6 +861,11 @@ files:
     table: done_stories
     column: num_done_stories
     default: 0
+    summarize:
+        operation: count_unique
+        field: key
+        group: [project_id, sprint_id]
+        details: [key]
     combine: sum
     descriptions:
         nl: Afgeronde stories
