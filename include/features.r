@@ -444,9 +444,17 @@ update_combine_interval <- function(items, old_data, data, row_num, details,
                                                               detail[[d]][[1]]
                                                           })))
                 }
+                key <- ifelse(is.null(item$summarize$key), "key",
+                              item$summarize$key)
+                if (key %in% colnames(current)) {
+                    duplicates <- duplicated(current[[key]][[1]])
+                    for (d in item$summarize$details) {
+                        current[[d]][[1]] <- current[[d]][[1]][!duplicates]
+                    }
+                }
                 details[[item$column[1]]][[detail_name]] <- current
 
-                if (item$summarize$field %in% current) {
+                if (item$summarize$field %in% colnames(current)) {
                     with_missing <- ifelse(is.null(item$summarize$with_missing),
                                            F, item$summarize$with_missing)
                     summarized <- do.call(item$summarize$operation[1],
