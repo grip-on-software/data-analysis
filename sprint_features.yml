@@ -145,7 +145,7 @@ files:
     table: sprint_vcs_dev_count
     column: number_of_vcs_devs
     default: 0
-    combine: mean
+    combine: median
     descriptions:
         nl: Developer teamgrootte
         en: Development team size
@@ -165,7 +165,7 @@ files:
     table: sprint_jira_dev_count
     column: number_of_jira_devs
     default: 0
-    combine: mean
+    combine: median
     descriptions:
         nl: Project teamgrootte
         en: Project team size
@@ -185,7 +185,7 @@ files:
     table: sprint_seat_count
     column: number_of_seats
     default: 0
-    combine: mean
+    combine: median
     descriptions:
         nl: Teamgrootte
         en: Team size
@@ -199,10 +199,10 @@ files:
         nl: "%s fte"
         en: "%s FTE"
     category: team
-  - expression: "ifelse(number_of_vcs_devs > 0, number_of_vcs_devs, mean(c(number_of_jira_devs, number_of_seats)))"
+  - expression: "ifelse(number_of_vcs_devs > 0, number_of_vcs_devs, round(mean(c(number_of_jira_devs, number_of_seats))))"
     column: number_of_devs
     default: 0
-    combine: mean
+    combine: median
     descriptions:
         nl: Aantal developers
         en: Number of developers
