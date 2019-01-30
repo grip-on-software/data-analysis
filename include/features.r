@@ -572,6 +572,9 @@ get_features <- function(conn, features, exclude, items, data, colnames,
                     group_cols$component <- addNA(factor(result$component,
                                                          component_names))
                     group_names <- c(group_names, "component")
+                    if (!is.null(result$original_component)) {
+                        group_names <- c(group_names, "original_component")
+                    }
                 }
                 groups <- split(result, as.list(group_cols), drop=T)
                 operation <- summarize$operation
@@ -628,6 +631,9 @@ get_features <- function(conn, features, exclude, items, data, colnames,
             if (!is.null(components)) {
                 if ("component" %in% colnames(result)) {
                     by <- c(by, "component")
+                    if ("original_component" %in% colnames(result)) {
+                        by <- c(by, "original_component")
+                    }
                 }
                 else {
                     match <- "all"
@@ -761,6 +767,9 @@ get_components <- function(data, result, components, source_type, field,
                            summarize=NULL) {
     if (is.null(result$component)) {
         result$component <- rep(NA, nrow(result))
+    }
+    else if (field == "component") {
+        result$original_component <- result$component
     }
     if (is.null(source_type)) {
         return(result)
