@@ -56,6 +56,7 @@ map_details <- function(details, project_ids, sprint_ids, component,
                                detail[[project_col]] <- NULL
                                detail[[sprint_col]] <- NULL
                                detail$component <- NULL
+                               detail$original_component <- NULL
                                return(unbox(detail))
                            },
                            project)
