@@ -311,14 +311,16 @@ get_combined_team <- function(team, team_id, data, projects, team_projects,
                            component=component,
                            stringsAsFactors=F)[, colnames(projects)]
     metadata$project_ids <- list(project_id)
+    metadata$project_names <- list(project_names)
 
     if (team$name %in% projects$name) {
-        metadata$project_names <- projects[projects$name == team$name,
-                                           "project_names"]
+        if (!isTRUE(team$names)) {
+            metadata$project_names <- projects[projects$name == team$name,
+                                               "project_names"]
+        }
         projects[projects$name == team$name, ] <- as.list(metadata)
     }
     else {
-        metadata$project_names <- list(project_names)
         projects[meta_condition, 'team'] <- F
         if (length(replace) > 0) {
             projects <- projects[!(projects$name %in% replace), ]
@@ -890,7 +892,7 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
                                        prediction=list()) {
     fields <- list(project_name='${t("project")}.name',
                    sprint_name='${t("sprint")}.name',
-                   start_date='${t("sprint")}.start_date',
+                   start_date='${s(sprint_open)}',
                    close_date='${s(sprint_close)}',
                    old='${old}')
 

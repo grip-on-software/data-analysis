@@ -242,8 +242,10 @@ build_sprint_source_urls <- function(conn, project_id, project_name,
     }
 
     if (is.null(sprint)) {
+        sprint_id <- ifelse(config$db$primary_source == "jira_version",
+                            '{{fixversion}}', '{{sprint_id}}')
         sprint_patterns <- list(jira_board_id='{{board_id}}',
-                                jira_sprint_id='{{sprint_id}}',
+                                jira_sprint_id=sprint_id,
                                 jira_sprint_ids='{{sprint_ids}}',
                                 sprint_start_date='{{start_date}}',
                                 sprint_end_date='{{end_date}}')
