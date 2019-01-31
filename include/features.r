@@ -319,9 +319,13 @@ get_combined_team <- function(team, team_id, data, projects, team_projects,
     metadata$project_names <- list(project_names)
 
     if (team$name %in% projects$name) {
-        if (!isTRUE(team$names)) {
-            metadata$project_names <- projects[projects$name == team$name,
-                                               "project_names"]
+        existing_names <- projects[projects$name == team$name, "project_names"]
+        if (isTRUE(team$names)) {
+            metadata$project_names <- list(c(existing_names,
+                                             metadata$project_names[[1]]))
+        }
+        else {
+            metadata$project_names <- existing_names
         }
         projects[projects$name == team$name, ] <- as.list(metadata)
     }
