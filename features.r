@@ -270,7 +270,13 @@ if (get_arg('--project', default=F)) {
         if (!dir.exists(output_dir)) {
             dir.create(output_dir)
         }
-        projects <- levels(factor(result$projects$name))
+        if (project_ids != '0') {
+            names <- paste('Proj', result$projects$project_id, sep='')
+        }
+        else {
+            names <- result$projects$name
+        }
+        projects <- levels(factor(names))
         ids <- unique(do.call("c", result$projects$project_ids))
 
         source_urls <- get_source_urls(conn, ids, multi=T)
