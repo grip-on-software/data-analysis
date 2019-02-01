@@ -620,7 +620,7 @@ files:
         jira: null
     category: tracking
   - expression: "abs(done_story_points - num_story_points)"
-    column:
+    column: points_off_expectation
     default: 0
     combine: sum
     descriptions:
