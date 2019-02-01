@@ -205,7 +205,8 @@ if (!exists('INC_DATABASE_R')) {
             joins <- paste(paste(left_table, left_fields, sep="."),
                            paste(right_table, right_fields, sep="."),
                            sep=" = ", collapse=" AND ")
-            if (!is.null(source) && !is.null(field[[source]])) {
+            if (!is.null(source) && is.list(field) &&
+                !is.null(field[[source]])) {
                 extra <- names(field[[source]])
                 joins <- paste(joins, "AND",
                                paste(paste("COALESCE(", left_table, ".", extra,
