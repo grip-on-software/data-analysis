@@ -234,6 +234,23 @@ files:
         nl: "%s sprints"
         en: "%s sprints"
     category: team
+  - expression: "dev_sprint_experience / number_of_devs"
+    column: weighted_sprint_experience
+    default: 0
+    combine: median
+    descriptions:
+        nl: Gemiddelde ervaring
+        en: Average experience
+    long_descriptions:
+        nl: Het aantal sprints dat een developer in het team gemiddeld in heeft gewerkt in de loopduur van het project voor de sprint
+        en: The number of sprints that a developer in the team has worked in the lifespan of the project before the sprint
+    units:
+        nl: "%s sprints ervaring per developer"
+        en: "%s sprints of experience per developer"
+    short_units:
+        nl: "%s sprints/dev"
+        en: "%s sprints/dev"
+    category: team
   - filename: 01-new-committers.sql
     table: new_developers
     column: num_new_developers
@@ -599,6 +616,22 @@ files:
     units:
         nl: "%s toegevoegde storypoints"
         en: "%s added story points"
+    source:
+        jira: null
+    category: tracking
+  - expression: "abs(done_story_points - num_story_points)"
+    column:
+    default: 0
+    combine: sum
+    descriptions:
+        nl: Punten naast verwachting
+        en: Points off expectation
+    long_descriptions:
+        nl: Het aantal storypoints afgemaakt tijdens de sprint onder of boven de geplande aantal
+        en: The number of story points completed during the sprint above or below the planned number
+    units:
+        nl: "%s storypoints naast verwachting"
+        en: "%s story points off expectation"
     source:
         jira: null
     category: tracking
