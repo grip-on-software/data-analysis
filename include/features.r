@@ -498,7 +498,8 @@ include_feature <- function(item, features, exclude) {
 }
 
 expand_feature_names <- function(feature, items, categories=list()) {
-    features <- strsplit(features, ",")[[1]]
+    features <- strsplit(feature, ",")[[1]]
+    all <- unlist(lapply(items, function(item) { item$column }))
     sources <- unique(unlist(lapply(items,
                                     function(item) { names(item$source) })))
 
@@ -514,19 +515,34 @@ expand_feature_names <- function(feature, items, categories=list()) {
         }
     }
 
-    features <- unlist(lapply(features,
-                              function(feature) {
-                                  if (feature %in% sources) {
-                                      return(lapply(items, filter_source,
-                                                    feature))
-                                  }
-                                  if (feature %in% names(categories)) {
-                                      return(lapply(items, filter_category,
-                                                    feature))
-                                  }
-                                  return(feature)
-                              }))
-    return(unique(features))
+    collect <- function(current, feature) {
+        if (startsWith(feature, "-")) {
+            exclude <- T
+            feature <- substring(feature, 2)
+        }
+        else {
+            exclude <- F
+        }
+
+        if (feature == "all") {
+            feature <- all
+        }
+        else if (feature %in% sources) {
+            feature <- lapply(items, filter_source, feature)
+        }
+        else if (feature %in% names(categories)) {
+            feature <- lapply(items, filter_category,
+                              feature)
+        }
+
+        if (exclude) {
+            return(current[!(current %in% feature)])
+        }
+        return(c(current, feature))
+    }
+
+    features <- Reduce(collect, features, collect(c(), features[1]))
+    return(unique(unlist(features)))
 }
 
 get_features <- function(conn, features, exclude, items, data, colnames,
