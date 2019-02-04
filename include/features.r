@@ -460,7 +460,7 @@ update_combine_interval <- function(items, old_data, data, row_num, details,
                 details[[item$column[1]]][[detail_name]] <- current
 
                 if (item$summarize$field %in% colnames(current) &&
-                    item$column[1] %in% result$columns &&
+                    item$column[1] %in% result$columns && !isTRUE(item$carry) &&
                     length(current[[item$summarize$field]][[1]]) > 1) {
                     with_missing <- ifelse(is.null(item$summarize$with_missing),
                                            F, item$summarize$with_missing)
