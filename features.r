@@ -286,6 +286,7 @@ if (get_arg('--project', default=F)) {
         old_sprint_data <- sprint_data[sprint_data$old, ]
         new_sprint_data <- sprint_data[!sprint_data$old, ]
 
+        result$projects$num_sprints <- 0
         for (project in projects) {
             project_dir <- paste(output_dir, project, sep="/")
             if (!dir.exists(project_dir)) {
@@ -324,6 +325,8 @@ if (get_arg('--project', default=F)) {
             team_id <- sprint_data[sprint_data$project_name == project,
                                    project_column][[1]]
             meta <- result$projects[result$projects$project_id == team_id, ]
+            result$projects[result$projects$project_id == team_id,
+                            'num_sprints'] <- nrow(old) + nrow(new)
             project_id <- meta$project_ids[[1]]
             team_projects <- meta$project_names[[1]]
             if (length(team_projects) == 1 || meta$component) {
@@ -434,6 +437,7 @@ if (get_arg('--project', default=F)) {
         if (isTRUE(metadata$team) && project_ids != '1') {
             metadata$project_names <- T
         }
+        metadata$num_sprints <- T
         write_projects_metadata(conn, result$project_fields, metadata,
                                 projects=result$projects,
                                 project_ids=project_ids,
