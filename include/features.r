@@ -3,6 +3,7 @@
 library(jsonlite)
 library(plyr)
 library(yaml)
+library(zoo)
 source('include/database.r')
 source('include/log.r')
 source('include/project.r')
@@ -679,6 +680,14 @@ get_features <- function(conn, features, exclude, items, data, colnames,
                 }
             }
             data <- join(data, result, by=by, type="left", match=match)
+            if (isTRUE(item$carry)) {
+                projects <- data[[join_cols[1]]]
+                for (project_id in unique(projects)) {
+                    data[projects == project_id, item$column] <-
+                        na.locf(data[projects == project_id, item$column],
+                                na.rm=F)
+                }
+            }
             if (!is.null(item$default)) {
                 for (column in columns) {
                     if (!(column %in% names(data))) {

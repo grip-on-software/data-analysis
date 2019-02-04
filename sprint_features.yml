@@ -387,6 +387,7 @@ files:
         metric_history: "${metric_history_url}/${metric_history_file}"
   - metric: Vulnerabilities
     column: vulnerabilities
+    carry: true
     aggregate: end
     summarize: sum
     descriptions:
@@ -400,6 +401,7 @@ files:
         en: "%s vulnerabilities"
   - metric: MaintainabilityBugs
     column: maintainability_bugs
+    carry: true
     aggregate: end
     summarize: sum
     descriptions:
@@ -413,6 +415,7 @@ files:
         en: "%s maintainability bugs"
   - metric: CodeSmells
     column: code_smells
+    carry: true
     aggregate: end
     summarize: sum
     descriptions:
@@ -426,6 +429,7 @@ files:
         en: "%s code smells"
   - metric: SqaleIndex
     column: technical_debt
+    carry: true
     aggregate: end
     summarize: sum
     descriptions:
