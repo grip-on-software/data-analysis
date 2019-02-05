@@ -322,34 +322,41 @@ if (get_arg('--project', default=F)) {
             }
 
             # There may be multiple original project IDs for team projects.
-            team_id <- sprint_data[sprint_data$project_name == project,
-                                   project_column][[1]]
-            meta <- result$projects[result$projects$project_id == team_id, ]
-            result$projects[result$projects$project_id == team_id,
-                            'num_sprints'] <- nrow(old) + nrow(new)
-            project_id <- meta$project_ids[[1]]
-            team_projects <- meta$project_names[[1]]
-            if (length(team_projects) == 1 || meta$component) {
-                team_ids <- unlist(c(new$team_id[[1]], project_id))
-            }
-            else {
-                team_ids <- new$team_id[[1]]
-            }
-            # Get latest sprint properties
-            quality_name <- new$quality_name[[1]]
-            if (is.null(quality_name)) {
+            if (length(new[[project_column]]) == 0) {
+                team_ids <- c()
                 quality_name <- NA
-            }
-            sprint <- c(new[nrow(new), sprint_meta],
-                        list(quality_name=quality_name))
-
-            component <- new$component[[1]]
-            if (is.null(component)) {
+                sprint <- list()
                 component <- NA
             }
-            else if (length(team_projects) > 1) {
-                component <- F
+            else {
+                team_id <- new[[project_column]][[1]]
+                meta <- result$projects[result$projects$project_id == team_id, ]
+                result$projects[result$projects$project_id == team_id,
+                                'num_sprints'] <- nrow(old) + nrow(new)
+                project_id <- meta$project_ids[[1]]
+                team_projects <- meta$project_names[[1]]
+                if (length(team_projects) == 1 || meta$component) {
+                    team_ids <- unlist(c(new$team_id[[1]], project_id))
+                }
+                else {
+                    team_ids <- new$team_id[[1]]
+                }
+                # Get latest sprint properties
+                quality_name <- new$quality_name[[1]]
+                if (is.null(quality_name)) {
+                    quality_name <- NA
+                }
+                sprint <- new[nrow(new), sprint_meta]
+
+                component <- new$component[[1]]
+                if (is.null(component)) {
+                    component <- NA
+                }
+                else if (length(team_projects) > 1) {
+                    component <- F
+                }
             }
+            sprint <- c(sprint, list(quality_name=quality_name))
 
             new_details <- lapply(result$details, map_details,
                                   team_ids, unlist(new[[sprint_column]]),
