@@ -1,6 +1,9 @@
-SELECT ${s(project_name)} AS project_name, sprint.sprint_id AS sprint_id, sprint."name" AS sprint_name, issue.updated AS date
-FROM gros.issue
-JOIN gros.issue AS prev_issue ON issue.issue_id = prev_issue.issue_id AND issue.changelog_id = prev_issue.changelog_id+1
-LEFT OUTER JOIN gros.sprint ON issue.project_id = sprint.project_id AND issue.sprint_id = sprint.sprint_id
-JOIN gros.project ON issue.project_id = project.project_id
-WHERE issue.impediment = TRUE AND prev_issue.impediment = FALSE
+SELECT ${s(project_name)} AS project_name, ${f(join_cols, "sprint", mask=2, alias=F)} AS sprint_id, ${t("sprint")}."name" AS sprint_name, ${t("issue")}.updated AS date
+FROM gros.${t("issue")}
+JOIN gros.${t("issue")} AS prev_issue
+ON ${j(issue_next_changelog, "issue", "prev_issue")}
+LEFT OUTER JOIN gros.${t("sprint")}
+ON ${j(join_cols, "issue", "sprint")}
+JOIN gros.${t("project")}
+ON ${j(join_cols, "issue", "project", mask=1)}
+WHERE ${t("issue")}.impediment = TRUE AND prev_issue.impediment = FALSE

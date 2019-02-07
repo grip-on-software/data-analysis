@@ -576,7 +576,8 @@ get_features <- function(conn, features, exclude, items, data, colnames,
     selected_items <- c()
     expressions <- c()
     for (item in items) {
-        if (include_feature(item, features, exclude)) {
+        if (all(item$column %in% required) ||
+            include_feature(item, features, exclude)) {
             selected_items <- c(selected_items, list(item))
             columns <- item$column
             by <- join_cols
@@ -749,6 +750,9 @@ get_expression <- function(item, data) {
         group <- item$window$group
         if ("project_name" %in% colnames(data)) {
             group[group == "project_id"] <- "project_name"
+        }
+        else if (!("project_id" %in% colnames(data))) {
+            group[group == "project_id"] <- "team_id"
         }
         if (length(group) == 1) {
             group_cols <- list(factor(data[, group]))
@@ -935,7 +939,7 @@ get_sprint_features <- function(conn, features, exclude, variables, latest_date,
                                 future=T, combine=F, details=F, time=F,
                                 teams=list()) {
     conditions <- get_sprint_conditions(latest_date, core, sprint_days,
-                                        sprint_patch)
+                                        sprint_patch, future=future)
     if (length(conditions) != 0) {
         where_clause <- paste('WHERE', paste(conditions, collapse=' AND '))
         sprint_conditions <- paste('AND', paste(conditions, collapse=' AND '))
@@ -944,8 +948,6 @@ get_sprint_features <- function(conn, features, exclude, variables, latest_date,
         where_clause <- ''
         sprint_conditions <- ''
     }
-    patterns <- load_definitions('sprint_definitions.yml',
-                                 list(sprint_days=sprint_days))
 
     fields <- c('${f(join_cols, "sprint")}')
     if (config$db$primary_source == "tfs") {
@@ -962,14 +964,18 @@ get_sprint_features <- function(conn, features, exclude, variables, latest_date,
     }
     order_by <- c('${f(join_cols, "sprint", mask=1)}', '${s(sprint_open)}',
                '${t("sprint")}.name')
+
+    patterns <- load_definitions('sprint_definitions.yml',
+                                 list(sprint_days=sprint_days,
+                                      join_cols=join_cols))
+
     query <- paste('SELECT', paste(fields, collapse=', '),
                    'FROM gros.${t("sprint")}
                     JOIN gros.${t("project")}
                     ON ${j(join_cols, "project", "sprint", mask=1)}',
                    where_clause,
                    'ORDER BY', paste(order_by, collapse=', '))
-    sprint_query <- load_query(list(query=query),
-                               c(patterns, list(join_cols=join_cols)))
+    sprint_query <- load_query(list(query=query), patterns)
 
     sprint_data <- dbGetQuery(conn, sprint_query$query)
 
@@ -1227,22 +1233,34 @@ get_prediction_feature <- function(prediction, result) {
     return(result)
 }
 
-get_project_features <- function(conn, features, exclude, variables, core=F) {
-    fields <- list(project_id='project_id', name='name')
+get_project_features <- function(conn, features, exclude, variables, core=F,
+                                 metadata=list(), project_fields=list()) {
+    names(project_fields) <- project_fields
     if (config$db$primary_source == "tfs") {
         join_cols <- c("team_id")
-        fields$project_id <- "team_id"
+        project_fields$project_id <- NULL
+        project_fields$team_id <- "team_id"
+        project_fields$quality_display_name <- NULL
     }
     else {
         join_cols <- c("project_id")
     }
     patterns <- load_definitions('sprint_definitions.yml',
                                  c(variables, list(join_cols=join_cols)))
-    data <- get_projects_meta(conn, fields, list(core=core), join_cols,
+    if (isTRUE(core)) {
+        metadata$core <- T
+    }
+    data <- get_projects_meta(conn, project_fields, metadata, join_cols,
                               patterns, by='name')
+    if (isTRUE(core)) {
+        data <- data[data$core, ]
+    }
+    projects <- data
 
     items <- load_queries('project_features.yml', NULL, patterns)
     result <- get_features(conn, features, exclude, items, data, c(), join_cols)
+    result$projects <- projects
+    result$project_fields <- project_fields
     result$patterns <- patterns
     return(result)
 }

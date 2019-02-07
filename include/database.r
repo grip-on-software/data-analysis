@@ -51,13 +51,16 @@ if (!exists('INC_DATABASE_R')) {
         }
         sources <- list(jira=list(issue="issue",
                                   sprint="sprint",
-                                  project="project"),
+                                  project="project",
+                                  developer="developer"),
                         jira_version=list(issue="issue",
                                           sprint="fixversion",
-                                          project="project"),
+                                          project="project",
+                                          developer="developer"),
                         tfs=list(issue="tfs_work_item",
                                  sprint="tfs_sprint",
-                                 project="tfs_team"))
+                                 project="tfs_team",
+                                 developer="tfs_developer"))
         primary_tables <- sources[[config$db$primary_source]]
         variables <- c(variables, primary_tables)
 
@@ -110,6 +113,7 @@ if (!exists('INC_DATABASE_R')) {
         field_str_interp <- function(field, table=NULL, mask=T, alias=NA, ...) {
             extra_fields <- c()
             primary_table <- NULL
+            var <- c(..., as.list(parent.frame()), variables)
             if (is.null(table)) {
                 if (!is.null(definitions$fields[[field]])) {
                     definition <- definitions$fields[[field]]
@@ -117,15 +121,17 @@ if (!exists('INC_DATABASE_R')) {
                 else {
                     definition <- definitions$conditions[[field]]
                 }
-                var_table <- get_define(definition, "table")
-                if (length(var_table) > 1) {
-                    tables <- var_table %in% primary_tables
-                    var_table <- var_table[as.character(tables)][1]
+                table <- get_define(definition, "table")
+                if (length(table) > 1) {
+                    table <- table[table %in% primary_tables][[1]]
                 }
+                if (table %in% primary_tables) {
+                    table <- names(primary_tables)[table == primary_tables]
+                }
+                var_table <- var_str_interp(table, var)
                 field <- get_define(definition, "column")
             }
             else {
-                var <- c(..., as.list(parent.frame()), variables)
                 if (table %in% names(var) &&
                     var[[table]] %in% names(primary_tables)) {
                     table <- var[[table]]
@@ -154,7 +160,12 @@ if (!exists('INC_DATABASE_R')) {
                 }
             }
             primary_id <- field == primary_table
-            fields <- paste(var_table, field, sep=".")
+            if (var_table == "") {
+                fields <- field
+            }
+            else {
+                fields <- paste(var_table, field, sep=".")
+            }
             if (any(primary_id)) {
                 if (is.character(alias) && alias == "alias") {
                     fields[primary_id] <- paste(var_table, "id", sep=".")
@@ -180,7 +191,7 @@ if (!exists('INC_DATABASE_R')) {
             return(paste('GROUP BY ', fields, extra, sep=""))
         }
         join_str_interp <- function(field, left, right, mask=T, source=NULL,
-                                    ...) {
+                                    var=F, ...) {
             if (is.list(field) && !is.null(field$default)) {
                 fields <- field$default
             }
@@ -201,6 +212,18 @@ if (!exists('INC_DATABASE_R')) {
             right_table <- var_str_interp(right, ...)
             left_fields[left_fields == left_table] <- "id"
             right_fields[right_fields == right_table] <- "id"
+
+            vars <- c(..., as.list(parent.frame()), variables)
+            var_left_fields <- left_fields %in% names(vars)
+            if (var && any(var_left_fields)) {
+                left_fields[var_left_fields] <-
+                    vars[[left_fields[var_left_fields]]][[left_table]]
+            }
+            var_right_fields <- right_fields %in% names(vars)
+            if (var && any(var_right_fields)) {
+                right_fields[var_right_fields] <-
+                    vars[[right_fields[var_right_fields]]][[right_table]]
+            }
 
             joins <- paste(paste(left_table, left_fields, sep="."),
                            paste(right_table, right_fields, sep="."),

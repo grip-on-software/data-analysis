@@ -1,3 +1,4 @@
-SELECT ${s(project_name)} AS project_name, sprint.sprint_id AS sprint_id, sprint."name" AS sprint_name, ${s(sprint_close)} AS date
-FROM gros.sprint
-JOIN gros.project ON sprint.project_id = project.project_id
+SELECT ${s(project_name)} AS project_name, ${f(join_cols, "sprint", mask=2, alias=F)} AS sprint_id, ${t("sprint")}."name" AS sprint_name, ${s(sprint_close)} AS date
+FROM gros.${t("sprint")}
+JOIN gros.${t("project")}
+ON ${j(join_cols, "sprint", "project", mask=1)}

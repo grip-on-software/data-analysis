@@ -1,5 +1,5 @@
 -- Number of stories that are done in time
-SELECT DISTINCT ${f(join_cols, "issue")}, ${s(issue_key)}
+SELECT DISTINCT ${f(join_cols, "issue")}, ${s(issue_key)} AS key
 FROM gros.${t("issue")} ${s(issue_join)}, gros.${t("sprint")},
 (SELECT issue_id, MAX(changelog_id) AS changelog_id FROM gros.${t("issue")} GROUP BY issue_id) AS max_issue
 WHERE ${j(join_cols, "issue", "sprint")}

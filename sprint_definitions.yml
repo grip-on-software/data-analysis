@@ -63,11 +63,71 @@ fields:
             table: tfs_sprint
             column: [end_date]
             field: ${t("sprint")}.end_date
+    sprint_board:
+        description: "Board ID on which the sprint is shown"
+        jira:
+            table: sprint
+            column: [board_id]
+            field: ${t("sprint")}.board_id
+        tfs:
+            table: tfs_sprint
+            column: []
+            field: 'NULL'
     story_points:
         description: "The number of planned points of an issue"
         table: [issue, tfs_work_item]
-        column: [complete_date, end_date]
+        column: [story_points]
         field: CASE WHEN ${t("issue")}.story_points IN (99, 100, 122, 999) THEN 0 ELSE ${t("issue")}.story_points END
+    developer_internal:
+        description: "Whether the developer has an internal email address"
+        jira:
+            table: developer
+            column: [local_domain]
+            field: ${t("developer")}.local_domain
+        tfs:
+            table: tfs_developer
+            column: [email]
+            field: ${t("developer")}.email LIKE '%\%'
+    developer_issue_name:
+        description: "Name of the developer as mentioned in issue tables (reporter, assignee, updater)"
+        jira:
+            table: developer
+            column: [name]
+            field: ${t("developer")}.name
+        tfs:
+            table: tfs_developer
+            column: [display_name]
+            field: ${t("developer")}.display_name
+    issue_status:
+        description: "Human-readable name of an issue status"
+        jira:
+            table: status
+            column: [name]
+            field: status.name
+        tfs:
+            table: tfs_work_item
+            column: [status]
+            field: ${t("issue")}.status
+    issue_resolution:
+        description: "Human-readable name of an issue resolution"
+        jira:
+            table: resolution
+            column: [name]
+            field: resolution.name
+        tfs:
+            table: tfs_work_item
+            column: [status]
+            field: CASE WHEN ${s(issue_done)} THEN ${t("issue")}.status ELSE null END
+    issue_status_resolution_join:
+        description: "Join statement for status and resolution names"
+        jira:
+            table: issue
+            column: [status, resolution]
+            field: LEFT JOIN gros.status ON ${t("issue")}.status = status.id LEFT JOIN gros.resolution ON ${t("issue")}.resolution = resolution.id
+        tfs:
+            table: tfs_work_item
+            column: []
+            field: ''
 conditions:
     project_recent:
         jira:
@@ -89,7 +149,7 @@ conditions:
         tfs:
             table: tfs_team
             column: [name]
-            condition: 'true'
+            condition: ${t("project")}.name <> 'IT Squad'
     project_main:
         description: "Projects that do not have a parent project"
         jira:

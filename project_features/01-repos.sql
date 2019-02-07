@@ -1,2 +1,3 @@
-SELECT project_id, COUNT(*) AS num_repos FROM gros.repo
-GROUP BY project_id HAVING project_id IS NOT NULL;
+SELECT ${f(join_cols, "repo")}, COUNT(*) AS num_repos
+FROM gros.${t("repo")}
+${g(join_cols, "repo")} HAVING ${f(join_cols, "repo")} IS NOT NULL

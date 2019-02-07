@@ -1,3 +1,4 @@
-SELECT repo.project_id, COUNT(*) AS num_push_events FROM gros.vcs_event
-LEFT JOIN gros.repo ON vcs_event.repo_id = repo.id
-GROUP BY repo.project_id HAVING repo.project_id IS NOT NULL;
+SELECT ${f(join_cols, "repo")}, COUNT(*) AS num_push_events
+FROM gros.${t("vcs_event")}
+LEFT JOIN gros.${t("repo")} ON ${t("vcs_event")}.repo_id = ${t("repo")}.id
+${g(join_cols, "repo")} HAVING ${f(join_cols, "repo")} IS NOT NULL

@@ -1,2 +1,4 @@
-SELECT project_id, COUNT(DISTINCT tag_name) AS num_tags
-FROM gros.tag JOIN gros.repo ON tag.repo_id = repo.id GROUP BY project_id;
+SELECT ${f(join_cols, "repo")}, COUNT(DISTINCT tag_name) AS num_tags
+FROM gros.${t("tag")}
+JOIN gros.${t("repo")} ON ${t("tag")}.repo_id = ${t("repo")}.id
+${g(join_cols, "repo")}

@@ -70,7 +70,13 @@ not_done_ratio <- function(item, result, output_dir) {
 
 sprint_burndown <- function(item, result, output_dir) {
     format <- get_arg('--format', default='pdf')
-    projects <- get_projects(conn)
+
+    project_col <- item$patterns$join_cols[1]
+    sprint_col <- item$patterns$join_cols[2]
+    project_fields <- list(project_col, 'name')
+    projects <- get_projects_meta(conn, fields=project_fields,
+                                  join_cols=item$patterns$join_cols,
+                                  patterns=item$patterns)
 
     baseDir <- paste(output_dir, item$table, sep="/")
     if (!dir.exists(baseDir)) {
@@ -80,18 +86,19 @@ sprint_burndown <- function(item, result, output_dir) {
         unlink(paste(baseDir, "*", sep="/"), recursive=TRUE)
     }
     aspect_ratio <- 1 / 1.6
-    for (project in levels(factor(result$project_id))) {
-        for (sprint in levels(factor(result[result$project_id == project,
-                                            'sprint_id']))) {
+    for (project in levels(factor(result[[project_col]]))) {
+        for (sprint in levels(factor(result[result[[project_col]] == project,
+                                            sprint_col]))) {
             if (item$patterns[['project_ids']] != '1') {
-                project_name <- projects[projects$project_id == project, 'name']
+                project_name <- projects[projects[[project_col]] == project,
+                                         'name']
             }
             else {
                 project_name <- paste('Proj', project, sep='')
             }
             columns <- c('story_points', 'close_date', 'key', 'event_type')
-            sprint_data <- result[result$project_id == project &
-                                  result$sprint_id == sprint, columns]
+            sprint_data <- result[result[[project_col]] == project &
+                                  result[[sprint_col]] == sprint, columns]
             start_points <- sprint_data[1, 'story_points']
             end_time <- sprint_data[sprint_data$event_type == 'close',
                                     'close_date']
@@ -227,26 +234,47 @@ to_map <- function(df) {
 }
 
 story_flow <- function(item, result, output_dir) {
-    states <- to_map(dbGetQuery(conn, 'SELECT id, name FROM gros.status'))
-    resolutions <- to_map(dbGetQuery(conn,
-                                     'SELECT id, name FROM gros.resolution'))
-
+    config <- get_config()
+    if (config$db$primary_source == "tfs") {
+        colors <- list('To Do'='blue',
+                       'New'='blue',
+                       'Requested'='blue',
+                       'Active'='yellow',
+                       'Closed'='darkgreen',
+                       'Committed'='green',
+                       'Approved'='yellow',
+                       'Done'='green',
+                       'In progress'='yellow',
+                       'Design'='blue',
+                       'Removed'='green',
+                       'Accepted'='blue',
+                       'Open'='blue',
+                       'Ready'='yellow',
+                       'done'='green',
+                       'Validate'='green',
+                       'In Progress'='yellow',
+                       'Completed'='green',
+                       'Inactive'='grey')
+    }
+    else {
+        colors <- list('Open'='blue',
+                       'In Progress'='yellow',
+                       'Reopened'='gray',
+                       'Resolved'='green',
+                       'Closed'='darkgreen',
+                       'BACKLOG APPROVED'='yellow',
+                       'REVIEWED'='yellow',
+                       'IN REVIEW'='yellow')
+    }
+    resolved <- names(colors)[colors %in% c('green', 'darkgreen')]
     columns <- c('old_status', 'old_resolution', 'new_status', 'new_resolution')
-    changes <- split(result,
-                     list(result$old_status, result$old_resolution,
-                          result$new_status, result$new_resolution), drop=T)
+    factors <- list(addNA(result$old_status), addNA(result$old_resolution),
+                    addNA(result$new_status), addNA(result$new_resolution))
+    changes <- split(result, factors, drop=T)
     nodes <- list()
     edges <- list()
     total_stories <- nrow(result)
     avg_volume <- total_stories / length(changes)
-    colors <- list('1'='blue', # Open
-                   '3'='yellow', # In Progress
-                   '4'='gray', # Reopened
-                   '5'='green', # Resolved
-                   '6'='darkgreen', # Closed
-                   '10004'='yellow', # Backlog Approved
-                   '10005'='yellow', # Reviewed
-                   '10006'='yellow') # In Review
     color_names <- list(blue='open', yellow='progress', gray='reopened',
                         green='resolved', darkgreen='closed')
     # from max (bottom) to min (top)
@@ -256,20 +284,16 @@ story_flow <- function(item, result, output_dir) {
                                   option="plasma")(max_time+1), 0, 7)
 
     for (change in changes) {
-        old_status_id <- as.character(change[1, 'old_status'])
-        old_resolution_id <- as.character(change[1, 'old_resolution'])
-        new_status_id <- as.character(change[1, 'new_status'])
-        new_resolution_id <- as.character(change[1, 'new_resolution'])
+        old_status <- as.character(change[1, 'old_status'])
+        old_resolution <- as.character(change[1, 'old_resolution'])
+        new_status <- as.character(change[1, 'new_status'])
+        new_resolution <- as.character(change[1, 'new_resolution'])
 
-        old_status <- states[[old_status_id]]
-        old_resolution <- resolutions[[old_resolution_id]]
-        new_status <- states[[new_status_id]]
-        new_resolution <- resolutions[[new_resolution_id]]
-
-        if (is.null(old_status) || is.null(new_status)) {
+        if (is.na(old_status) || is.na(new_status)) {
             next
         }
-        if (!(old_status_id %in% c('5', '6')) && old_resolution != '') {
+        if (!(old_status %in% resolved) && !is.na(old_resolution) &&
+            old_resolution != '' && old_resolution != old_status) {
             next
         }
 
@@ -279,9 +303,13 @@ story_flow <- function(item, result, output_dir) {
                                                change$earliest_date,
                                                units="days")) * 7.0 / 5)
 
-        old_name <- paste('"', paste(old_status, old_resolution, sep=" "),
+        old_name <- paste('"', ifelse(is.na(old_resolution) ||
+                                      old_status == old_resolution, old_status,
+                                      paste(old_status, old_resolution)),
                           '"', sep='')
-        new_name <- paste('"', paste(new_status, new_resolution, sep=" "),
+        new_name <- paste('"', ifelse(is.na(new_resolution) ||
+                                      new_status == new_resolution, new_status,
+                                      paste(new_status, new_resolution)),
                           '"', sep='')
 
         old_attrs <- list(style='"filled,rounded"',
@@ -290,13 +318,13 @@ story_flow <- function(item, result, output_dir) {
         new_attrs <- list(style='"filled,rounded"',
                           shape='box',
                           fillcolor='"#FFFFFF"')
-        if (old_status_id %in% names(colors)) {
-            color <- colors[[old_status_id]]
+        if (old_status %in% names(colors)) {
+            color <- colors[[old_status]]
             ranks[[color]] <- c(ranks[[color]], old_name)
             old_attrs$color <- color
         }
-        if (new_status_id %in% names(colors)) {
-            color <- colors[[new_status_id]]
+        if (new_status %in% names(colors)) {
+            color <- colors[[new_status]]
             ranks[[color]] <- c(ranks[[color]], new_name)
             new_attrs$color <- color
         }
@@ -343,7 +371,7 @@ story_flow <- function(item, result, output_dir) {
                      "}", sep=""))
     }
 
-    dot <- c(paste("digraph", item$patterns[['name']], "{"),
+    dot <- c(paste('digraph "', item$patterns[['name']], '" {', sep=''),
              'bgcolor="#FDFDFD";',
              paste(names(edges), lapply(edges, dot_attrs)),
              paste(names(nodes), lapply(nodes, dot_attrs)),
@@ -521,6 +549,20 @@ bigboat_status <- function(item, result, output_dir) {
           file=paste(path, "urls.json", sep="/"))
 }
 
+load_report_query <- function(item, path, config, patterns, reports) {
+    fields <- c(lapply(item$fields,
+                       function(field) {
+                           if (!is.null(field[[config$db$primary_source]])) {
+                               return(field[[config$db$primary_source]])
+                           }
+                           return(field)
+                       }),
+                patterns)
+    item <- load_query(item, fields, path)
+    item$report <- reports[[item$table]]
+    return(item)
+}
+
 get_analysis_reports <- function(analysis_variables) {
     reports <- list(not_done_ratio=not_done_ratio,
                     not_done_ratio_log=not_done_ratio,
@@ -539,11 +581,10 @@ get_analysis_reports <- function(analysis_variables) {
                                               }),
                                        analysis_variables)
     patterns <- load_definitions('sprint_definitions.yml', analysis_definitions)
-    items <- load_queries('analysis_reports.yml', NULL, patterns)
-    reports <- list(patterns=patterns,
-                    items=lapply(items, function(item) {
-                                     item$report <- reports[[item$table]]
-                                     return(item)
-                                 }))
+    spec <- yaml.load_file('analysis_reports.yml')
+    config <- get_config()
+    items <- lapply(spec$files, load_report_query,
+                    spec$path, config, patterns, reports)
+    reports <- list(patterns=patterns, items=items)
     return(reports)
 }
