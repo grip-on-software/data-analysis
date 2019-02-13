@@ -41,6 +41,10 @@ sum_of_na_avg <- function(data, na.rm=F) {
     return(sub / length(which(!is.na(data))) * length(which(is.na(data))))
 }
 
+end <- function(data, na.rm=F) {
+    return(tail(data[!na.rm | !is.na(data)], n=1))
+}
+
 get_locales <- function(items) {
     locales <- list()
     for (type in names(items)) {

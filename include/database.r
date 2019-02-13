@@ -273,7 +273,7 @@ if (!exists('INC_DATABASE_R')) {
             item$table <- table
             item$category <- "metrics"
             if (!("combine" %in% names(item))) {
-                item$combine <- "sum"
+                item$combine <- list(project="sum", sprint="end")
             }
             item$query <- paste('SELECT', paste(columns, collapse=","), ",",
                                 aggregate,
