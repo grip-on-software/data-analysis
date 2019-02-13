@@ -16,6 +16,14 @@ categories:
         nl: Voortgang
         en: Progress
         icon: [fas, fa-tasks]
+    velocity:
+        nl: Velocity
+        en: Velocity
+        icon: [fas, fa-shipping-fast]
+    backlog:
+        nl: Backlog
+        en: Backlog
+        icon: [fas, fa-clipboard-list]
     code:
         nl: Code
         en: Code
@@ -51,7 +59,7 @@ files:
         en: Sprint length
     long_descriptions:
         nl: Het aantal dagen tussen de begindatum en de einddatum van de sprint
-        en: The number of days between the start and eind date of the sprint
+        en: The number of days between the start and end date of the sprint
     units:
         nl: "%s dagen"
         en: "%s days"
@@ -512,7 +520,7 @@ files:
         en: "%s planned points"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=burndownChart&sprint=${jira_sprint_id}"
-    category: tracking
+    category: velocity
   - filename: 04-done-story-points.sql
     table: done_story_points
     column: done_story_points
@@ -538,7 +546,7 @@ files:
         en: "%s done story points"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
-    category: tracking
+    category: velocity
   - filename: 04-expected-story-points.sql
     table: expected_bug_points
     column: planned_bug_points
@@ -564,7 +572,7 @@ files:
         en: "%s planned bug points"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=burndownChart&sprint=${jira_sprint_id}"
-    category: tracking
+    category: velocity
   - filename: 04-done-story-points.sql
     table: done_bug_points
     column: done_bug_points
@@ -590,7 +598,7 @@ files:
         en: "%s done bug points"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
-    category: tracking
+    category: velocity
   - expression: "done_story_points + done_bug_points"
     column: velocity_one
     default: 0
@@ -606,7 +614,7 @@ files:
         en: "%s points"
     source:
         jira: null
-    category: tracking
+    category: velocity
   - expression: "done_story_points - num_story_points"
     column: over_expectation
     default: 0
@@ -622,7 +630,7 @@ files:
         en: "%s added story points"
     source:
         jira: null
-    category: tracking
+    category: velocity
   - expression: "abs(done_story_points - num_story_points)"
     column: points_off_expectation
     default: 0
@@ -638,7 +646,7 @@ files:
         en: "%s story points off expectation"
     source:
         jira: null
-    category: tracking
+    category: velocity
   - filename: 04-weighted-story-points.sql
     table: weighted_story_points
     column: num_weighted_points
@@ -655,7 +663,7 @@ files:
         en: "%s weighted story points"
     source:
         jira: "${jira_url}/secure/BrowseProjects.jspa"
-    category: tracking
+    category: velocity
   - filename: 04-attachments.sql
     table: attachments
     column: num_attachments
@@ -745,7 +753,7 @@ files:
         en: "%s story points that are not yet done"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
-    category: tracking
+    category: velocity
   - filename: 04-late-story-points.sql
     table: late_story_points
     column: num_late_points
@@ -767,7 +775,7 @@ files:
         en: "%s late story points"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
-    category: tracking
+    category: velocity
   - filename: 04-added-stories.sql
     table: added_stories
     column: num_added_stories
@@ -811,7 +819,7 @@ files:
         en: "%s story points added from earlier sprint"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
-    category: tracking
+    category: velocity
   - filename: 04-removed-stories.sql
     table: removed_stories
     column: num_removed_stories
@@ -855,7 +863,7 @@ files:
         en: "%s removed story points"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
-    category: tracking
+    category: velocity
   - expression: 'num_not_done_points + num_removed_points'
     column: num_incomplete_points
     default: 0
@@ -871,7 +879,7 @@ files:
         en: "%s incomplete story points"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
-    category: tracking
+    category: velocity
   - filename: 04-stories.sql
     table: stories
     column: num_stories
@@ -1001,7 +1009,7 @@ files:
         en: "%s points/day"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
-    category: tracking
+    category: velocity
   - expression: "rowSums(embed(done_story_points, 3)) / 3"
     column: velocity_three
     window:
@@ -1023,7 +1031,7 @@ files:
         en: "%s points/sprint"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
-    category: tracking
+    category: velocity
   - expression: "rowSums(embed(done_story_points, 7)) / 7"
     column: velocity_seven
     window:
@@ -1045,7 +1053,7 @@ files:
         en: "%s points/sprint"
     source:
         jira: null
-    category: tracking
+    category: velocity
   - expression: "num_story_points - velocity_three"
     column: over_value
     default: 0
@@ -1064,7 +1072,7 @@ files:
         en: "%s extra points"
     source:
         jira: null
-    category: tracking
+    category: velocity
   - filename: 06-other-issues-done.sql
     table: other_done_issues
     column: other_done_issues
@@ -1345,7 +1353,7 @@ files:
         en: "%s items for the sprint on the backlog"
     source:
         jira: null
-    category: tracking
+    category: backlog
   - filename: 11-backlog-ready-status.sql
     table: backlog_ready_status
     column: backlog_ready_status
@@ -1362,7 +1370,7 @@ files:
         en: "%s items with ready status for the sprint on the backlog"
     source:
         jira: null
-    category: tracking
+    category: backlog
   - filename: 11-backlog-all.sql
     table: backlog_all
     column: backlog_items
@@ -1391,7 +1399,7 @@ files:
         en: "%s items on the whole backlog"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
-    category: tracking
+    category: backlog
   - filename: 11-backlog-all.sql
     table: backlog_stories
     column: backlog_story_points
@@ -1420,7 +1428,7 @@ files:
         en: "%s"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
-    category: tracking
+    category: backlog
   - filename: 11-backlog-all.sql
     table: backlog_stories
     column: backlog_expected_story_points
@@ -1446,11 +1454,11 @@ files:
         nl: "%s geschatte extra storypoints op de product backlog"
         en: "%s estimated additional story points on the product backlog"
     short_units:
-        nl: "%s extra points"
-        en: "%s additional points"
+        nl: "%s geschatte points"
+        en: "%s estimated points"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
-    category: tracking
+    category: backlog
   - filename: 11-backlog-epic.sql
     table: backlog_epics
     column: backlog_epic_points
@@ -1477,7 +1485,7 @@ files:
         en: "%s epic points"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
-    category: tracking
+    category: backlog
   - expression: 'backlog_story_points + backlog_expected_story_points'
     column: backlog_points
     combine: sum
@@ -1492,4 +1500,4 @@ files:
         en: "%s points on the product backlog"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
-    category: tracking
+    category: backlog
