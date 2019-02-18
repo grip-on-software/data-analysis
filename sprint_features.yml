@@ -1561,3 +1561,18 @@ files:
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
     category: backlog
+  - expression: 'backlog_removed_story_points + backlog_estimated_removed_story_points + done_story_points'
+    column: backlog_dismiss_velocity
+    combine: sum
+    descriptions:
+        nl: Afgevoerde storypoints per sprint
+        en: Dismissed story points per sprint
+    long_descriptions:
+        nl: Het aantal storypoints dat afgevoerd wordt van de product backlog tijdens de sprint
+        en: The total number of story points that is dismissed from the product backlog during the sprint
+    units:
+        nl: "%s afgevoerde punten van de product backlog"
+        en: "%s dismissed points from the prouct backlog"
+    source:
+        jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
+    category: backlog
