@@ -36,9 +36,12 @@ count_unique <- function(data, na.rm=F) {
                         (!na.rm | !is.na(data)))))
 }
 
-sum_of_na_avg <- function(data, na.rm=F) {
-    sub <- sum(data, na.rm=na.rm)
-    return(sub / length(which(!is.na(data))) * length(which(is.na(data))))
+sum_of_na_avg <- function(data, reference=NULL, na.rm=F) {
+    if (is.null(reference)) {
+        reference <- data
+    }
+    sub <- sum(reference, na.rm=na.rm)
+    return(sub / length(which(!is.na(reference))) * length(which(is.na(data))))
 }
 
 end <- function(data, na.rm=F) {
@@ -464,6 +467,7 @@ update_combine_interval <- function(items, old_data, data, row_num, details,
                 details[[item$column[1]]][[detail_name]] <- current
 
                 if (item$summarize$field %in% colnames(current) &&
+                    is.null(item$summarize$reference) &&
                     item$column[1] %in% result$columns && !isTRUE(item$carry) &&
                     length(current[[item$summarize$field]][[1]]) > 1) {
                     with_missing <- ifelse(is.null(item$summarize$with_missing),
@@ -625,6 +629,9 @@ get_features <- function(conn, features, exclude, items, data, colnames,
                 with_missing <- ifelse(is.null(summarize$with_missing),
                                        rep(F, length(operation)),
                                        summarize$with_missing)
+                reference_column <- ifelse(is.null(summarize$reference),
+                                           rep(NA, length(operation)),
+                                           summarize$reference)
                 if (length(columns) == 1 && length(operation) > 1) {
                     columns <- paste(columns, operation, sep="_")
                 }
@@ -635,12 +642,21 @@ get_features <- function(conn, features, exclude, items, data, colnames,
                 else {
                     result <- do.call("rbind", lapply(groups, function(group) {
                         group_result <- data.frame(group[1, group_names])
-                        summarizer <- function(operation, field, with_missing) {
-                            do.call(operation, c(list(group[, field]),
+                        n <- group_names[group_names != "original_component"]
+                        summarizer <- function(operation, field, reference,
+                                               with_missing) {
+                            data <- list(group[, field])
+                            if (!is.na(reference)) {
+                                name <- paste(group_result[n], collapse=".")
+                                data <- c(data,
+                                          details[[reference]][[name]][[field]])
+                            }
+                            do.call(operation, c(data,
                                                  list(na.rm=!with_missing)))
                         }
                         group_result[, columns] <- mapply(summarizer, operation,
                                                           summarize$field,
+                                                          reference_column,
                                                           with_missing)
                         return(group_result)
                     }))

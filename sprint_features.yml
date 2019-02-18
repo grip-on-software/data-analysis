@@ -1459,6 +1459,66 @@ files:
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
     category: backlog
+  - filename: 11-backlog-all.sql
+    table: backlog_stories
+    column: backlog_removed_story_points
+    default: 0
+    patterns:
+        issue_backlog: ${s(issue_story)} and newer_issue.updated IS NOT NULL and ${s(issue_closed, issue="newer_issue")} and newer_issue.sprint_id IS NULL
+    summarize:
+        operation: sum
+        field: story_points
+        group: [project_id, sprint_id]
+        details: [key, story_points]
+    combine:
+        project: sum
+        sprint: max
+    descriptions:
+        nl: Verijwderde storypoints van backlog
+        en: Removed story points off backlog
+    long_descriptions:
+        nl: Het totaal aantal storypoints dat is verwijderd van de product backlog in de projecttracker tijdens de sprint
+        en: The number of story points that is removed from the product backlog in the project tracker during the sprint
+    units:
+        nl: "%s verwijderde storypoints van de product backlog"
+        en: "%s removed story points off the product backlog"
+    short_units:
+        nl: "%s verwijderde storypoints"
+        en: "%s removed story points"
+    source:
+        jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
+    category: backlog
+  - filename: 11-backlog-all.sql
+    table: backlog_stories
+    column: backlog_estimated_removed_story_points
+    default: 0
+    patterns:
+        issue_backlog: ${s(issue_story)} and newer_issue.updated IS NOT NULL and ${s(issue_closed, issue="newer_issue")} and newer_issue.sprint_id IS NULL
+    summarize:
+        operation: sum_of_na_avg
+        field: story_points
+        reference: backlog_story_points
+        group: [project_id, sprint_id]
+        details: [key]
+        filter: 'is.na(story_points)'
+    combine:
+        project: sum
+        sprint: max
+    descriptions:
+        nl: Verwijderde ongepokerde storypoints van backlog
+        en: Removed non-pokered story points from backlog
+    long_descriptions:
+        nl: Een automatische schatting van het aantal ongepokerde storypoints dat is verwijderd van de product backlog in de projecttracker tijdens de sprint
+        en: An automated estimate of the number of story points that are not pokered on the product backlog in the project tracker at the start of the sprint
+    units:
+        nl: "%s geschatte verwijderde storypoints op de product backlog"
+        en: "%s estimated removed story points on the product backlog"
+    short_units:
+        nl: "%s geschatte verwijderde points"
+        en: "%s estimated removed points"
+    source:
+        jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
+    category: backlog
   - filename: 11-backlog-epic.sql
     table: backlog_epics
     column: backlog_epic_points
