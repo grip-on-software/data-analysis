@@ -35,6 +35,7 @@ get_sprints <- function(conn) {
                    WHERE', paste(conditions, collapse=' AND '), '
                    ORDER BY project.project_id, ${s(sprint_open)}, sprint.name')
     item <- load_query(list(query=query), c(patterns, sprint_days=sprint_days))
+    logdebug(item$query)
     time <- system.time(sprint <- dbGetQuery(conn, item$query))
     loginfo('Obtained sprints in %f seconds', time['elapsed'])
     return(sprint)
@@ -42,8 +43,12 @@ get_sprints <- function(conn) {
 
 conn <- connect()
 sprint_cache <- get_sprints(conn)
-get_sprint <- function(project_id, sprint_id) {
-    return(sprint_cache[sprint_cache$project_id == project_id, ][sprint_id, ])
+get_sprint <- function(project_id, sprint_num) {
+    return(sprint_cache[sprint_cache$project_id == project_id, ][sprint_num, ])
+}
+get_sprint_by_id <- function(project_id, sprint_id) {
+    return(sprint_cache[sprint_cache$project_id == project_id &
+                        sprint_cache$sprint_id == sprint_id, ])
 }
 
 input_file <- get_arg('--file', default='sprint_labels.json')
@@ -120,7 +125,7 @@ for (idx in 1:length(results$projects)) {
     }
     projects <- c(projects, project_name)
     sprint_id <- results$sprints[idx]
-    sprint <- get_sprint(project_id, sprint_id)
+    sprint <- get_sprint_by_id(project_id, sprint_id)
 
     feature_sets <- intersect(results$configuration$features, names(features))
     tag_names <- get_tags(setNames(rep(T, length(features)), names(features)))
@@ -145,7 +150,7 @@ for (idx in 1:length(results$projects)) {
                                keep.null=T)
     project_data <- list(project=sprint$quality_display_name,
                          project_id=sprint$project_key,
-                         sprint=sprint_id,
+                         sprint=all_features$sprint_num,
                          id=sprint$sprint_id,
                          board_id=sprint$board_id,
                          name=sprint$name,
