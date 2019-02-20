@@ -279,17 +279,19 @@ get_combined_team <- function(team, team_id, data, projects, team_projects,
 
     if (!is.null(team$overlap)) {
         sprint_data <- data[team_conditions, c('start_date', 'close_date')]
-        prev <- embed(as.matrix(sprint_data), 3)
-        overlap <- as.Date(prev[, 4]) - as.Date(prev[, 1]) >= team$overlap &
-            as.Date(prev[, 2]) >= as.Date(prev[, 4])
-        for (index in which(overlap)) {
-            if (overlap[index] && index < length(overlap)) {
-                overlap[index+1] <- F
+        if (nrow(sprint_data) > 0) {
+            prev <- embed(as.matrix(sprint_data), 3)
+            overlap <- as.Date(prev[, 4]) - as.Date(prev[, 1]) >= team$overlap &
+                as.Date(prev[, 2]) >= as.Date(prev[, 4])
+            for (index in which(overlap)) {
+                if (overlap[index] && index < length(overlap)) {
+                    overlap[index+1] <- F
+                }
             }
+            team_meta$duplicate <- c(F, F, overlap)
+            loginfo('Team %s has %d overlapping sprints', team$name,
+                    length(which(overlap)))
         }
-        team_meta$duplicate <- c(F, F, overlap)
-        loginfo('Team %s has %d overlapping sprints', team$name,
-                length(which(overlap)))
     }
 
     team_meta <- team_meta[names(team_meta) %in% colnames(data)]
@@ -353,6 +355,9 @@ get_combined_team <- function(team, team_id, data, projects, team_projects,
                 loginfo("Replacing project %s to clean up board", project$key)
                 display_name <- projects[projects$name == project$key,
                                          'quality_display_name']
+                if (length(display_name) == 0) {
+                    display_name <- NA
+                }
                 board_project <- list(name=project$key,
                                       display_name=display_name,
                                       board=team$board,
