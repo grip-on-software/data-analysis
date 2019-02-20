@@ -844,7 +844,59 @@ files:
     category: tracking
   - filename: 04-removed-story-points.sql
     table: removed_story_points
+    column: num_replaced_points
+    patterns:
+        issue_removed: ${s(issue_not_done)} AND new_issue.sprint_id IS NULL
+    default: 0
+    summarize:
+        operation: sum
+        field: story_points
+        group: [project_id, sprint_id]
+        details: [key, story_points]
+    combine: sum
+    descriptions:
+        nl: Teruggehaalde storypoints
+        en: Replaced story points
+    long_descriptions:
+        nl: Het totaal aantal storypoints dat tijdens de sprint wordt teruggezet op de product backlog
+        en: The total number of story points that is placed back on the product backlog during the sprint
+    units:
+        nl: "%s terruggeplaatste storypoints"
+        en: "%s replaced story points"
+    source:
+        jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
+    category: velocity
+  - filename: 04-removed-story-points.sql
+    table: removed_story_points
+    column: num_moved_points
+    patterns:
+        issue_removed: ${s(issue_not_done)} AND new_issue.sprint_id IS NOT NULL
+    default: 0
+    summarize:
+        operation: sum
+        field: story_points
+        group: [project_id, sprint_id]
+        details: [key, story_points]
+    combine: sum
+    descriptions:
+        nl: Doorgeschoven storypoints
+        en: Moved story points
+    long_descriptions:
+        nl: Het totaal aantal storypoints dat tijdens de sprint wordt doorgeschoven
+        en: The total number of story points that is moved during the sprint
+    units:
+        nl: "%s doorgeschoven storypoints"
+        en: "%s moved story points"
+    source:
+        jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
+    category: velocity
+  - filename: 04-removed-story-points.sql
+    table: removed_story_points
     column: num_removed_points
+    patterns:
+        issue_removed:
+            jira: new_issue.status IN (5,6) AND new_issue.resolution IN (2,3,4,5,7,17,18,19,20)
+            tfs: new_issue.status = 'Removed'
     default: 0
     summarize:
         operation: sum
@@ -856,15 +908,15 @@ files:
         nl: Doorgeschoven storypoints
         en: Removed story points
     long_descriptions:
-        nl: Het totaal aantal storypoints dat tijdens de sprint wordt weggehaald of doorgeschoven
-        en: The total number of story points that is (re)moved during the sprint
+        nl: Het totaal aantal storypoints dat tijdens de sprint wordt weggehaald
+        en: The total number of story points that is removed during the sprint
     units:
         nl: "%s doorgeschoven storypoints"
         en: "%s removed story points"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
     category: velocity
-  - expression: 'num_not_done_points + num_removed_points'
+  - expression: 'num_not_done_points + num_replaced_points + num_moved_points + num_removed_points'
     column: num_incomplete_points
     default: 0
     combine: sum

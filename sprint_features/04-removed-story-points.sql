@@ -8,10 +8,9 @@ LEFT JOIN gros.subtask ON ${t("issue")}.issue_id = subtask.id_subtask
 ${s(issue_join)}
 WHERE ${t("issue")}.story_points IS NOT NULL
 AND ${s(sprint_id, sprint="issue")} <> 0
-AND ${f(join_cols, "new_issue", mask=2, alias="alias")} IS NOT NULL
 AND ${s(sprint_id, sprint="issue")} <> ${s(sprint_id, sprint="issue", issue="new_issue")}
 AND new_issue.updated > ${s(planned_end)}
 AND new_issue.updated <= ${s(sprint_close)} + interval '1' day
-AND ${s(issue_not_done)}
+AND ${s(issue_removed)}
 AND subtask.id_parent IS NULL
 ${s(project_condition, project="issue")}
