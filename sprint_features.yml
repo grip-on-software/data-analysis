@@ -882,8 +882,8 @@ files:
         nl: Doorgeschoven storypoints
         en: Moved story points
     long_descriptions:
-        nl: Het totaal aantal storypoints dat tijdens de sprint wordt doorgeschoven
-        en: The total number of story points that is moved during the sprint
+        nl: Het totaal aantal storypoints dat tijdens de sprint wordt doorgeschoven naar een volgende sprint
+        en: The total number of story points that is moved to a later sprint during the sprint
     units:
         nl: "%s doorgeschoven storypoints"
         en: "%s moved story points"
@@ -905,13 +905,13 @@ files:
         details: [key, story_points]
     combine: sum
     descriptions:
-        nl: Doorgeschoven storypoints
+        nl: Weggehaalde storypoints
         en: Removed story points
     long_descriptions:
-        nl: Het totaal aantal storypoints dat tijdens de sprint wordt weggehaald
-        en: The total number of story points that is removed during the sprint
+        nl: Het totaal aantal storypoints dat tijdens de sprint wordt weggehaald en afgesloten als onnodig
+        en: The total number of story points that is removed and closed as unnecessary during the sprint
     units:
-        nl: "%s doorgeschoven storypoints"
+        nl: "%s weggehaalde storypoints"
         en: "%s removed story points"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
