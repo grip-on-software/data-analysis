@@ -878,15 +878,26 @@ get_components <- function(data, result, components, source_type, field,
             component_count <- length(which(conditions))
             loginfo('Setting %d results to component %s',
                     component_count, component$name)
-            if (project_count == component_count &&
-                is.null(source_filter$exclude) &&
-                !isTRUE(component$remove)) {
-                result[conditions, "component"] <- NA
+            if (project_count == component_count && !isTRUE(component$remove)) {
+                if (is.null(source_filter$exclude)) {
+                    if (field == "component") {
+                        original <- result[conditions, "component"]
+                        result[conditions, "original_component"] <- original
+                    }
+                    result[conditions, "component"] <- NA
+                }
+                else if (field == "component") {
+                    result[conditions, "original_component"] <- NA
+                }
                 rows <- result[conditions, ]
                 rows$component <- component$name
                 result <- rbind(result, rows)
             }
             else {
+                if (field == "component") {
+                    original <- result[conditions, "component"]
+                    result[conditions, "original_component"] <- original
+                }
                 result[conditions, "component"] <- component$name
             }
             if (isTRUE(component$remove) && !is.null(summarize)) {
