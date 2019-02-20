@@ -1526,7 +1526,7 @@ files:
         project: sum
         sprint: max
     descriptions:
-        nl: Verijwderde storypoints van backlog
+        nl: Verwijderde storypoints van backlog
         en: Removed story points from backlog
     long_descriptions:
         nl: Het totaal aantal storypoints dat is verwijderd van de product backlog in de projecttracker tijdens de sprint
