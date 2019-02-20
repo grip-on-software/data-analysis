@@ -651,7 +651,7 @@ get_features <- function(conn, features, exclude, items, data, colnames,
                         summarizer <- function(operation, field, reference,
                                                with_missing) {
                             data <- list(group[, field])
-                            if (!is.na(reference)) {
+                            if (is.list(details) && !is.na(reference)) {
                                 name <- paste(group_result[n], collapse=".")
                                 data <- c(data,
                                           details[[reference]][[name]][[field]])
