@@ -327,8 +327,7 @@ if (get_arg('--project', default=F)) {
                 quality_name <- NA
                 sprint <- list()
                 component <- NA
-                project_id <- result$projects[result$projects$name == project,
-                                              'project_id']
+                project_id <- result$projects[names == project, 'project_id']
                 team_projects <- c()
             }
             else {
