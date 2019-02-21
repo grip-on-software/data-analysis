@@ -1,8 +1,15 @@
-SELECT ${s(project_name)} AS project_name, sprint.sprint_id AS sprint_id, sprint."name" AS sprint_name, issuedata.date AS start_date, issuedata.end_date AS date 
-FROM (SELECT start_issue.project_id, start_issue.sprint_id, start_issue.issue_id, MIN(start_issue.updated) AS date, MIN(issue.updated) AS end_date
-	FROM gros.issue AS start_issue
-	JOIN gros.issue AS issue ON start_issue.issue_id = issue.issue_id AND start_issue.changelog_id < issue.changelog_id
-	WHERE start_issue.type = 7 AND start_issue.status = 3 AND ${s(issue_done)}
-	GROUP BY start_issue.project_id, start_issue.sprint_id, start_issue.issue_id) AS issuedata
-LEFT OUTER JOIN gros.sprint ON issuedata.project_id = sprint.project_id AND issuedata.sprint_id = sprint.sprint_id
-JOIN gros.project ON issuedata.project_id = project.project_id
+SELECT ${s(project_name)} AS project_name, ${f(join_cols, "sprint", mask=2, alias=F)} AS sprint_id, ${t("sprint")}."name" AS sprint_name, issuedata.date AS start_date, issuedata.end_date AS date 
+FROM (
+	SELECT ${f(join_cols, "start_issue")}, start_issue.issue_id,
+		MIN(start_issue.updated) AS date, MIN(${t("issue")}.updated) AS end_date
+	FROM gros.${t("issue")} AS start_issue
+	JOIN gros.${t("issue")} ON start_issue.issue_id = ${t("issue")}.issue_id AND start_issue.changelog_id < ${t("issue")}.changelog_id
+	WHERE ${s(issue_story, issue="start_issue")}
+	AND ${s(issue_in_progress, issue="start_issue")}
+	AND ${s(issue_done)}
+	${g(join_cols, "start_issue")}, start_issue.issue_id
+) AS issuedata
+LEFT OUTER JOIN gros.${t("sprint")}
+ON ${j(join_cols, "issuedata", "sprint")}
+JOIN gros.${t("project")}
+ON ${j(join_cols, "issuedata", "project", mask=1)}

@@ -71,8 +71,10 @@ map_details <- function(details, project_ids, sprint_ids, component,
 }
 
 if (get_arg('--project', default=F)) {
-    result <- get_project_features(conn, features, exclude, NULL, core=core)
+    result <- get_project_features(conn, features, exclude, NULL, core=core,
+                                   metadata=metadata, project_fields=fields)
     subprojects <- get_subprojects(conn)
+    project_col <- result$join_cols[1]
 
     df <- result$data[, result$colnames]
     data <- lapply(as.list(split(df, seq(nrow(df)))), unbox)
@@ -87,8 +89,8 @@ if (get_arg('--project', default=F)) {
         data[subproject] <- NULL
     }
     if (project_ids == '1') {
-        num <- result$data$project_id[result$data$name %in% names(data)]
-        names(data) <- paste("Proj", sep="")
+        num <- result$data[[project_col]][result$data$name %in% names(data)]
+        names(data) <- paste("Proj", num, sep="")
     }
     write(toJSON(data),
           file=paste(output_directory, "project_features.json", sep="/"))
@@ -103,7 +105,7 @@ if (get_arg('--project', default=F)) {
 
     if (project_ids != '1') {
         links <- mapply(build_source_urls,
-                        result$data[['project_id']],
+                        result$data[[project_col]],
                         result$data[['name']],
                         MoreArgs=list(patterns=patterns, items=result$items,
                                       conn=conn),
@@ -135,10 +137,11 @@ if (get_arg('--project', default=F)) {
           file=paste(output_directory, "project_features_groups.json", sep="/"))
     loginfo("Wrote project_features_groups.json")
 
-    write_projects_metadata(conn, fields, metadata, projects=NA,
+    write_projects_metadata(conn, result$project_fields, metadata,
+                            projects=result$projects,
                             project_ids=project_ids,
                             output_directory=output_directory,
-                            patterns=result$patterns)
+                            join_cols=result$join_cols)
 } else if (recent) {
     if (isTRUE(recent)) {
         recent <- 5

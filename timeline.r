@@ -13,8 +13,20 @@ dateFormat <- function(date) {
 }
 
 conn <- connect()
+config <- get_config()
 
-projects <- get_core_projects(conn)
+if (config$db$primary_source == "tfs") {
+    join_cols <- c("team_id")
+    project_fields <- list(project_id='team_id', name='name')
+} else {
+    join_cols <- c("project_id")
+    project_fields <- list(project_id='project_id', name='name')
+}
+
+projects <- get_projects_meta(conn, fields=project_fields,
+                              metadata=list(core=T), join_cols=join_cols)
+projects <- projects[projects$core, ]
+
 project_ids <- get_arg('--project-ids', default='0')
 if (project_ids != '0') {
     project_ids <- '1'
@@ -34,10 +46,11 @@ exportFeatures <- function(features, exclude, output_directory) {
                                   future=F)
     data <- result$data
     colnames <- result$colnames
+    project_col <- result$join_cols[1]
     project_data <- lapply(as.list(projects$project_id), function(project) {
         project_id <- projects[project, 'project_id']
-        if (project_id %in% data$project_id) {
-            sprint_data <- data[data$project_id == project,
+        if (project_id %in% data[[project_col]]) {
+            sprint_data <- data[data[[project_col]] == project,
                                 c('sprint_id', colnames)]
             result <- lapply(as.list(1:dim(sprint_data)[1]), function(i) {
                 safe_unbox(sprint_data[i, colnames])
@@ -154,9 +167,13 @@ project_boards <- list()
 
 features <- get_arg('--features', default=NA)
 exclude <- get_arg('--exclude', default='^$')
+events <- strsplit(get_arg('--events', default=''), ',')[[1]]
 data <- exportFeatures(features, exclude, output_directory)
 no_features <- get_arg('--no-features', default=F)
 for (item in items) {
+    if (length(events) > 0 && !(item$type %in% events)) {
+        next
+    }
     loginfo('Executing query for type %s', item$type)
     time <- system.time(result <- dbGetQuery(conn, item$query))
     loginfo('Query for type %s took %f seconds', item$type, time['elapsed'])

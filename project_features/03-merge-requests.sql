@@ -1,3 +1,4 @@
-SELECT project_id, COUNT(*) AS num_requests
-FROM gros.merge_request JOIN gros.repo ON merge_request.repo_id = repo.id
-GROUP BY project_id
+SELECT ${f(join_cols, "repo")}, COUNT(*) AS num_requests
+FROM gros.${t("merge_request")}
+JOIN gros.${t("repo")} ON ${t("merge_request")}.repo_id = ${t("repo")}.id
+${g(join_cols, "repo")}

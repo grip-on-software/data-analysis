@@ -1,9 +1,12 @@
-SELECT ${s(project_name)} AS project_name, sprint.sprint_id AS sprint_id, sprint."name" AS sprint_name, issue.updated AS date
-FROM gros.issue
-LEFT OUTER JOIN gros.sprint ON issue.project_id = sprint.project_id AND issue.sprint_id = sprint.sprint_id
-JOIN gros.project ON issue.project_id = project.project_id
-JOIN gros.issue AS older_issue ON issue.issue_id = older_issue.issue_id AND issue.changelog_id = older_issue.changelog_id + 1 
-WHERE issue.rank_change IS NOT NULL
-AND (older_issue.rank_change IS NULL OR older_issue.rank_change <> issue.rank_change)
-AND issue.updated < ${s(sprint_close)}
-ORDER BY project.project_id, sprint.start_date, issue.updated
+SELECT ${s(project_name)} AS project_name, ${f(join_cols, "sprint", mask=2, alias=F)} AS sprint_id, ${t("sprint")}."name" AS sprint_name, ${t("issue")}.updated AS date
+FROM gros.${t("issue")}
+LEFT OUTER JOIN gros.${t("sprint")}
+ON ${j(join_cols, "issue", "sprint")}
+JOIN gros.${t("project")}
+ON ${j(join_cols, "issue", "project", mask=1)}
+JOIN gros.${t("issue")} AS older_issue
+ON ${j(issue_next_changelog, "issue", "older_issue")}
+WHERE ${t("issue")}.rank_change IS NOT NULL
+AND (older_issue.rank_change IS NULL OR older_issue.rank_change <> ${t("issue")}.rank_change)
+AND ${t("issue")}.updated < ${s(sprint_close)}
+ORDER BY ${f(join_cols, "project", mask=1)}, ${t("sprint")}.start_date, ${t("issue")}.updated

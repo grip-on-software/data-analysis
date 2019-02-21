@@ -1,6 +1,7 @@
 # Utilities for retrieving lists of projects.
 
 if (!exists('INC_PROJECT_R')) {
+    source('include/database.r')
     source('include/sources.r')
 
     INC_PROJECT_R <- T
@@ -18,13 +19,17 @@ if (!exists('INC_PROJECT_R')) {
 
     get_projects_meta <- function(conn, fields=list('project_id', 'name'),
                                   metadata=list(), join_cols=NULL,
-                                  patterns=list(), by=NULL) {
+                                  patterns=NULL, by=NULL) {
         joins <- list()
         aliases <- list()
         groups <- c()
         must_group <- F
         if (is.null(names(fields))) {
             names(fields) <- fields
+        }
+        if (is.null(patterns)) {
+            patterns <- load_definitions('sprint_definitions.yml',
+                                         list(join_cols=join_cols))
         }
 
         variables <- c(patterns, list(join_cols=join_cols))
@@ -179,10 +184,11 @@ if (!exists('INC_PROJECT_R')) {
     write_projects_metadata <- function(conn, fields, metadata, projects=NA,
                                         project_ids='0', project_sources=c(),
                                         output_directory='output',
-                                        patterns=list()) {
+                                        patterns=list(), join_cols=NULL) {
         if (is.atomic(projects) && is.na(projects)) {
             projects <- get_projects_meta(conn, fields=fields,
-                                          metadata=metadata, patterns=patterns)
+                                          metadata=metadata, patterns=patterns,
+                                          join_cols=join_cols)
         }
         else {
             if (!is.null(names(fields))) {
@@ -196,15 +202,21 @@ if (!exists('INC_PROJECT_R')) {
                                    output_directory=output_directory)
         }
 
+        if (is.null(join_cols)) {
+            project_col <- 'project_id'
+        }
+        else {
+            project_col <- join_cols[1]
+        }
         if (project_ids != '0') {
-            projects$name <- paste('Proj', projects$project_id, sep='')
+            projects$name <- paste('Proj', projects[[project_col]], sep='')
             projects$quality_display_name <- NULL
-            projects <- projects[order(projects$project_id), ]
+            projects <- projects[order(projects[[project_col]]), ]
         }
         else {
             projects <- projects[order(projects$name), ]
         }
-        projects$project_id <- NULL
+        projects[[project_col]] <- NULL
         write(toJSON(projects, auto_unbox=T),
               file=paste(output_directory, 'projects_meta.json', sep='/'))
     }

@@ -1,2 +1,3 @@
-SELECT commits.project_id, COUNT(*) AS num_commits FROM gros.commits
-GROUP BY commits.project_id HAVING commits.project_id IS NOT NULL;
+SELECT ${f(join_cols, "commits")}, COUNT(*) AS num_commits
+FROM gros.${t("commits")}
+${g(join_cols, "commits")} HAVING ${f(join_cols, "commits")} IS NOT NULL

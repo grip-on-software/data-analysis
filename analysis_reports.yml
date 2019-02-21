@@ -6,6 +6,10 @@ files:
     table: not_done_ratio_log
   - filename: sprint_burndown.sql
     table: sprint_burndown
+    fields:
+        join_cols:
+            jira: [project_id, sprint_id]
+            tfs: [team_id, sprint_id]
   - filename: commit_volume.sql
     table: commit_volume
   - filename: developers.sql
@@ -16,6 +20,18 @@ files:
     table: long_waiting_commits
   - filename: project_members.sql
     table: project_members
+    fields:
+        join_cols:
+            jira: [project_id, jira_dev_id]
+            tfs: [team_id, alias_id]
+        jira_dev_id:
+            project_developer: developer_id
+            developer: id
+            vcs_developer: jira_dev_id
+        alias_id:
+            project_developer: developer_id
+            tfs_developer: alias_id
+            vcs_developer: alias_id
   - filename: project_backlog_burndown.sql
     table: project_backlog_burndown
   - filename: bigboat_status.sql

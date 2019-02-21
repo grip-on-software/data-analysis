@@ -1,4 +1,4 @@
-SELECT ${s(project_name)} AS project_name, sprint.sprint_id AS sprint_id, sprint."name" AS sprint_name, commits.commit_date AS date
-FROM gros.commits
-JOIN gros.sprint ON commits.sprint_id = sprint.sprint_id
-JOIN gros.project ON commits.project_id = project.project_id
+SELECT ${s(project_name)} AS project_name, ${f(join_cols, "sprint", mask=2, alias=F)} AS sprint_id, ${t("sprint")}."name" AS sprint_name, ${t("commits")}.commit_date AS date
+FROM gros.${t("commits")}
+JOIN gros.${t("sprint")} ON ${j(join_cols, "commits", "sprint")}
+JOIN gros.${t("project")} ON ${j(join_cols, "commits", "project", mask=1)}

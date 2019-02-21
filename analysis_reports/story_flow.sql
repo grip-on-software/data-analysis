@@ -1,14 +1,17 @@
-SELECT issue.issue_id, issue_changes.earliest_date,
-issue_changes.status AS old_status, COALESCE(issue_changes.resolution, 0) AS old_resolution,
-issue.status AS new_status, COALESCE(issue.resolution, 0) AS new_resolution,
-issue.updated AS new_date
-FROM gros.issue, (
-	SELECT issue_id, status, resolution,
-		MIN(updated) AS earliest_date, MAX(changelog_id) AS latest_changelog_id
-	FROM gros.issue
-	GROUP BY issue_id, status, resolution
+SELECT ${t("issue")}.issue_id, issue_changes.earliest_date,
+issue_changes.status AS old_status, issue_changes.resolution AS old_resolution,
+${s(issue_status)} AS new_status, ${s(issue_resolution)} AS new_resolution,
+${t("issue")}.updated AS new_date
+FROM gros.${t("issue")}
+${s(issue_status_resolution_join)}
+JOIN (
+	SELECT issue_id,
+		${s(issue_status)} AS status, ${s(issue_resolution)} AS resolution,
+		MIN(updated) AS earliest_date, MAX(changelog_id) AS changelog_id
+	FROM gros.${t("issue")}
+	${s(issue_status_resolution_join)}
+	GROUP BY issue_id, ${f("issue_status")}, ${f("issue_resolution")}
 ) AS issue_changes
-WHERE issue.issue_id = issue_changes.issue_id
-AND issue.changelog_id = issue_changes.latest_changelog_id+1
-AND ${s(issue_story_subtask)}
+ON ${j(issue_next_changelog, "issue", "issue_changes")}
+WHERE ${s(issue_story_subtask)}
 ${category_conditions}

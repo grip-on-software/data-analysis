@@ -23,9 +23,19 @@ if (project_ids != '0') {
     project_ids <- '1'
 }
 
+config <- get_config()
+
 project_metadata <- get_arg('--project-metadata', default='recent,core,main')
 metadata <- get_meta_keys(project_metadata)
+
+join_cols <- c('project_id')
 fields <- list('project_id', 'name', 'quality_display_name')
+names(fields) <- fields
+if (config$db$primary_source == "tfs") {
+    join_cols <- c('team_id')
+    fields$project_id <- "team_id"
+    fields$quality_display_name <- NULL
+}
 
 project_sources <- strsplit(get_arg('--project-sources', default=''), ',')[[1]]
 
@@ -35,6 +45,7 @@ run_reports <- function(definitions) {
     for (item in reports$items) {
         if (length(grep(report, item$table)) > 0) {
             loginfo('Executing query for report %s', item$table)
+            logdebug(item$query)
             time <- system.time(result <- dbGetQuery(conn, item$query))
             loginfo('Query for report %s took %f seconds', item$table,
                     time['elapsed'])
@@ -48,16 +59,16 @@ run_reports <- function(definitions) {
 
 if (interval != '') {
     # Always run the full report, this will also empty the output directory
-    run_reports(list(id='all', project_ids=project_ids))
+    reports <- run_reports(list(id='all', project_ids=project_ids))
 
-    start_date <- dbGetQuery(conn, 'SELECT MIN(updated) AS start_date
-                                    FROM gros.issue
-                                    WHERE assignee IS NOT NULL')[[1]]
+    item <- load_query(list(query='SELECT MIN(updated) AS start_date
+                                   FROM gros.${t("issue")}
+                                   WHERE assignee IS NOT NULL'),
+                       reports$patterns)
+
+    start_date <- dbGetQuery(conn, item$query)[[1]]
     intervals <- seq(as.POSIXct(start_date), Sys.time(), by=interval)
     loginfo(intervals)
-    output_directory <- get_arg('--output', default='output')
-    write(toJSON(head(as.numeric(intervals), n=-1)),
-          file=paste(output_directory, "intervals.json", sep="/"))
     rollapply(intervals, 2,
               function(range) {
                   id <- paste('interval', as.numeric(range[1]), sep='-')
@@ -69,17 +80,22 @@ if (interval != '') {
                                    project_ids=project_ids,
                                    interval_condition=condition))
               })
+
+    output_directory <- get_arg('--output', default='output')
+    write(toJSON(head(as.numeric(intervals), n=-1)),
+          file=paste(output_directory, "intervals.json", sep="/"))
 } else if (projects_list == '') {
     reports <- run_reports(list(id='all', project_ids=project_ids))
     write_projects_metadata(conn, fields, metadata, projects=NA,
                             project_ids=project_ids,
                             project_sources=project_sources,
                             output_directory=output_directory,
-                            patterns=reports$patterns)
+                            patterns=reports$patterns,
+                            join_cols=join_cols)
 } else {
     patterns <- load_definitions('sprint_definitions.yml', list())
     projects <- get_projects_meta(conn, fields=fields, metadata=metadata,
-                                  patterns=patterns)
+                                  patterns=patterns, join_cols=join_cols)
     if (projects_list == 'main') {
         projects <- projects[projects$main, ]
     }
@@ -91,7 +107,7 @@ if (interval != '') {
         projects$name <- paste('Proj', projects$project_id, sep='')
     }
     mapply(function(project_id, name) {
-               condition <- 'AND project_id'
+               condition <- paste('AND', join_cols[1])
                run_reports(list(id=project_id,
                                 name=name,
                                 project_ids=project_ids,
