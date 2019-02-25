@@ -267,7 +267,7 @@ build_sprint_source_urls <- function(conn, project_id, project_name,
 }
 
 get_source_ids <- function(conn, project_id) {
-    query <- paste('SELECT project_id, domain_name, url, source_id
+    query <- paste('SELECT project_id, domain_name, url, source_id, source_type
                     FROM gros.source_id WHERE project_id IN (',
                    paste(project_id, collapse=','), ')')
     result <- dbGetQuery(conn, query)
