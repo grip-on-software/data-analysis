@@ -310,9 +310,6 @@ files:
     units:
         nl: "%s regels code"
         en: "%s regels code"
-    sources:
-        quality: "${quality_url}/${quality_name}"
-        metric_history: "${metric_history_url}/${metric_history_file}"
   - metric: UnittestLineCoverage
     column: unittest_line_coverage
     aggregate: end
