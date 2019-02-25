@@ -330,9 +330,6 @@ files:
     short_units:
         nl: "%s%%"
         en: "%s%%"
-    sources:
-        quality: "${quality_url}/${quality_name}"
-        metric_history: "${metric_history_url}/${metric_history_file}"
   - metric: UnittestBranchCoverage
     column: unittest_branch_coverage
     aggregate: end
@@ -350,9 +347,6 @@ files:
     short_units:
         nl: "%s%%"
         en: "%s%%"
-    sources:
-        quality: "${quality_url}/${quality_name}"
-        metric_history: "${metric_history_url}/${metric_history_file}"
   - metric: ARTStatementCoverage
     column: art_statement_coverage
     aggregate: end
@@ -370,9 +364,6 @@ files:
     short_units:
         nl: "%s%%"
         en: "%s%%"
-    sources:
-        quality: "${quality_url}/${quality_name}"
-        metric_history: "${metric_history_url}/${metric_history_file}"
   - metric: ARTBranchCoverage
     column: art_branch_coverage
     aggregate: end
@@ -390,9 +381,6 @@ files:
     short_units:
         nl: "%s%%"
         en: "%s%%"
-    sources:
-        quality: "${quality_url}/${quality_name}"
-        metric_history: "${metric_history_url}/${metric_history_file}"
   - metric: Vulnerabilities
     column: vulnerabilities
     carry: true
@@ -481,6 +469,11 @@ files:
     units:
         nl: "%s geleden bijgewerkt"
         en: "%s last updated"
+    source:
+        quality: '${quality_url}/${quality_name}'
+        metric_history: '${metric_history_url}/${metric_options_file}'
+        git: null
+        subversion: null
   - filename: 03-story-watchers.sql
     table: watchers
     column: num_watchers

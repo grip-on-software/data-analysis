@@ -14,6 +14,10 @@ quality:
     nl: Kwaliteitsrapportage
     en: Quality report
     icon: [fas, fa-chart-pie]
+sonar:
+    nl: SonarQube
+    en: SonarQube
+    icon: [fas, fa-rss]
 jenkins:
     nl: Jenkins
     en: Jenkins

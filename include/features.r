@@ -1282,15 +1282,16 @@ write_feature_metadata <- function(projects, specifications, output_directory,
           file=paste(output_directory, "short_units.json", sep="/"))
     write(toJSON(get_feature_locales(items, 'tags')),
           file=paste(output_directory, "tags.json", sep="/"))
-    write(toJSON(get_locales(yaml.load_file("source_types.yml"))),
-          file=paste(output_directory, "sources.json", sep="/"))
     write(toJSON(projects, auto_unbox=T),
           file=paste(output_directory, "projects.json", sep="/"))
 
+    source_types <- yaml.load_file("source_types.yml")
+    sources <- get_locales(source_types)
     if (length(features) > 0) {
         cats <- specifications$categories
         values <- list()
         names(values) <- list()
+        sources$feature <- list()
 
         for (item in items) {
             feature <- item$column[item$column %in% features]
@@ -1300,6 +1301,12 @@ write_feature_metadata <- function(projects, specifications, output_directory,
                 cats[[cat]]$items <- c(cats[[cat]]$items, feature)
                 if (!is.null(item$values)) {
                     values[[item$column]] <- item$values
+                }
+                for (source_name in names(item$source)) {
+                    if (source_name %in% names(source_types)) {
+                        current <- sources$feature[[source_name]]
+                        sources$feature[[source_name]] <- c(current, feature)
+                    }
                 }
             }
         }
@@ -1319,4 +1326,6 @@ write_feature_metadata <- function(projects, specifications, output_directory,
         write(toJSON(values, auto_unbox=T),
               file=paste(output_directory, "values.json", sep="/"))
     }
+    write(toJSON(sources),
+          file=paste(output_directory, "sources.json", sep="/"))
 }
