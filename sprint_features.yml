@@ -509,6 +509,9 @@ files:
         group: [project_id, sprint_id]
         details: [key, story_points]
     combine: sum
+    values:
+        type: fraction
+        denominator: 4
     descriptions:
         nl: Geplande storypoints
         en: Planned story points
@@ -535,6 +538,9 @@ files:
         group: [project_id, sprint_id]
         details: [key, story_points]
     combine: sum
+    values:
+        type: fraction
+        denominator: 4
     descriptions:
         nl: Afgeronde storypoints
         en: Done story points
@@ -561,6 +567,9 @@ files:
         group: [project_id, sprint_id]
         details: [key, story_points]
     combine: sum
+    values:
+        type: fraction
+        denominator: 4
     descriptions:
         nl: Geplande bug points
         en: Planned bug points
@@ -587,6 +596,9 @@ files:
         group: [project_id, sprint_id]
         details: [key, story_points]
     combine: sum
+    values:
+        type: fraction
+        denominator: 4
     descriptions:
         nl: Afgeronde bug points
         en: Done bug points
@@ -603,6 +615,9 @@ files:
     column: velocity_one
     default: 0
     combine: sum
+    values:
+        type: fraction
+        denominator: 4
     descriptions:
         nl: "Sprint-velocity"
         en: "Sprint velocity"
@@ -619,6 +634,9 @@ files:
     column: over_expectation
     default: 0
     combine: sum
+    values:
+        type: fraction
+        denominator: 4
     descriptions:
         nl: Punten boven verwachting
         en: Points above expectation
@@ -635,6 +653,9 @@ files:
     column: points_off_expectation
     default: 0
     combine: sum
+    values:
+        type: fraction
+        denominator: 4
     descriptions:
         nl: Punten naast verwachting
         en: Points off expectation
@@ -652,6 +673,9 @@ files:
     column: num_weighted_points
     default: 0
     combine: sum
+    values:
+        type: fraction
+        denominator: 4
     descriptions:
         nl: Gewogen storypoints
         en: Weighted story points
@@ -742,6 +766,9 @@ files:
         group: [project_id, sprint_id]
         details: [key, story_points]
     combine: sum
+    values:
+        type: fraction
+        denominator: 4
     descriptions:
         nl: Onvoltooide storypoints
         en: Unfinished story points
@@ -764,6 +791,9 @@ files:
         group: [project_id, sprint_id]
         details: [key, story_points]
     combine: sum
+    values:
+        type: fraction
+        denominator: 4
     descriptions:
         nl: Late storypoints
         en: Late story points
@@ -808,6 +838,9 @@ files:
         group: [project_id, sprint_id]
         details: [key, story_points]
     combine: sum
+    values:
+        type: fraction
+        denominator: 4
     descriptions:
         nl: Heringeplande storypoints
         en: Replanned story points
@@ -854,6 +887,9 @@ files:
         group: [project_id, sprint_id]
         details: [key, story_points]
     combine: sum
+    values:
+        type: fraction
+        denominator: 4
     descriptions:
         nl: Teruggehaalde storypoints
         en: Replaced story points
@@ -878,6 +914,9 @@ files:
         group: [project_id, sprint_id]
         details: [key, story_points]
     combine: sum
+    values:
+        type: fraction
+        denominator: 4
     descriptions:
         nl: Doorgeschoven storypoints
         en: Moved story points
@@ -904,6 +943,9 @@ files:
         group: [project_id, sprint_id]
         details: [key, story_points]
     combine: sum
+    values:
+        type: fraction
+        denominator: 4
     descriptions:
         nl: Weggehaalde storypoints
         en: Removed story points
@@ -920,6 +962,9 @@ files:
     column: num_incomplete_points
     default: 0
     combine: sum
+    values:
+        type: fraction
+        denominator: 4
     descriptions:
         nl: Incomplete storypoints
         en: Incomplete story points
@@ -1047,6 +1092,9 @@ files:
     column: velocity
     default: 0
     combine: mean
+    values:
+        type: fraction
+        denominator: 10
     descriptions:
         nl: Dagelijkse velocity
         en: Daily velocity
@@ -1069,6 +1117,9 @@ files:
         group: project_id
     default: 0
     combine: mean
+    values:
+        type: fraction
+        denominator: 10
     descriptions:
         nl: Gemiddelde velocity
         en: Average velocity
@@ -1091,6 +1142,9 @@ files:
         group: project_id
     default: 0
     combine: mean
+    values:
+        type: fraction
+        denominator: 10
     descriptions:
         nl: Langdurige velocity
         en: Long term velocity
@@ -1110,6 +1164,9 @@ files:
     column: over_value
     default: 0
     combine: true
+    values:
+        type: fraction
+        denominator: 4
     descriptions:
         nl: Bovengeplande punten
         en: Overplanned points
@@ -1466,6 +1523,9 @@ files:
     combine:
         project: sum
         sprint: max
+    values:
+        type: fraction
+        denominator: 4
     descriptions:
         nl: Storypoints op backlog
         en: Story points on backlog
@@ -1496,6 +1556,9 @@ files:
     combine:
         project: sum
         sprint: max
+    values:
+        type: fraction
+        denominator: 4
     descriptions:
         nl: Ongepokerde storypoints op backlog
         en: Non-pokered story points on backlog
@@ -1525,6 +1588,9 @@ files:
     combine:
         project: sum
         sprint: max
+    values:
+        type: fraction
+        denominator: 4
     descriptions:
         nl: Verwijderde storypoints van backlog
         en: Removed story points from backlog
@@ -1556,6 +1622,9 @@ files:
     combine:
         project: sum
         sprint: max
+    values:
+        type: fraction
+        denominator: 4
     descriptions:
         nl: Verwijderde ongepokerde storypoints van backlog
         en: Removed non-pokered story points from backlog
@@ -1583,6 +1652,9 @@ files:
     combine:
         project: sum
         sprint: max
+    values:
+        type: fraction
+        denominator: 4
     descriptions:
         nl: Epicpoints op backlog
         en: Epic points on backlog
@@ -1601,6 +1673,9 @@ files:
   - expression: 'backlog_story_points + backlog_expected_story_points'
     column: backlog_points
     combine: sum
+    values:
+        type: fraction
+        denominator: 4
     descriptions:
         nl: Punten op backlog
         en: Points on backlog
@@ -1616,6 +1691,9 @@ files:
   - expression: 'backlog_removed_story_points + backlog_estimated_removed_story_points + done_story_points'
     column: backlog_dismiss_velocity
     combine: sum
+    values:
+        type: fraction
+        denominator: 4
     descriptions:
         nl: Afgevoerde storypoints per sprint
         en: Dismissed story points per sprint

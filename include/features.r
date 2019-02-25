@@ -1217,6 +1217,8 @@ get_prediction_feature <- function(prediction, result) {
                         match="first")
     item <- list(column="prediction",
                  combine=prediction$combine,
+                 values=list(type="fraction",
+                             denominator=4),
                  descriptions=list(nl="Voorspelling",
                                    en="Prediction"),
                  long_descriptions=list(nl=paste("Voorspelling van het aantal",
