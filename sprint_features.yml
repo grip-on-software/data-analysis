@@ -461,6 +461,26 @@ files:
     units:
         nl: "%s technische schuld"
         en: "%s of technical debt"
+  - metric: DocumentAge
+    column: document_age
+    aggregate: end
+    summarize: [min, max]
+    combine: [min, max]
+    descriptions:
+        nl: Documentouderdom
+        en: Document age
+    long_descriptions:
+        nl: De hoeveelheid tijd dat de documenten niet zijn aangepast aan het einde van de sprint
+        en: The amount of time that the documents have not been updated at the end of the sprint
+    values:
+        type: duration
+        intervals:
+            - unit: days
+              key: d
+              num: 5
+    units:
+        nl: "%s geleden bijgewerkt"
+        en: "%s last updated"
   - filename: 03-story-watchers.sql
     table: watchers
     column: num_watchers
