@@ -1543,6 +1543,38 @@ files:
     category: backlog
   - filename: 11-backlog-all.sql
     table: backlog_stories
+    column: backlog_points_per_story
+    default: 0
+    patterns:
+        issue_backlog: ${s(issue_story)} AND ${t("issue")}.story_points IS NOT NULL
+    summarize:
+        operation: mean
+        field: story_points
+        group: [project_id, sprint_id]
+        details: [key, story_points]
+    combine:
+        project: sum
+        sprint: max
+    values:
+        type: fraction
+        denominator: 4
+    descriptions:
+        nl: Punten per story op backlog
+        en: Points per story on backlog
+    long_descriptions:
+        nl: Het aantal storypoints dat iedere story gemiddeld heeft op de product backlog in de projecttracker bij het begin van de sprint
+        en: The average number of story points for each story on the product backlog in the project tracker at the start of the sprint
+    units:
+        nl: "%s punten per story op de product backlog"
+        en: "%s points per story on the product backlog"
+    short_units:
+        nl: "%s punten/story"
+        en: "%s points/story"
+    source:
+        jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
+    category: backlog
+  - filename: 11-backlog-all.sql
+    table: backlog_stories
     column: backlog_expected_story_points
     default: 0
     patterns:
