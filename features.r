@@ -148,6 +148,7 @@ if (get_arg('--project', default=F)) {
     }
     split <- get_arg('--split', default=F)
     with_old <- get_arg('--old', default=F)
+    futures <- get_arg('--future', default=0)
     closed <- get_arg('--closed', default=F)
     combine <- get_arg('--combine', default='')
     if (combine == '') {
@@ -167,6 +168,11 @@ if (get_arg('--project', default=F)) {
     all_features <- unlist(sapply(specifications$files, function(item) {
         if (is.null(item$tag) || is.null(item$expression)) {
             # Filter expressions that are used only as tags
+            return(item$column)
+        }
+    }))
+    prediction_features <- unlist(sapply(specifications$files, function(item) {
+        if (!is.null(item$prediction)) {
             return(item$column)
         }
     }))
@@ -201,20 +207,16 @@ if (get_arg('--project', default=F)) {
         extra_features <- c(extra_features, 'prediction')
     }
     old_features <- unique(c(sprint_meta, default_features, extra_features))
+    future_features <- unique(c(sprint_meta, prediction_features))
     cat_features <- list()
 
     core <- get_arg('--core', default=F)
     sprint_days <- get_arg('--days', default=NA)
     sprint_patch <- ifelse(get_arg('--patch', default=F), NA, F)
-    conditions <- get_sprint_conditions(latest_date='', core=core,
-                                        sprint_days=sprint_days,
-                                        sprint_patch=sprint_patch)
-    if (length(conditions) != 0) {
-        sprint_conditions <- paste('AND', paste(conditions, collapse=' AND '))
-    }
-    else {
-        sprint_conditions <- ''
-    }
+    sprint_conditions <- get_sprint_conditions(latest_date='', core=core,
+                                               sprint_days=sprint_days,
+                                               sprint_patch=sprint_patch,
+                                               future=futures > 0)
     result <- get_recent_sprint_features(conn,
                                          unique(c(meta_features, features)),
                                          exclude,
@@ -224,6 +226,7 @@ if (get_arg('--project', default=F)) {
                                          project_fields=fields,
                                          project_meta=metadata,
                                          old=with_old,
+                                         future=futures,
                                          details=split,
                                          combine=combine,
                                          teams=teams,
@@ -232,6 +235,7 @@ if (get_arg('--project', default=F)) {
                                          prediction=prediction)
     default_features <- default_features[default_features %in% result$colnames]
     old_features <- old_features[old_features %in% result$colnames]
+    future_features <- future_features[future_features %in% result$colnames]
     extra_features <- extra_features[extra_features %in% result$colnames]
     sprint_meta <- sprint_meta[sprint_meta %in% result$colnames]
 
@@ -287,7 +291,8 @@ if (get_arg('--project', default=F)) {
         targets <- get_metric_targets(conn, ids, result$items)
 
         old_sprint_data <- sprint_data[sprint_data$old, ]
-        new_sprint_data <- sprint_data[!sprint_data$old, ]
+        new_sprint_data <- sprint_data[!sprint_data$old & !sprint_data$future, ]
+        future_sprint_data <- sprint_data[sprint_data$future, ]
 
         result$projects$num_sprints <- 0
         for (project in projects) {
@@ -295,15 +300,20 @@ if (get_arg('--project', default=F)) {
             if (!dir.exists(project_dir)) {
                 dir.create(project_dir)
             }
-            new <- new_sprint_data[new_sprint_data$project_name == project, ]
-            old <- old_sprint_data[old_sprint_data$project_name == project, ]
+
+            write_data <- function(data, features, name) {
+                write(toJSON(data[data$project_name == project, features],
+                             auto_unbox=T),
+                      file=paste(project_dir, name, sep='/'))
+            }
 
             loginfo("Writing data for project %s", project)
+            write_data(new_sprint_data, default_features, 'default.json')
+            write_data(old_sprint_data, old_features, 'old.json')
+            write_data(future_sprint_data, future_features, 'future.json')
 
-            write(toJSON(new[, default_features], auto_unbox=T),
-                  file=paste(project_dir, 'default.json', sep='/'))
-            write(toJSON(old[, old_features], auto_unbox=T),
-                  file=paste(project_dir, 'old.json', sep='/'))
+            new <- new_sprint_data[new_sprint_data$project_name == project, ]
+            old <- old_sprint_data[old_sprint_data$project_name == project, ]
 
             for (feature in extra_features) {
                 values <- as.list(new[[feature]])
@@ -422,7 +432,8 @@ if (get_arg('--project', default=F)) {
         shown_features <- known_features[!(known_features %in% sprint_meta)]
         write_feature_metadata(projects, specifications, output_dir,
                                features=shown_features, items=result$items)
-        write(toJSON(list(limit=recent, closed=closed, old=with_old),
+        write(toJSON(list(limit=recent, closed=closed,
+                          old=with_old, future=futures),
                      auto_unbox=T),
               file=paste(output_dir, "sprints.json", sep="/"))
         metrics <- unlist(lapply(result$items,
@@ -437,6 +448,7 @@ if (get_arg('--project', default=F)) {
         }
         write(toJSON(list(default=default_features,
                           all=known_features,
+                          future=future_features,
                           details=unique(details_features),
                           metrics=metrics,
                           meta=sprint_meta)),

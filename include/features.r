@@ -142,7 +142,7 @@ get_combined_features <- function(items, data, colnames, details, join_cols,
 
         sprint_data <- data[, c('project_name', combine)]
         sprint_data[[combine]] <- as.Date(sprint_data[[combine]])
-        duplicates <- duplicates | duplicated(sprint_data)
+        duplicates <- duplicates | (duplicated(sprint_data) & !data$future)
 
         n <- length(which(!duplicates))
         new_data <- data.frame(project_id=data[!duplicates, 'project_id'],
@@ -1006,18 +1006,62 @@ get_sprint_features <- function(conn, features, exclude, variables, latest_date,
     return(result)
 }
 
+update_non_recent_features <- function(group, future, limit, join_cols, items) {
+    late <- length(which(group$future))
+    last <- length(which(!group$future))
+    first <- max(1, last - limit + 1)
+    group[first:(last + late), 'old'] <- F
+
+    extra <- group[nrow(group), ]
+    extra$old <- F
+    extra$future <- T
+    extra[[join_cols[2]]] <- 0
+    extra$sprint_name <- 'Future Sprint'
+    multi <- extra[rep(1, each=max(0, future - late)), ]
+    multi$sprint_num <- seq(extra$sprint_num + 1, length.out=future - late)
+    group <- rbind(group, multi)
+
+    start <- group[last, 'start_date'][[1]]
+    length <- as.difftime(group[last, 'sprint_days'], units="days")
+    downtime <- length + start - group[last - 1, 'close_date'][[1]]
+    start_date <- seq(start + downtime, by=downtime, length.out=future)
+    group[group$future, 'start_date'] <- start_date
+    group[group$future, 'close_date'] <- start_date + length
+
+    prediction_columns <- c()
+    for (item in items) {
+        if (!is.null(item$prediction)) {
+            group[group$future, item$column] <- 0
+        }
+        for (prediction in item$prediction) {
+            if (!is.null(prediction$reference)) {
+                steps <- seq(1, future) * group[last, prediction$reference]
+                predict <- pmax(0, group[last, item$column] - steps)
+
+                group[group$future, item$column] <- predict
+                prediction_columns <- c(prediction_columns, item$column)
+            }
+        }
+    }
+    down <- rowSums(group[, prediction_columns, drop=F] > 0) != 0
+    down[group$future][1] <- F
+    group <- group[!group$future | down, ]
+    return(group)
+}
+
 get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
-                                       limit=5, closed=T, sprint_conditions='',
+                                       limit=5, closed=T, sprint_conditions=c(),
                                        project_fields=list('project_id'),
-                                       project_meta=list(), old=F, details=F,
-                                       combine=F, teams=list(),
+                                       project_meta=list(), old=F, future=0,
+                                       details=F, combine=F, teams=list(),
                                        project_names=NULL, components=NULL,
                                        prediction=list()) {
     fields <- list(project_name='${t("project")}.name',
                    sprint_name='${t("sprint")}.name',
                    start_date='${s(sprint_open)}',
-                   close_date='${s(sprint_close)}',
-                   old='${old}')
+                   close_date='COALESCE(${s(sprint_close)}, ${s(sprint_open)})',
+                   old='${old}',
+                   future='${future}')
 
     names(project_fields) <- project_fields
     if (config$db$primary_source == "tfs") {
@@ -1036,15 +1080,20 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
             fields$board_id <- 'sprint.board_id'
         }
     }
-    colnames <- c(join_cols, names(fields)[names(fields) != ""])
     order_by <- c('${f(join_cols, "sprint", mask=1)}',
                   '${s(sprint_open)} DESC',
                   '${t("sprint")}.name DESC')
 
-    if (closed) {
-        sprint_conditions <- paste(sprint_conditions, 'AND',
-                                   '${s(sprint_close)} < CURRENT_TIMESTAMP()')
+    if (future == 0) {
+        sprint_conditions <- c(sprint_conditions,
+                               '${s(sprint_open)} < CURRENT_TIMESTAMP()')
     }
+    if (closed) {
+        sprint_conditions <- c(sprint_conditions,
+                               '${s(sprint_close)} < CURRENT_TIMESTAMP()')
+    }
+    colnames <- c(join_cols, names(fields)[names(fields) != ""])
+    sprint_conditions <- paste(sprint_conditions, collapse=' AND ')
 
     variables <- list(sprint_conditions=sprint_conditions,
                       join_cols=list(default=join_cols),
@@ -1080,9 +1129,8 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
                     JOIN gros.${t("project")}
                     ON ${j(join_cols, "project", "sprint", mask=1)}
                     ${s(component_join)}
-                    WHERE ${s(sprint_open)} < NOW()
+                    WHERE ${s(sprint_conditions)}
                     ${s(project_condition)}
-                    ${s(sprint_conditions)}
                     ORDER BY', paste(order_by, collapse=", "), '${limit}')
 
     patterns <- load_definitions('sprint_definitions.yml', variables)
@@ -1112,6 +1160,7 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
         item <- load_query(list(query=query),
                            c(patterns, list(project_condition=project_condition,
                                             old='TRUE',
+                                            future='FALSE',
                                             pager='',
                                             limit='',
                                             source='jira')))
@@ -1129,6 +1178,7 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
                                c(patterns,
                                  list(project_condition=condition,
                                       old='FALSE',
+                                      future='FALSE',
                                       limit=paste('LIMIT', limit),
                                       source='jira')))
             sprint_data <- rbind(sprint_data, dbGetQuery(conn, item$query))
@@ -1142,6 +1192,7 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
     }
     sprint_data$start_date <- as.POSIXct(sprint_data$start_date)
     sprint_data$close_date <- as.POSIXct(sprint_data$close_date)
+    sprint_data$future <- sprint_data$start_date >= as.POSIXct(Sys.Date())
     sprint_data <- arrange(sprint_data, sprint_data$project_name,
                            sprint_data$start_date, sprint_data$sprint_name)
 
@@ -1170,21 +1221,18 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
                                         main=T, projects=result$projects,
                                         components=components)
     }
-    if (old) {
-        result$data <- do.call("rbind",
-                               lapply(split(result$data,
-                                            result$data[, 'project_name']),
-                                      function(group) {
-                                          last <- nrow(group)
-                                          first <- max(1, last - limit + 1)
-                                          group[first:last, 'old'] <- F
-                                          return(group)
-                                      }))
-    }
     result$data <- get_expressions(result$items, result$data, expressions)
     result$colnames <- c(result$colnames, expressions)
     if (prediction$data != '' && identical(prediction$combine, F)) {
         result <- get_prediction_feature(prediction, result)
+    }
+
+    if (old || future > 0) {
+        result$data <- do.call("rbind",
+                               lapply(split(result$data,
+                                            result$data[, 'project_name']),
+                                      update_non_recent_features, future,
+                                      limit, join_cols, result$items))
     }
 
     for (item in result$items) {

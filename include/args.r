@@ -11,11 +11,14 @@ if (!exists('INC_ARGS_R')) {
     get_arg <- function(name, default=NA) {
         arg <- match(name, args, nomatch=0)
         if (arg > 0) {
-            if (!is.na(default) && default == F) {
+            if (!is.na(default) && identical(default, F)) {
                 return(T)
             }
             else if (arg >= length(args)) {
                 stop(paste(name, 'requires a parameter'))
+            }
+            if (is.numeric(default)) {
+                return(as.numeric(args[arg + 1]))
             }
             return(args[arg + 1])
         }

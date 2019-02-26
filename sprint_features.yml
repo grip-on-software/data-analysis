@@ -548,6 +548,8 @@ files:
         group: [project_id, sprint_id]
         details: [key, story_points]
     combine: sum
+    prediction:
+        - url: '${prediction_url}'
     values:
         type: fraction
         denominator: 4
@@ -1715,6 +1717,8 @@ files:
   - expression: 'backlog_story_points + backlog_expected_story_points'
     column: backlog_points
     combine: sum
+    prediction:
+        - reference: backlog_dismiss_velocity
     values:
         type: fraction
         denominator: 4
