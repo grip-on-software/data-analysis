@@ -104,6 +104,9 @@ get_combined_features <- function(items, data, colnames, details, join_cols,
             data[condition, "quality_display_name"] <- display_name
 
             project <- projects[projects$name == component$project, ]
+            if (nrow(project) == 0) {
+                next
+            }
             metadata <- data.frame(project_id=project_id,
                                    project_names=project$project_names,
                                    name=component$name,
@@ -270,6 +273,10 @@ get_combined_team <- function(team, team_id, data, projects, team_projects,
     }
 
     t <- length(which(team_conditions))
+    if (t == 0) {
+        return(list(data=data, projects=projects, team_id=team_id,
+                    team_projects=team_projects))
+    }
     loginfo("Team %s has %d unmerged sprints", team$name, t)
     team_meta <- list(team_id=rep(team_id, t),
                       project_name=rep(team$name, t),
