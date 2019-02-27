@@ -207,7 +207,7 @@ if (get_arg('--project', default=F)) {
         extra_features <- c(extra_features, 'prediction')
     }
     old_features <- unique(c(sprint_meta, default_features, extra_features))
-    future_features <- unique(c(sprint_meta, prediction_features))
+    future_features <- unique(c(sprint_meta, prediction_features, 'future'))
     cat_features <- list()
 
     core <- get_arg('--core', default=F)
@@ -294,7 +294,7 @@ if (get_arg('--project', default=F)) {
         new_sprint_data <- sprint_data[!sprint_data$old & !sprint_data$future, ]
         future_sprint_data <- sprint_data[sprint_data$future, ]
 
-        result$projects$num_sprints <- 0
+        result$projects[, c('num_sprints', 'future_sprints')] <- 0
         for (project in projects) {
             project_dir <- paste(output_dir, project, sep="/")
             if (!dir.exists(project_dir)) {
@@ -302,18 +302,17 @@ if (get_arg('--project', default=F)) {
             }
 
             write_data <- function(data, features, name) {
-                write(toJSON(data[data$project_name == project, features],
-                             auto_unbox=T),
+                project_data <- data[data$project_name == project, ]
+                write(toJSON(project_data[, features], auto_unbox=T),
                       file=paste(project_dir, name, sep='/'))
+                return(project_data)
             }
 
             loginfo("Writing data for project %s", project)
-            write_data(new_sprint_data, default_features, 'default.json')
-            write_data(old_sprint_data, old_features, 'old.json')
-            write_data(future_sprint_data, future_features, 'future.json')
-
-            new <- new_sprint_data[new_sprint_data$project_name == project, ]
-            old <- old_sprint_data[old_sprint_data$project_name == project, ]
+            new <- write_data(new_sprint_data, default_features, 'default.json')
+            old <- write_data(old_sprint_data, old_features, 'old.json')
+            future <- write_data(future_sprint_data, future_features,
+                                 'future.json')
 
             for (feature in extra_features) {
                 values <- as.list(new[[feature]])
@@ -348,6 +347,8 @@ if (get_arg('--project', default=F)) {
                 meta <- result$projects[result$projects$project_id == team_id, ]
                 result$projects[result$projects$project_id == team_id,
                                 'num_sprints'] <- nrow(old) + nrow(new)
+                result$projects[result$projects$project_id == team_id,
+                                'future_sprints'] <- nrow(future)
                 project_id <- meta$project_ids[[1]]
                 team_projects <- meta$project_names[[1]]
                 if (length(team_projects) == 1 || meta$component) {
@@ -461,7 +462,7 @@ if (get_arg('--project', default=F)) {
         if (isTRUE(metadata$team) && project_ids != '1') {
             metadata$project_names <- T
         }
-        metadata$num_sprints <- T
+        metadata[c('num_sprints', 'future_sprints')] <- T
         write_projects_metadata(conn, result$project_fields, metadata,
                                 projects=result$projects,
                                 project_ids=project_ids,
