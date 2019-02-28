@@ -45,6 +45,8 @@ files:
     units:
         nl: "Sprint #%s"
         en: "Sprint #%s"
+    measurement:
+        unit: meta
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=burndownChart&sprint=${jira_sprint_id}"
         jira_version: "${jira_url}/jira/projects/${jira_key}?selectedItem=com.atlassian.jira.jira-projects-plugin%3Arelease-page&status=released-unreleased"
@@ -66,6 +68,8 @@ files:
     short_units:
         nl: "%s dagen"
         en: "%s days"
+    measurement:
+        unit: time
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
         jira_version: "${jira_url}/jira/projects/${jira_key}/versions/${jira_sprint_id}"
@@ -80,6 +84,9 @@ files:
     long_descriptions:
         nl: Het aantal dagen exclusief weekends tussen de begindatum en de einddatum van de sprint
         en: The number of days, excluding weekends, between the start and end date of the sprint
+    measurement:
+        unit: time
+        superset: sprint_days
     units:
         nl: "%s weekdagen"
         en: "%s weekdays"
@@ -107,6 +114,8 @@ files:
     units:
         nl: "%s gesloten sprint"
         en: "%s closed sprint"
+    measurement:
+        unit: meta
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
         jira_version: "${jira_url}/jira/projects/${jira_key}?selectedItem=com.atlassian.jira.jira-projects-plugin%3Arelease-page&status=released-unreleased"
@@ -127,6 +136,8 @@ files:
     units:
         nl: "%s open sprint"
         en: "%s open sprint"
+    measurement:
+        unit: meta
     category: general
   - filename: 00-sprint-gathered.sql
     table: sprint_gathered
@@ -145,6 +156,8 @@ files:
     units:
         nl: "%s complete sprint"
         en: "%s complete sprint"
+    measurement:
+        unit: meta
     category: general
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
@@ -166,6 +179,8 @@ files:
     short_units:
         nl: "%s devs"
         en: "%s devs"
+    measurement:
+        unit: person
     source:
         vcs: "${vcs_url}"
     category: team
@@ -186,6 +201,8 @@ files:
     short_units:
         nl: "%s leden"
         en: "%s members"
+    measurement:
+        unit: person
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?projectKey=${jira_key}&rapidView=${jira_board_id}&view=planning"
     category: team
@@ -206,6 +223,8 @@ files:
     short_units:
         nl: "%s fte"
         en: "%s FTE"
+    measurement:
+        unit: person
     category: team
   - expression: "ifelse(number_of_vcs_devs > 0, number_of_vcs_devs, round(mean(c(number_of_jira_devs, number_of_seats))))"
     column: number_of_devs
@@ -223,6 +242,8 @@ files:
     short_units:
         nl: "%s devs"
         en: "%s devs"
+    measurement:
+        unit: person
     category: team
   - filename: 01-dev-sprint-experience.sql
     table: sprint_experience
@@ -241,6 +262,8 @@ files:
     short_units:
         nl: "%s sprints"
         en: "%s sprints"
+    measurement:
+        unit: sprint
     category: team
   - expression: "dev_sprint_experience / number_of_devs"
     column: weighted_sprint_experience
@@ -258,6 +281,10 @@ files:
     short_units:
         nl: "%s sprints/dev"
         en: "%s sprints/dev"
+    measurement:
+        unit: [sprint, person]
+        dividend: dev_sprint_experience
+        divisor: number_of_devs
     category: team
   - filename: 01-new-committers.sql
     table: new_developers
@@ -273,6 +300,9 @@ files:
     units:
         nl: "%s nieuwe developers"
         en: "%s new developers"
+    measurement:
+        unit: person
+        superset: number_of_devs
     category: team
   - metric: TeamSpirit
     column: team_spirit
@@ -293,6 +323,8 @@ files:
     units:
         nl: "Stemming van %s"
         en: "Spirit %s"
+    measurement:
+        unit: meta
     sources:
         quality: "${quality_url}/${quality_name}"
         metric_history: "${metric_history_url}/${metric_history_file}"
@@ -310,6 +342,8 @@ files:
     units:
         nl: "%s regels code"
         en: "%s regels code"
+    measurement:
+        unit: line
   - metric: UnittestLineCoverage
     column: unittest_line_coverage
     aggregate: end
@@ -327,6 +361,10 @@ files:
     short_units:
         nl: "%s%%"
         en: "%s%%"
+    measurement:
+        unit: [line, line]
+        dividend: number_of_covered_lines
+        divisor: lines_of_code
   - metric: UnittestBranchCoverage
     column: unittest_branch_coverage
     aggregate: end
@@ -335,6 +373,10 @@ files:
     descriptions:
         nl: Unittest branch coverage
         en: Unittest branch coverage
+    measurement:
+        unit: [line, line]
+        dividend: number_of_covered_branches
+        divisor: number_of_branches
     long_descriptions:
         nl: Het percentage regels met condities dat in de producten door tests wordt bereikt aan het einde van de sprint
         en: The percentage of lines of conditions in the products that is reached by tests at the end of the sprint
@@ -361,6 +403,10 @@ files:
     short_units:
         nl: "%s%%"
         en: "%s%%"
+    measurement:
+        unit: [line, line]
+        dividend: number_of_covered_lines
+        divisor: lines_of_code
   - metric: ARTBranchCoverage
     column: art_branch_coverage
     aggregate: end
@@ -378,6 +424,10 @@ files:
     short_units:
         nl: "%s%%"
         en: "%s%%"
+    measurement:
+        unit: [line, line]
+        dividend: number_of_covered_branches
+        divisor: number_of_branches
   - metric: Vulnerabilities
     column: vulnerabilities
     carry: true
@@ -392,6 +442,8 @@ files:
     units:
         nl: "%s kwetsbaarheden"
         en: "%s vulnerabilities"
+    measurement:
+        unit: issue
   - metric: MaintainabilityBugs
     column: maintainability_bugs
     carry: true
@@ -406,6 +458,8 @@ files:
     units:
         nl: "%s onderhoudsbugs"
         en: "%s maintainability bugs"
+    measurement:
+        unit: issue
   - metric: CodeSmells
     column: code_smells
     carry: true
@@ -420,6 +474,8 @@ files:
     units:
         nl: "%s code smells"
         en: "%s code smells"
+    measurement:
+        unit: issue
   - metric: SqaleIndex
     column: technical_debt
     carry: true
@@ -446,6 +502,8 @@ files:
     units:
         nl: "%s technische schuld"
         en: "%s of technical debt"
+    measurement:
+        unit: time
   - metric: DocumentAge
     column: document_age
     aggregate: end
@@ -466,6 +524,8 @@ files:
     units:
         nl: "%s geleden bijgewerkt"
         en: "%s last updated"
+    measurement:
+        unit: time
     source:
         quality: '${quality_url}/${quality_name}'
         metric_history: '${metric_history_url}/${metric_options_file}'
@@ -485,6 +545,9 @@ files:
     units:
         nl: "%s story-watchers"
         en: "%s story watchers"
+    measurement:
+        unit: person
+        superset: number_of_jira_devs
     source:
         jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=${jira_project} and ${jira_sprint} and type = Story and watchers %3E 0&runQuery=true"
     category: tracking
@@ -502,6 +565,9 @@ files:
     units:
         nl: "%s item-updaters"
         en: "%s item updaters"
+    measurement:
+        unit: person
+        superset: number_of_jira_devs
     category: tracking
     source:
         jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=${jira_project} and ${jira_sprint} and reporter !%3D currentUser()&runQuery=true"
@@ -531,6 +597,8 @@ files:
     units:
         nl: "%s geplande punten"
         en: "%s planned points"
+    measurement:
+        unit: point
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=burndownChart&sprint=${jira_sprint_id}"
     category: velocity
@@ -562,6 +630,9 @@ files:
     units:
         nl: "%s afgronde storypoints"
         en: "%s done story points"
+    measurement:
+        unit: point
+        superset: velocity_one
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
     category: velocity
@@ -591,6 +662,8 @@ files:
     units:
         nl: "%s geplande bug punten"
         en: "%s planned bug points"
+    measurement:
+        unit: point
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=burndownChart&sprint=${jira_sprint_id}"
     category: velocity
@@ -620,6 +693,9 @@ files:
     units:
         nl: "%s afgronde bug points"
         en: "%s done bug points"
+    measurement:
+        unit: point
+        superset: velocity_one
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
     category: velocity
@@ -639,6 +715,8 @@ files:
     units:
         nl: "%s punten"
         en: "%s points"
+    measurement:
+        unit: point
     source:
         jira: null
     category: velocity
@@ -658,6 +736,9 @@ files:
     units:
         nl: "%s toegevoegde storypoints"
         en: "%s added story points"
+    measurement:
+        unit: point
+        superset: done_story_points
     source:
         jira: null
     category: velocity
@@ -677,6 +758,8 @@ files:
     units:
         nl: "%s storypoints naast verwachting"
         en: "%s story points off expectation"
+    measurement:
+        unit: point
     source:
         jira: null
     category: velocity
@@ -697,6 +780,8 @@ files:
     units:
         nl: "%s gewogen storypoints"
         en: "%s weighted story points"
+    measurement:
+        unit: point
     source:
         jira: "${jira_url}/secure/BrowseProjects.jspa"
     category: velocity
@@ -748,6 +833,8 @@ files:
     units:
         nl: "%s impediments"
         en: "%s impediments"
+    measurement:
+        unit: issue
     source:
         jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=${jira_project} and ${jira_sprint} and Flagged %3D Impediment&runQuery=true"
     category: tracking
@@ -765,6 +852,8 @@ files:
     units:
         nl: "%s rangwijzigingen na begin van sprint"
         en: "%s rank changes after start of sprint"
+    measurement:
+        unit: change
     source:
         jira: null
     category: tracking
@@ -790,6 +879,8 @@ files:
     units:
         nl: "%s storypoints die nog niet afgerond zijn"
         en: "%s story points that are not yet done"
+    measurement:
+        unit: point
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
     category: velocity
@@ -815,6 +906,8 @@ files:
     units:
         nl: "%s late storypoints"
         en: "%s late story points"
+    measurement:
+        unit: point
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
     category: velocity
@@ -837,6 +930,8 @@ files:
     units:
         nl: "%s stories toegevoegd uit eerdere sprint"
         en: "%s stories added from earlier sprint"
+    measurement:
+        unit: points
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
     category: tracking
@@ -862,6 +957,8 @@ files:
     units:
         nl: "%s storypoints toegevoegd uit eerdere sprint"
         en: "%s story points added from earlier sprint"
+    measurement:
+        unit: point
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
     category: velocity
@@ -884,6 +981,9 @@ files:
     units:
         nl: "%s doorgeschoven stories"
         en: "%s removed stories"
+    measurement:
+        unit: point
+        superset: num_incomplete_points
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
     category: tracking
@@ -911,6 +1011,9 @@ files:
     units:
         nl: "%s terruggeplaatste storypoints"
         en: "%s replaced story points"
+    measurement:
+        unit: point
+        superset: num_incomplete_points
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
     category: velocity
@@ -938,6 +1041,9 @@ files:
     units:
         nl: "%s doorgeschoven storypoints"
         en: "%s moved story points"
+    measurement:
+        unit: point
+        superset: num_incomplete_points
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
     category: velocity
@@ -967,6 +1073,9 @@ files:
     units:
         nl: "%s weggehaalde storypoints"
         en: "%s removed story points"
+    measurement:
+        unit: point
+        superset: num_incomplete_points
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
     category: velocity
@@ -986,6 +1095,8 @@ files:
     units:
         nl: "%s incomplete storypoints"
         en: "%s incomplete story points"
+    measurement:
+        unit: point
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
     category: velocity
@@ -1008,6 +1119,9 @@ files:
     units:
         nl: "%s stories"
         en: "%s stories"
+    measurement:
+        unit: item
+        superset: backlog_size
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
     category: tracking
@@ -1030,6 +1144,9 @@ files:
     units:
         nl: "%s afgeronde stories"
         en: "%s done stories"
+    measurement:
+        unit: item
+        superset: num_done_items
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
     category: tracking
@@ -1081,6 +1198,9 @@ files:
     units:
         nl: "gemiddeld %s wijzigingen per item"
         en: "average of %s changes per item"
+    measurement:
+        unit: [change, item]
+        divisor: backlog_size
     source:
         jira: null
     category: tracking
@@ -1094,9 +1214,17 @@ files:
     long_descriptions:
         nl: De gemiddelde dag geteld vanaf het begin van de sprint waarop wijzigen aan items in de sprint worden gemaakt
         en: The average day counted from the start of the sprint when changes to items in the sprint are made
+    values:
+        type: duration
+        intervals:
+            - unit: days
+              key: d
+              num: 5
     units:
         nl: "middelpunt van itemwijzigingen op %s dagen na begin van sprint"
         en: "midpoint of item changes at %s days after start of sprint"
+    measurement:
+        unit: time
     source:
         jira: null
     category: tracking
@@ -1119,6 +1247,10 @@ files:
     short_units:
         nl: "%s punten/dag"
         en: "%s points/day"
+    measurement:
+        unit: [point, time]
+        dividend: done_story_points
+        divisor: sprint_weekdays
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
     category: velocity
@@ -1144,6 +1276,9 @@ files:
     short_units:
         nl: "%s punten/sprint"
         en: "%s points/sprint"
+    measurements:
+        unit: [point, sprint]
+        dividend: done_story_points
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
     category: velocity
@@ -1169,6 +1304,9 @@ files:
     short_units:
         nl: "%s punten/sprint"
         en: "%s points/sprint"
+    measurements:
+        unit: [point, sprint]
+        dividend: done_story_points
     source:
         jira: null
     category: velocity
@@ -1191,6 +1329,9 @@ files:
     short_units:
         nl: "%s extra points"
         en: "%s extra points"
+    measurement:
+        unit: point
+        superset: num_story_points
     source:
         jira: null
     category: velocity
@@ -1208,6 +1349,9 @@ files:
     units:
         nl: "%s afgeronde items die geen story of subtask zijn"
         en: "%s done items that are not stories or subtasks"
+    measurement:
+        unit: item
+        superset: num_done_items
     source:
         jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=${jira_project} and ${jira_sprint} and ${q(issue_other)} and resolution < %22${sprint_end_date}%22&runQuery=true"
     category: tracking
@@ -1221,6 +1365,8 @@ files:
     long_descriptions:
         nl: Het aantal items dat in de sprint wordt afgerond
         en: The number of items that are completed in the sprint
+    measurement:
+        unit: item
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
         jira_version: "${jira_url}/projects/${jira_key}/versions/${jira_sprint_id}"
@@ -1244,6 +1390,8 @@ files:
     units:
         nl: "gemiddeld %s stories die gelijktijdig in progress zijn"
         en: "average of %s stories that are concurrently in progress"
+    measurement:
+        unit: [item]
     source:
         jira: null
     category: tracking
@@ -1269,6 +1417,9 @@ files:
     short_units:
         nl: "%s dagen/story"
         en: "%s days/story"
+    measurement:
+        unit: [time, item]
+        divisor: num_stories
     source:
         jira: null
     category: tracking
@@ -1337,6 +1488,18 @@ files:
             - "%s bytes/commit"
             - "%s files/commit"
             - "%s lines/commit"
+    measurement:
+        - unit: commit
+        - unit: [line, commit]
+          divisor: num_commits
+        - unit: [line, commit]
+          divisor: num_commits
+        - unit: [byte, commit]
+          divisor: num_commits
+        - unit: [file, commit]
+          divisor: num_commits
+        - unit: [line, commit]
+          divisor: num_commits
     category: code
   - filename: 09-metric-count.sql
     table: metric_count
@@ -1351,6 +1514,8 @@ files:
     units:
         nl: "%s metrieken"
         en: "%s metrics"
+    measurement:
+        unit: metric
     source:
         quality: "${quality_url}/${quality_name}"
         metric_history: "${metric_history_url}/${metric_history_file}"
@@ -1368,6 +1533,9 @@ files:
     units:
         nl: "%s metrieken die op rood staan"
         en: "%s metrics that are red"
+    measurement:
+        unit: metric
+        superset: num_metrics
     source:
         quality: "${quality_url}/${quality_name}"
         metric_history: "${metric_history_url}/${metric_history_file}"
@@ -1385,6 +1553,9 @@ files:
     units:
         nl: "%s metrieken met missende bron"
         en: "%s metrics with missing sources"
+    measurement:
+        unit: metric
+        superset: num_metrics
     source:
         quality: "${quality_url}/${quality_name}"
         metric_history: "${metric_history_url}/${metric_history_file}"
@@ -1403,6 +1574,8 @@ files:
     units:
         nl: "%s veranderingen aan metrieknormen"
         en: "%s changes to metric targets"
+    measurement:
+        unit: change
     source:
         metric_options: "${metric_options_url}/blob/master/${metric_options_file}"
         quality: "${quality_url}/${quality_name}"
@@ -1421,6 +1594,8 @@ files:
     units:
         nl: "%s rangwijzigingen voor begin van sprint"
         en: "%s rank changes before start of sprint"
+    measurement:
+        unit: change
     source:
         jira: null
     category: tracking
@@ -1438,6 +1613,8 @@ files:
     units:
         nl: "%s wijzigingen aan storypoints voor begin van sprint"
         en: "%s story point changes before start of sprint"
+    measurement:
+        unit: change
     source:
         jira: null
     category: tracking
@@ -1455,6 +1632,8 @@ files:
     units:
         nl: "%s overige wijzigingen aan issues voor begin van sprint"
         en: "%s other issue changes before start of sprint"
+    measurement:
+        unit: change
     source:
         jira: null
     category: tracking
@@ -1472,6 +1651,8 @@ files:
     units:
         nl: "%s items voor de sprint op de backlog"
         en: "%s items for the sprint on the backlog"
+    measurement:
+        unit: item
     source:
         jira: null
     category: backlog
@@ -1489,6 +1670,9 @@ files:
     units:
         nl: "%s items met readystatus voor de sprint op de backlog"
         en: "%s items with ready status for the sprint on the backlog"
+    measurement:
+        unit: item
+        superset: backlog_size
     source:
         jira: null
     category: backlog
@@ -1518,6 +1702,8 @@ files:
     units:
         nl: "%s items op de algehele backlog"
         en: "%s items on the whole backlog"
+    measurement:
+        unit: item
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
     category: backlog
@@ -1550,6 +1736,9 @@ files:
     short_units:
         nl: "%s"
         en: "%s"
+    measurement:
+        unit: point
+        superset: backlog_points
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
     category: backlog
@@ -1582,6 +1771,10 @@ files:
     short_units:
         nl: "%s punten/story"
         en: "%s points/story"
+    measurement:
+        unit: [point, item]
+        dividend: backlog_story_points
+        divisor: backlog_items
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
     category: backlog
@@ -1615,6 +1808,9 @@ files:
     short_units:
         nl: "%s geschatte points"
         en: "%s estimated points"
+    measurement:
+        unit: point
+        superset: backlog_points
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
     category: backlog
@@ -1647,6 +1843,8 @@ files:
     short_units:
         nl: "%s verwijderde storypoints"
         en: "%s removed story points"
+    measurement:
+        unit: point
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
     category: backlog
@@ -1681,6 +1879,8 @@ files:
     short_units:
         nl: "%s geschatte verwijderde points"
         en: "%s estimated removed points"
+    measurement:
+        unit: point
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
     category: backlog
@@ -1711,6 +1911,8 @@ files:
     short_units:
         nl: "%s epicpoints"
         en: "%s epic points"
+    measurement:
+        unit: point
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
     category: backlog
@@ -1728,6 +1930,8 @@ files:
     long_descriptions:
         nl: Het totaal aantal storypoints dat op de product backlog in de projecttracker staat bij het begin van de sprint (inclusief inschattingen van andere items)
         en: The total number of story points on the product backlog in the project tracker at the start of the sprint (including estimates of other items)
+    measurement:
+        unit: point
     units:
         nl: "%s punten op de product backlog"
         en: "%s points on the product backlog"
@@ -1749,6 +1953,8 @@ files:
     units:
         nl: "%s afgevoerde punten van de product backlog"
         en: "%s dismissed points from the prouct backlog"
+    measurement:
+        unit: point
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
     category: backlog
