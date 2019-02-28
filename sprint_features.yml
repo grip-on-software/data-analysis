@@ -70,6 +70,7 @@ files:
         en: "%s days"
     measurement:
         unit: time
+    preferred: false
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
         jira_version: "${jira_url}/jira/projects/${jira_key}/versions/${jira_sprint_id}"
@@ -84,15 +85,16 @@ files:
     long_descriptions:
         nl: Het aantal dagen exclusief weekends tussen de begindatum en de einddatum van de sprint
         en: The number of days, excluding weekends, between the start and end date of the sprint
-    measurement:
-        unit: time
-        superset: sprint_days
     units:
         nl: "%s weekdagen"
         en: "%s weekdays"
     short_units:
         nl: "%s dagen"
         en: "%s days"
+    measurement:
+        unit: time
+        superset: sprint_days
+    preferred: true
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
         jira_version: "${jira_url}/jira/projects/${jira_key}/versions/${jira_sprint_id}"
@@ -244,6 +246,7 @@ files:
         en: "%s devs"
     measurement:
         unit: person
+    preferred: true
     category: team
   - filename: 01-dev-sprint-experience.sql
     table: sprint_experience
@@ -739,6 +742,7 @@ files:
     measurement:
         unit: point
         superset: done_story_points
+    preferred: false
     source:
         jira: null
     category: velocity
@@ -760,6 +764,7 @@ files:
         en: "%s story points off expectation"
     measurement:
         unit: point
+    preferred: false
     source:
         jira: null
     category: velocity
@@ -782,6 +787,7 @@ files:
         en: "%s weighted story points"
     measurement:
         unit: point
+    preferred: false
     source:
         jira: "${jira_url}/secure/BrowseProjects.jspa"
     category: velocity
@@ -1014,6 +1020,7 @@ files:
     measurement:
         unit: point
         superset: num_incomplete_points
+    preferred: false
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
     category: velocity
@@ -1044,6 +1051,7 @@ files:
     measurement:
         unit: point
         superset: num_incomplete_points
+    preferred: false
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
     category: velocity
@@ -1076,6 +1084,7 @@ files:
     measurement:
         unit: point
         superset: num_incomplete_points
+    preferred: false
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
     category: velocity
@@ -1097,6 +1106,7 @@ files:
         en: "%s incomplete story points"
     measurement:
         unit: point
+    preferred: true
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
     category: velocity
@@ -1332,6 +1342,7 @@ files:
     measurement:
         unit: point
         superset: num_story_points
+    preferred: false
     source:
         jira: null
     category: velocity
@@ -1556,6 +1567,7 @@ files:
     measurement:
         unit: metric
         superset: num_metrics
+    preferred: false
     source:
         quality: "${quality_url}/${quality_name}"
         metric_history: "${metric_history_url}/${metric_history_file}"
@@ -1576,6 +1588,7 @@ files:
         en: "%s changes to metric targets"
     measurement:
         unit: change
+    preferred: false
     source:
         metric_options: "${metric_options_url}/blob/master/${metric_options_file}"
         quality: "${quality_url}/${quality_name}"
@@ -1596,6 +1609,7 @@ files:
         en: "%s rank changes before start of sprint"
     measurement:
         unit: change
+        superset: num_early_changes
     source:
         jira: null
     category: tracking
@@ -1615,6 +1629,7 @@ files:
         en: "%s story point changes before start of sprint"
     measurement:
         unit: change
+        superset: num_early_changes
     source:
         jira: null
     category: tracking
@@ -1697,10 +1712,10 @@ files:
         nl: Items op backlog
         en: Items on backlog
     long_descriptions:
-        nl: Het aantal items in de projecttracker dat op de product backlog staat bij het begin van de sprint
-        en: The number of items in the project tracker that is on the product backlog at the start of the sprint
+        nl: Het aantal items in de projecttracker dat op de gehele backlog staat bij het begin van de sprint
+        en: The number of items in the project tracker that is on the whole backlog at the start of the sprint
     units:
-        nl: "%s items op de algehele backlog"
+        nl: "%s items op de gehele backlog"
         en: "%s items on the whole backlog"
     measurement:
         unit: item
@@ -1728,11 +1743,11 @@ files:
         nl: Storypoints op backlog
         en: Story points on backlog
     long_descriptions:
-        nl: Het totaal aantal storypoints op de product backlog in de projecttracker bij het begin van de sprint
-        en: The number of story points on the product backlog in the project tracker at the start of the sprint
+        nl: Het totaal aantal storypoints op de gehele backlog in de projecttracker bij het begin van de sprint
+        en: The number of story points on the whole backlog in the project tracker at the start of the sprint
     units:
-        nl: "%s storypoints op de product backlog"
-        en: "%s story points on the product backlog"
+        nl: "%s storypoints op de gehele backlog"
+        en: "%s story points on the whole backlog"
     short_units:
         nl: "%s"
         en: "%s"
@@ -1763,11 +1778,11 @@ files:
         nl: Punten per story op backlog
         en: Points per story on backlog
     long_descriptions:
-        nl: Het aantal storypoints dat iedere story gemiddeld heeft op de product backlog in de projecttracker bij het begin van de sprint
-        en: The average number of story points for each story on the product backlog in the project tracker at the start of the sprint
+        nl: Het aantal storypoints dat iedere story gemiddeld heeft op de gehele backlog in de projecttracker bij het begin van de sprint
+        en: The average number of story points for each story on the whole backlog in the project tracker at the start of the sprint
     units:
-        nl: "%s punten per story op de product backlog"
-        en: "%s points per story on the product backlog"
+        nl: "%s punten per story op de gehele backlog"
+        en: "%s points per story on the whole backlog"
     short_units:
         nl: "%s punten/story"
         en: "%s points/story"
@@ -1775,6 +1790,7 @@ files:
         unit: [point, item]
         dividend: backlog_story_points
         divisor: backlog_items
+    preferred: false
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
     category: backlog
@@ -1800,11 +1816,11 @@ files:
         nl: Ongepokerde storypoints op backlog
         en: Non-pokered story points on backlog
     long_descriptions:
-        nl: Een automatische schatting van het aantal ongepokerde storypoints op de product backlog in de projecttracker bij het begin van de sprint
-        en: An automated estimate of the number of story points that are not pokered on the product backlog in the project tracker at the start of the sprint
+        nl: Een automatische schatting van het aantal ongepokerde storypoints op de gehele backlog in de projecttracker bij het begin van de sprint
+        en: An automated estimate of the number of story points that are not pokered on the whole backlog in the project tracker at the start of the sprint
     units:
-        nl: "%s geschatte extra storypoints op de product backlog"
-        en: "%s estimated additional story points on the product backlog"
+        nl: "%s geschatte extra storypoints op de gehele backlog"
+        en: "%s estimated additional story points on the whole backlog"
     short_units:
         nl: "%s geschatte points"
         en: "%s estimated points"
@@ -1835,16 +1851,17 @@ files:
         nl: Verwijderde storypoints van backlog
         en: Removed story points from backlog
     long_descriptions:
-        nl: Het totaal aantal storypoints dat is verwijderd van de product backlog in de projecttracker tijdens de sprint
-        en: The number of story points that is removed from the product backlog in the project tracker during the sprint
+        nl: Het totaal aantal storypoints dat is verwijderd van de gehele backlog in de projecttracker tijdens de sprint
+        en: The number of story points that is removed from the whole backlog in the project tracker during the sprint
     units:
-        nl: "%s verwijderde storypoints van de product backlog"
-        en: "%s removed story points from the product backlog"
+        nl: "%s verwijderde storypoints van de gehele backlog"
+        en: "%s removed story points from the whole backlog"
     short_units:
         nl: "%s verwijderde storypoints"
         en: "%s removed story points"
     measurement:
         unit: point
+    preferred: false
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
     category: backlog
@@ -1871,16 +1888,17 @@ files:
         nl: Verwijderde ongepokerde storypoints van backlog
         en: Removed non-pokered story points from backlog
     long_descriptions:
-        nl: Een automatische schatting van het aantal ongepokerde storypoints dat is verwijderd van de product backlog in de projecttracker tijdens de sprint
-        en: An automated estimate of the number of story points that are not pokered on the product backlog in the project tracker at the start of the sprint
+        nl: Een automatische schatting van het aantal ongepokerde storypoints dat is verwijderd van de gehele backlog in de projecttracker tijdens de sprint
+        en: An automated estimate of the number of story points that are not pokered on the whole backlog in the project tracker at the start of the sprint
     units:
-        nl: "%s geschatte verwijderde storypoints van de product backlog"
-        en: "%s estimated removed story points from the product backlog"
+        nl: "%s geschatte verwijderde storypoints van de gehele backlog"
+        en: "%s estimated removed story points from the whole backlog"
     short_units:
         nl: "%s geschatte verwijderde points"
         en: "%s estimated removed points"
     measurement:
         unit: point
+    preferred: false
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
     category: backlog
@@ -1903,11 +1921,11 @@ files:
         nl: Epicpoints op backlog
         en: Epic points on backlog
     long_descriptions:
-        nl: Het totaal aantal storypoints dat bij epics hoort op de product backlog in de projecttracker bij het begin van de sprint
-        en: The number of story points belonging to epics on the product backlog in the project tracker at the start of the sprint
+        nl: Het totaal aantal storypoints dat bij epics hoort op de gehele backlog in de projecttracker bij het begin van de sprint
+        en: The number of story points belonging to epics on the whole backlog in the project tracker at the start of the sprint
     units:
-        nl: "%s epicpoints op de product backlog"
-        en: "%s epic points on the product backlog"
+        nl: "%s epicpoints op de gehele backlog"
+        en: "%s epic points on the whole backlog"
     short_units:
         nl: "%s epicpoints"
         en: "%s epic points"
@@ -1928,13 +1946,13 @@ files:
         nl: Punten op backlog
         en: Points on backlog
     long_descriptions:
-        nl: Het totaal aantal storypoints dat op de product backlog in de projecttracker staat bij het begin van de sprint (inclusief inschattingen van andere items)
-        en: The total number of story points on the product backlog in the project tracker at the start of the sprint (including estimates of other items)
+        nl: Het totaal aantal storypoints dat op de gehele backlog in de projecttracker staat bij het begin van de sprint (inclusief inschattingen van andere items)
+        en: The total number of story points on the whole backlog in the project tracker at the start of the sprint (including estimates of other items)
     measurement:
         unit: point
     units:
-        nl: "%s punten op de product backlog"
-        en: "%s points on the product backlog"
+        nl: "%s punten op de gehele backlog"
+        en: "%s points on the whole backlog"
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
     category: backlog
@@ -1948,13 +1966,14 @@ files:
         nl: Afgevoerde storypoints per sprint
         en: Dismissed story points per sprint
     long_descriptions:
-        nl: Het aantal storypoints dat afgevoerd wordt van de product backlog tijdens de sprint
-        en: The total number of story points that is dismissed from the product backlog during the sprint
+        nl: Het aantal storypoints dat afgevoerd wordt van de gehele backlog tijdens de sprint
+        en: The total number of story points that is dismissed from the whole backlog during the sprint
     units:
-        nl: "%s afgevoerde punten van de product backlog"
-        en: "%s dismissed points from the prouct backlog"
+        nl: "%s afgevoerde punten van de gehele backlog"
+        en: "%s dismissed points from the whole backlog"
     measurement:
         unit: point
+    preferred: true
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
     category: backlog
