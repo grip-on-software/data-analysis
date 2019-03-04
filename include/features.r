@@ -1345,8 +1345,8 @@ write_feature_metadata <- function(projects, specifications, output_directory,
     sources <- get_locales(source_types)
     if (length(features) > 0) {
         cats <- specifications$categories
-        meta <- list()
-        names(meta) <- list()
+        meta <- rep(list(NULL), length(metadata))
+        names(meta) <- metadata
         sources$feature <- list()
 
         for (item in items) {
@@ -1355,7 +1355,21 @@ write_feature_metadata <- function(projects, specifications, output_directory,
                 cat <- ifelse("category" %in% names(item), item$category,
                               "other")
                 cats[[cat]]$items <- c(cats[[cat]]$items, feature)
-                meta[[item$column]] <- item[metadata[metadata %in% names(item)]]
+
+                metas <- lapply(item[metadata[metadata %in% names(item)]],
+                                function(fields) {
+                                    if (length(item$column) == 1) {
+                                        field <- list(fields)
+                                        names(field) <- item$column
+                                        return(field)
+                                    }
+                                    return(mapply(function(column, value) {
+                                                      return(value)
+                                                  },
+                                                  item$column, metas,
+                                                  SIMPLIFY=F))
+                                })
+                meta <- modifyList(meta, metas)
                 for (source_name in names(item$source)) {
                     if (source_name %in% names(source_types)) {
                         current <- sources$feature[[source_name]]
