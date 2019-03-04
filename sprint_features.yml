@@ -347,6 +347,7 @@ files:
         en: "%s regels code"
     measurement:
         unit: line
+    backends: [sonar]
   - metric: UnittestLineCoverage
     column: unittest_line_coverage
     aggregate: end
@@ -368,6 +369,7 @@ files:
         unit: [line, line]
         dividend: number_of_covered_lines
         divisor: lines_of_code
+    backends: [sonar]
   - metric: UnittestBranchCoverage
     column: unittest_branch_coverage
     aggregate: end
@@ -389,6 +391,7 @@ files:
     short_units:
         nl: "%s%%"
         en: "%s%%"
+    backends: [sonar]
   - metric: ARTStatementCoverage
     column: art_statement_coverage
     aggregate: end
@@ -410,6 +413,7 @@ files:
         unit: [line, line]
         dividend: number_of_covered_lines
         divisor: lines_of_code
+    backends: [sonar]
   - metric: ARTBranchCoverage
     column: art_branch_coverage
     aggregate: end
@@ -431,6 +435,7 @@ files:
         unit: [line, line]
         dividend: number_of_covered_branches
         divisor: number_of_branches
+    backends: [sonar]
   - metric: Vulnerabilities
     column: vulnerabilities
     carry: true
@@ -447,6 +452,7 @@ files:
         en: "%s vulnerabilities"
     measurement:
         unit: issue
+    backends: [sonar]
   - metric: MaintainabilityBugs
     column: maintainability_bugs
     carry: true
@@ -463,6 +469,7 @@ files:
         en: "%s maintainability bugs"
     measurement:
         unit: issue
+    backends: [sonar]
   - metric: CodeSmells
     column: code_smells
     carry: true
@@ -479,6 +486,7 @@ files:
         en: "%s code smells"
     measurement:
         unit: issue
+    backends: [sonar]
   - metric: SqaleIndex
     column: technical_debt
     carry: true
@@ -507,6 +515,7 @@ files:
         en: "%s of technical debt"
     measurement:
         unit: time
+    backends: [sonar]
   - metric: DocumentAge
     column: document_age
     aggregate: end
@@ -529,11 +538,7 @@ files:
         en: "%s last updated"
     measurement:
         unit: time
-    source:
-        quality: '${quality_url}/${quality_name}'
-        metric_history: '${metric_history_url}/${metric_options_file}'
-        git: null
-        subversion: null
+    backends: [git, github, gitlab, tfs, subversion]
   - filename: 03-story-watchers.sql
     table: watchers
     column: num_watchers

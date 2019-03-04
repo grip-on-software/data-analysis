@@ -267,8 +267,8 @@ if (!exists('INC_DATABASE_R')) {
             if (is.null(item$source)) {
                 metric_history <- '${metric_history_url}/${metric_history_file}'
                 item$source <- list(quality='${quality_url}/${quality_name}',
-                                    metric_history=metric_history,
-                                    sonar=NULL)
+                                    metric_history=metric_history)
+                item$source[item$backends] <- list(NULL)
             }
             if (!is.null(item$summarize)) {
                 columns <- c(columns, 'metric.domain_name')
