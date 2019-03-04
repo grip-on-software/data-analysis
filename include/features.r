@@ -508,7 +508,10 @@ update_combine_interval <- function(items, old_data, data, row_num, details,
     return(result)
 }
 
-include_feature <- function(item, features, exclude) {
+include_feature <- function(item, features, exclude, required=c()) {
+    if (all(item$column %in% required)) {
+        return(T)
+    }
     if (all(item$column %in% features)) {
         if (!is.null(item$expression)) {
             return(length(grep(exclude, item$column)) == 0)
@@ -583,8 +586,7 @@ get_features <- function(conn, features, exclude, items, data, colnames,
     selected_items <- c()
     expressions <- c()
     for (item in items) {
-        if (all(item$column %in% required) ||
-            include_feature(item, features, exclude)) {
+        if (include_feature(item, features, exclude, required)) {
             selected_items <- c(selected_items, list(item))
             columns <- item$column
             by <- join_cols
@@ -1011,6 +1013,9 @@ update_non_recent_features <- function(group, future, limit, join_cols, items) {
     last <- length(which(!group$future))
     first <- max(1, last - limit + 1)
     group[first:(last + late), 'old'] <- F
+    if (future == 0) {
+        return(group)
+    }
 
     extra <- group[nrow(group), ]
     extra$old <- F
@@ -1043,8 +1048,12 @@ update_non_recent_features <- function(group, future, limit, join_cols, items) {
             }
         }
     }
-    down <- rowSums(group[, prediction_columns, drop=F] > 0) != 0
-    down[group$future][1] <- F
+    down <- F
+    if (length(prediction_columns) > 0) {
+        # Remove future sprints where predicted values are all zero or negative
+        down <- rowSums(group[, prediction_columns, drop=F] > 0) != 0
+        down[group$future][1] <- F
+    }
     group <- group[!group$future | down, ]
     return(group)
 }
@@ -1198,15 +1207,16 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
 
     data <- yaml.load_file('sprint_features.yml')
     items <- list()
+    required <- c("sprint_num", "sprint_days")
     for (item in data$files) {
-        if (include_feature(item, features, exclude)) {
+        if (include_feature(item, features, exclude, required)) {
             items <- c(items, list(load_query(item, patterns, data$path)))
         }
     }
 
     result <- get_features(conn, features, exclude, items, sprint_data,
                            colnames, join_cols, details=details,
-                           required=c("sprint_num"), components=components)
+                           required=required, components=components)
     expressions <- result$expressions
 
     result$projects <- projects
