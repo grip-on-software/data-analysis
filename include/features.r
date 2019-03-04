@@ -1274,8 +1274,8 @@ get_prediction_feature <- function(prediction, result) {
                  combine=prediction$combine,
                  values=list(type="fraction",
                              denominator=4),
-                 descriptions=list(nl="Voorspelling",
-                                   en="Prediction"),
+                 descriptions=list(nl="Voorspelde storypoints",
+                                   en="Predicted story points"),
                  long_descriptions=list(nl=paste("Voorspelling van het aantal",
                                                  "storypoints dat in de sprint",
                                                  "zou worden gerealiseerd op",
@@ -1284,7 +1284,8 @@ get_prediction_feature <- function(prediction, result) {
                                                  "story points that could be",
                                                  "realized during the sprint",
                                                  "based on historical data")),
-                 source=list(prediction=prediction$source))
+                 source=list(prediction=prediction$source),
+                 measurement=list(unit='point'))
     result$items <- c(result$items, list(item))
     result$colnames <- c(result$colnames, "prediction")
     return(result)

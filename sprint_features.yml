@@ -939,7 +939,7 @@ files:
         nl: "%s stories toegevoegd uit eerdere sprint"
         en: "%s stories added from earlier sprint"
     measurement:
-        unit: points
+        unit: point
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
     category: tracking
