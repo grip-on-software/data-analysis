@@ -432,7 +432,9 @@ if (get_arg('--project', default=F)) {
                             unlist(cat_features))
         shown_features <- known_features[!(known_features %in% sprint_meta)]
         write_feature_metadata(projects, specifications, output_dir,
-                               features=shown_features, items=result$items)
+                               features=shown_features, items=result$items,
+                               locales=c('descriptions', 'long_descriptions',
+                                         'units', 'short_units'))
         write(toJSON(list(limit=recent, closed=closed,
                           old=with_old, future=futures),
                      auto_unbox=T),

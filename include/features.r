@@ -1323,20 +1323,20 @@ get_project_features <- function(conn, features, exclude, variables, core=F,
 }
 
 write_feature_metadata <- function(projects, specifications, output_directory,
-                                   features=c(), items=c()) {
+                                   features=c(), items=c(),
+                                   locales=c('descriptions',
+                                             'long_descriptions', 'units',
+                                             'short_units', 'tags'),
+                                   metadata=c('values', 'measurement',
+                                              'preferred')) {
     if (length(items) == 0) {
         items <- specifications$files
     }
-    write(toJSON(get_feature_locales(items)),
-          file=paste(output_directory, "descriptions.json", sep="/"))
-    write(toJSON(get_feature_locales(items, 'long_descriptions')),
-          file=paste(output_directory, "long_descriptions.json", sep="/"))
-    write(toJSON(get_feature_locales(items, 'units')),
-          file=paste(output_directory, "units.json", sep="/"))
-    write(toJSON(get_feature_locales(items, 'short_units')),
-          file=paste(output_directory, "short_units.json", sep="/"))
-    write(toJSON(get_feature_locales(items, 'tags')),
-          file=paste(output_directory, "tags.json", sep="/"))
+    for (locale in locales) {
+        write(toJSON(get_feature_locales(items, locale)),
+              file=paste(output_directory, paste(locale, "json", sep="."),
+                         sep="/"))
+    }
     write(toJSON(projects, auto_unbox=T),
           file=paste(output_directory, "projects.json", sep="/"))
 
@@ -1344,8 +1344,8 @@ write_feature_metadata <- function(projects, specifications, output_directory,
     sources <- get_locales(source_types)
     if (length(features) > 0) {
         cats <- specifications$categories
-        values <- list()
-        names(values) <- list()
+        meta <- list()
+        names(meta) <- list()
         sources$feature <- list()
 
         for (item in items) {
@@ -1354,9 +1354,7 @@ write_feature_metadata <- function(projects, specifications, output_directory,
                 cat <- ifelse("category" %in% names(item), item$category,
                               "other")
                 cats[[cat]]$items <- c(cats[[cat]]$items, feature)
-                if (!is.null(item$values)) {
-                    values[[item$column]] <- item$values
-                }
+                meta[[item$column]] <- item[metadata[metadata %in% names(item)]]
                 for (source_name in names(item$source)) {
                     if (source_name %in% names(source_types)) {
                         current <- sources$feature[[source_name]]
@@ -1378,8 +1376,8 @@ write_feature_metadata <- function(projects, specifications, output_directory,
                              cats, names(cats), SIMPLIFY=F, USE.NAMES=F)
         write(toJSON(categories, auto_unbox=T),
               file=paste(output_directory, "categories.json", sep="/"))
-        write(toJSON(values, auto_unbox=T),
-              file=paste(output_directory, "values.json", sep="/"))
+        write(toJSON(meta, auto_unbox=T),
+              file=paste(output_directory, "metadata.json", sep="/"))
     }
     write(toJSON(sources),
           file=paste(output_directory, "sources.json", sep="/"))
