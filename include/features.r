@@ -118,6 +118,10 @@ get_combined_features <- function(items, data, colnames, details, join_cols,
                                    team=F,
                                    component=T,
                                    stringsAsFactors=F)
+            if (!is.null(component$jira)) {
+                # Add primary source filter data into component data
+                metadata$component <- list(list(component$jira))
+            }
             metadata$project_ids <- project$project_ids
             if (!main || metadata$main) {
                 metadata <- metadata[, colnames(projects)]
@@ -316,7 +320,12 @@ get_combined_team <- function(team, team_id, data, projects, team_projects,
     project_id <- unique(c(projects[meta_condition, 'project_id'],
                            unlist(projects[meta_condition, 'project_ids'])))
     core <- any(projects[meta_condition, 'core'])
-    component <- any(projects[projects$name == team$name, 'component'])
+    component <- list()
+    for (components in projects[projects$name == team$name, 'component']) {
+        if (is.list(components)) {
+            component <- c(component, components[[1]])
+        }
+    }
     recent <- ifelse(!is.null(team$recent), team$recent,
                      any(as.Date(team_data[, 'start_date']) >= recent_date))
 
@@ -330,10 +339,12 @@ get_combined_team <- function(team, team_id, data, projects, team_projects,
                            core=core,
                            team=ifelse(is.null(team$team), team$board,
                                        as.logical(team$team)),
-                           component=component,
+                           component=F,
                            stringsAsFactors=F)[, colnames(projects)]
     metadata$project_ids <- list(project_id)
     metadata$project_names <- list(project_names)
+    metadata$component <- ifelse(length(component) > 0,
+                                 list(list(component)), F)
 
     if (team$name %in% projects$name) {
         existing_names <- projects[projects$name == team$name, "project_names"]

@@ -351,7 +351,7 @@ if (get_arg('--project', default=F)) {
                                 'future_sprints'] <- nrow(future)
                 project_id <- meta$project_ids[[1]]
                 team_projects <- meta$project_names[[1]]
-                if (length(team_projects) == 1 || meta$component) {
+                if (length(team_projects) == 1 || length(meta$component) > 0) {
                     team_ids <- unlist(c(new$team_id[[1]], project_id))
                 }
                 else {
