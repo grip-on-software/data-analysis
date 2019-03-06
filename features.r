@@ -341,6 +341,7 @@ if (get_arg('--project', default=F)) {
                 component <- NA
                 project_id <- result$projects[names == project, 'project_id']
                 team_projects <- c()
+                components <- c()
             }
             else {
                 team_id <- new[[project_column]][[1]]
@@ -351,6 +352,7 @@ if (get_arg('--project', default=F)) {
                                 'future_sprints'] <- nrow(future)
                 project_id <- meta$project_ids[[1]]
                 team_projects <- meta$project_names[[1]]
+                components <- meta$component[[1]]
                 if (length(team_projects) == 1 || length(meta$component) > 0) {
                     team_ids <- unlist(c(new$team_id[[1]], project_id))
                 }
@@ -415,9 +417,10 @@ if (get_arg('--project', default=F)) {
             dates <- get_tracker_dates(conn, project_id, aggregate=max)
             urls <- build_project_source_urls(project_urls, project_id, project,
                                               sprint,
-                                              team_projects=team_projects)
+                                              team_projects=team_projects,
+                                              components=components)
             write(toJSON(mapply(function(date, url) {
-                                    if (!is.null(url)) {
+                                    if (!is.na(date) && !is.null(url)) {
                                         list(date=unbox(date), url=unbox(url))
                                     }
                                 },

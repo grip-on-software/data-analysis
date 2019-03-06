@@ -94,6 +94,21 @@ get_source_pattern <- function(item, project_urls) {
     return(NA)
 }
 
+get_jira_filters <- function(filters) {
+    query <- c()
+    if (!is.null(filters$include)) {
+        query <- c(query, paste('component in (',
+                                paste(filters$include, collapse=','), ')',
+                                sep=''))
+    }
+    if (!is.null(filters$exclude)) {
+        query <- c(query, paste('component not in (',
+                                paste(filters$exclude, collapse=','), ')',
+                                sep=''))
+    }
+    return(query)
+}
+
 build_source_urls <- function(project_id, project_name, items=list(),
                               patterns=c(), conn=NULL, team_projects=c(),
                               components=NULL, component=NA) {
@@ -112,17 +127,9 @@ build_source_urls <- function(project_id, project_name, items=list(),
     if (!is.na(component)) {
         for (filters in components) {
             if (filters$name == component) {
-                if (!is.null(filters$jira$include)) {
-                    jira_project <- paste(jira_project, ' and component in (',
-                                          paste(filters$jira$include,
-                                                collapse=','), ')', sep='')
-                }
-                if (!is.null(filters$jira$exclude)) {
-                    jira_project <- paste(jira_project,
-                                          ' and component not in (',
-                                          paste(filters$jira$exclude,
-                                                collapse=','), ')', sep='')
-                }
+                jira_project <- paste(c(jira_project,
+                                        get_jira_filters(filters$jira)),
+                                      collapse=' and ')
                 break
             }
         }
@@ -161,11 +168,25 @@ build_source_urls <- function(project_id, project_name, items=list(),
 }
 
 build_project_source_urls <- function(conn, project_id, project_name, patterns,
-                                      sources='all', team_projects=c()) {
+                                      sources='all', team_projects=c(),
+                                      components=c()) {
     metric_options_url <- paste("${metric_options_url}", "blob/master",
                                 "${metric_options_file}", sep="/")
     quality_url <- "${quality_url}/${quality_name}"
-    if (length(team_projects) > 0 && "board_id" %in% names(patterns)) {
+    if (!identical(components, F) && length(components) > 0) {
+        if (isTRUE(components)) {
+            components <- list(include=project_name)
+        }
+        if (is.null(names(components))) {
+            components <- components[[1]]
+        }
+        jira_url <- paste("${jira_url}/secure/IssueNavigator.jspa?jqlQuery=",
+                          paste(c("project = ${project_name}",
+                                  get_jira_filters(components)),
+                                collapse=' and '),
+                          "&runQuery=true", sep="")
+    }
+    else if (length(team_projects) > 0 && "board_id" %in% names(patterns)) {
         jira_url <- paste("${jira_url}/secure/RapidBoard.jspa",
                           "?rapidView=${board_id}&view=planning", sep="")
     }
