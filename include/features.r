@@ -1024,7 +1024,7 @@ update_non_recent_features <- function(group, future, limit, join_cols, items) {
     last <- length(which(!group$future))
     first <- max(1, last - limit + 1)
     group[first:(last + late), 'old'] <- F
-    if (future == 0) {
+    if (future == 0 || nrow(group) < 2) {
         return(group)
     }
 
