@@ -835,16 +835,16 @@ get_sprint_conditions <- function(latest_date='', core=F, sprint_days=NA,
     }
     if (!is.na(sprint_days)) {
         conditions <- c(conditions,
-                        paste("${s(sprint_close)} - sprint.start_date >",
-                              "interval '${s(sprint_days)}' day"))
+                        paste('${s(sprint_close)} - ${t("sprint")}.start_date',
+                              "> interval '${s(sprint_days)}' day"))
     }
     if (!is.na(sprint_patch)) {
         conditions <- c(conditions, ifelse(sprint_patch, '${s(sprint_patch)}',
                                            'NOT (${s(sprint_patch)})'))
     }
     if (!future) {
-        conditions <- c(conditions, 'start_date IS NOT NULL',
-                        'end_date IS NOT NULL')
+        conditions <- c(conditions, '${f("sprint_open", mask=1)} IS NOT NULL',
+                        '${f("sprint_close", mask=1)} IS NOT NULL')
     }
     return(conditions)
 }
@@ -1172,7 +1172,7 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
                                             future='FALSE',
                                             pager='',
                                             limit='',
-                                            source='jira')))
+                                            source=config$db$primary_source)))
         logdebug(item$query)
         sprint_data <- dbGetQuery(conn, item$query)
     }
@@ -1189,7 +1189,7 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
                                       old='FALSE',
                                       future='FALSE',
                                       limit=paste('LIMIT', limit),
-                                      source='jira')))
+                                      source=config$db$primary_source)))
             sprint_data <- rbind(sprint_data, dbGetQuery(conn, item$query))
         }
     }

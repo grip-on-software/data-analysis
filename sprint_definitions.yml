@@ -53,7 +53,7 @@ fields:
         description: "The close date of a sprint"
         jira:
             table: sprint
-            column: [complete_date, end_date]
+            column: [end_date, complete_date]
             field: CASE WHEN ${t("sprint")}.complete_date IS NOT NULL AND ${t("sprint")}.complete_date < ${t("sprint")}.end_date THEN ${t("sprint")}.complete_date ELSE ${t("sprint")}.end_date END
         jira_version:
             table: fixversion
@@ -261,7 +261,7 @@ conditions:
         description: "Sprints that have been ended or completed"
         jira:
             table: sprint
-            column: [complete_date, end_date]
+            column: [end_date, complete_date]
             condition: COALESCE(COALESCE(${t("sprint")}.complete_date, ${t("sprint")}.end_date), NOW()) < NOW()
         jira_version:
             table: fixversion
