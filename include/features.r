@@ -1128,6 +1128,7 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
         variables$issue_join <- jira_join
         variables$component_join <- component_join
         variables$join_cols$jira <- list(component="component.name")
+        variables$join_cols$jira_version <- list(component="component.name")
         variables$components <- paste(dbQuoteString(conn, component_names),
                                       collapse=", ")
         colnames <- c(colnames, "component")
