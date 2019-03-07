@@ -38,13 +38,14 @@ map_details <- function(details, project_ids, sprint_ids, component,
     project_col <- join_cols[1]
     sprint_col <- join_cols[2]
     project <- Filter(function(detail) {
-                          if (is.na(component)) {
+                          if (identical(component, F) ||
+                              is.null(detail$component)) {
+                              cond <- T
+                          }
+                          else if (is.na(component)) {
                               cond <- !("component" %in% colnames(detail)) |
                                   is.null(detail$component) |
                                   is.na(detail$component)
-                          }
-                          else if (identical(component, F)) {
-                              cond <- T
                           }
                           else {
                               cond <- "component" %in% colnames(detail) &
