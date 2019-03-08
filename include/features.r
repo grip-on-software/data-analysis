@@ -1019,7 +1019,8 @@ get_sprint_features <- function(conn, features, exclude, variables, latest_date,
     return(result)
 }
 
-update_non_recent_features <- function(group, future, limit, join_cols, items) {
+update_non_recent_features <- function(group, future, limit, join_cols, items,
+                                       colnames) {
     late <- length(which(group$future))
     last <- length(which(!group$future))
     first <- max(1, last - limit + 1)
@@ -1050,12 +1051,16 @@ update_non_recent_features <- function(group, future, limit, join_cols, items) {
             group[group$future, item$column] <- 0
         }
         for (prediction in item$prediction) {
-            if (!is.null(prediction$reference)) {
+            if (!is.null(prediction$reference) &&
+                prediction$reference %in% colnames) {
                 steps <- seq(1, future) * group[last, prediction$reference]
                 predict <- pmax(0, group[last, item$column] - steps)
 
-                group[group$future, item$column] <- predict
-                prediction_columns <- c(prediction_columns, item$column)
+                col <- ifelse(length(item$prediction) > 1,
+                              paste(item$column, prediction$reference, sep='_'),
+                              item$column)
+                group[group$future, col] <- predict
+                prediction_columns <- c(prediction_columns, col)
             }
         }
     }
@@ -1254,27 +1259,41 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
                                lapply(split(result$data,
                                             result$data[, 'project_name']),
                                       update_non_recent_features, future,
-                                      limit, join_cols, result$items))
+                                      limit, join_cols, result$items,
+                                      result$colnames))
     }
 
     for (item in result$items) {
         if (!is.null(item$summarize) && length(item$summarize$operation) > 1) {
             loginfo("Wrapping column %s", item$column)
-            operations <- item$summarize$operation
-            cols <- paste(item$column, operations, sep="_")
-            result$data[[item$column]] <- apply(result$data[, cols], 1,
-                                                function(...) {
-                                                    args <- as.list(...)
-                                                    names(args) <- operations
-                                                    return(I(args))
-                                                })
-            result$data[, cols] <- NULL
-            result$colnames <- c(result$colnames[!(result$colnames %in% cols)],
-                                 item$column)
+            result <- wrap_feature(item, item$summarize$operation, result)
+        }
+        if (!is.null(item$prediction) && length(item$prediction) > 1) {
+            loginfo("Wrapping predictions for %s", item$column)
+            predictions <- unlist(lapply(item$prediction,
+                                         function(prediction) {
+                                             return(prediction$reference)
+                                         }))
+            result <- wrap_feature(item, predictions, result,
+                                   result$data$future)
         }
     }
     result$project_fields <- project_fields
     result$patterns <- patterns
+    return(result)
+}
+
+wrap_feature <- function(item, operations, result, filter=T) {
+    cols <- paste(item$column, operations, sep="_")
+    result$data[filter, ][[item$column]] <- apply(result$data[filter, cols], 1,
+                                                  function(...) {
+                                                      args <- as.list(...)
+                                                      names(args) <- operations
+                                                      return(I(args))
+                                                  })
+    result$data[, cols] <- NULL
+    result$colnames <- c(result$colnames[!(result$colnames %in% cols)],
+                         item$column)
     return(result)
 }
 

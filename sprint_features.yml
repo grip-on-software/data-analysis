@@ -1282,11 +1282,11 @@ files:
         type: fraction
         denominator: 10
     descriptions:
-        nl: Gemiddelde velocity
-        en: Average velocity
+        nl: 3-sprint velocity
+        en: Three-sprint velocity
     long_descriptions:
         nl: Het aantal storypoints per sprint gerealiseerd over de afgelopen drie sprints
-        en: The number of story points per sprint that are realized durint the past three sprints
+        en: The number of story points per sprint that are realized during the past three sprints
     units:
         nl: "velocity van %s storypoints over drie sprints"
         en: "velocity of %s story points over three sprints"
@@ -1310,11 +1310,11 @@ files:
         type: fraction
         denominator: 10
     descriptions:
-        nl: Langdurige velocity
-        en: Long term velocity
+        nl: 7-sprint velocity
+        en: Seven-sprint velocity
     long_descriptions:
         nl: Het aantal storypoints per sprint gerealiseerd over de afgelopen zeven sprints
-        en: The number of story points per sprint that are realized durint the past seven sprints
+        en: The number of story points per sprint that are realized during the past seven sprints
     units:
         nl: "velocity van %s storypoints over zeven sprints"
         en: "velocity of %s story points over seven sprints"
@@ -1896,13 +1896,85 @@ files:
         en: Removed non-pokered story points from backlog
     long_descriptions:
         nl: Een automatische schatting van het aantal ongepokerde storypoints dat is verwijderd van de gehele backlog in de projecttracker tijdens de sprint
-        en: An automated estimate of the number of story points that are not pokered on the whole backlog in the project tracker at the start of the sprint
+        en: An automated estimate of the number of story points that are not pokered and are removed from the whole backlog in the project tracker at the start of the sprint
     units:
         nl: "%s geschatte verwijderde storypoints van de gehele backlog"
         en: "%s estimated removed story points from the whole backlog"
     short_units:
         nl: "%s geschatte verwijderde points"
         en: "%s estimated removed points"
+    measurement:
+        unit: point
+    preferred: false
+    source:
+        jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
+    category: backlog
+  - filename: 11-backlog-added.sql
+    table: backlog_stories
+    column: backlog_added_story_points
+    default: 0
+    patterns:
+        issue_backlog: ${s(issue_story)} and issue.updated <= ${s(sprint_close, sprint="interval_sprint")}
+    summarize:
+        operation: sum
+        field: story_points
+        group: [project_id, sprint_id]
+        details: [key, story_points]
+    combine:
+        project: sum
+        sprint: max
+    values:
+        type: fraction
+        denominator: 4
+    descriptions:
+        nl: Toegevoegde storypoints aan backlog
+        en: Added story points on backlog
+    long_descriptions:
+        nl: Het totaal aantal storypoints dat is toegevoegd aan de gehele backlog in de projecttracker tijdens de sprint
+        en: The number of story points that is added to the whole backlog in the project tracker during the sprint
+    units:
+        nl: "%s toegevoegde storypoints aan de gehele backlog"
+        en: "%s aaded story points on the whole backlog"
+    short_units:
+        nl: "%s toegevoegde storypoints"
+        en: "%s added story points"
+    measurement:
+        unit: point
+    preferred: false
+    source:
+        jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
+    category: backlog
+  - filename: 11-backlog-added.sql
+    table: backlog_stories
+    column: backlog_estimated_added_story_points
+    default: 0
+    patterns:
+        issue_backlog: ${s(issue_story)} and issue.updated <= ${s(sprint_close, sprint="interval_sprint")}
+    summarize:
+        operation: sum_of_na_avg
+        field: story_points
+        reference: backlog_story_points
+        group: [project_id, sprint_id]
+        details: [key]
+        filter: 'is.na(story_points)'
+    combine:
+        project: sum
+        sprint: max
+    values:
+        type: fraction
+        denominator: 4
+    descriptions:
+        nl: Toegevoegde ongepokerde storypoints aan backlog
+        en: Added non-pokered story points on backlog
+    long_descriptions:
+        nl: Een automatische schatting van het aantal ongepokerde storypoints dat is toegevoegd aan de gehele backlog in de projecttracker tijdens de sprint
+        en: An automated estimate of the number of story points that are not pokered and are added to the whole backlog in the project tracker at the start of the sprint
+    units:
+        nl: "%s geschatte toegevoegde storypoints aan de gehele backlog"
+        en: "%s estimated added story points on the whole backlog"
+    short_units:
+        nl: "%s geschatte toegevoegde points"
+        en: "%s estimated added points"
     measurement:
         unit: point
     preferred: false
@@ -1945,13 +2017,15 @@ files:
     column: backlog_points
     combine: sum
     prediction:
-        - reference: backlog_dismiss_velocity
+        - reference: backlog_dismiss_velocity_three
+        - reference: velocity_three
+        - reference: backlog_adjustment_velocity_three
     values:
         type: fraction
         denominator: 4
     descriptions:
-        nl: Punten op backlog
-        en: Points on backlog
+        nl: (On)gepokerde punten op backlog
+        en: (Non-)pokered points on backlog
     long_descriptions:
         nl: Het totaal aantal storypoints dat op de gehele backlog in de projecttracker staat bij het begin van de sprint (inclusief inschattingen van andere items)
         en: The total number of story points on the whole backlog in the project tracker at the start of the sprint (including estimates of other items)
@@ -1981,6 +2055,63 @@ files:
     measurement:
         unit: point
     preferred: true
+    source:
+        jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
+    category: backlog
+  - expression: "rowSums(embed(backlog_dismiss_velocity, 3)) / 3"
+    column: backlog_dismiss_velocity_three
+    window:
+        dimension: 3
+        group: project_id
+    default: 0
+    combine: mean
+    values:
+        type: fraction
+        denominator: 10
+    descriptions:
+        nl: Afgevoerde storypoints over laatste 3 sprints
+        en: Dismissed story points over latest three sprints
+    long_descriptions:
+        nl: Het aantal storypoints dat afgevoerd wordt per sprint van de gehele backlog over de afgelopen drie sprints
+        en: The number of story points per sprint that is dismissed from the whole backlog during the past three sprints
+    units:
+        nl: "velocity van %s afgevoerde storypoints van de gehele backlog over drie sprints"
+        en: "velocity of %s dismissed story points from the whole backlog over three sprints"
+    short_units:
+        nl: "%s afgevoerde punten/sprint"
+        en: "%s dismissed points/sprint"
+    measurements:
+        unit: [point, sprint]
+        dividend: backlog_dismiss_velocity
+    preferred: false
+    source:
+        jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
+    category: backlog
+  - expression: "pmax(0, rowSums(embed(done_story_points - backlog_added_story_points, 3)) / 3)"
+    column: backlog_adjustment_velocity_three
+    window:
+        dimension: 3
+        group: project_id
+    default: 0
+    combine: mean
+    values:
+        type: fraction
+        denominator: 10
+    descriptions:
+        nl: Toegevoegde storypoints over laatste 3 sprints
+        en: Added story points over latest three sprints
+    long_descriptions:
+        nl: Het aantal storypoints dat toegevoegd wordt per sprint van de gehele backlog over de afgelopen drie sprints
+        en: The number of story points per sprint that is added to the whole backlog during the past three sprints
+    units:
+        nl: "velocity van %s toegevoegde storypoints aan de gehele backlog over drie sprints"
+        en: "velocity of %s added story points on the whole backlog over three sprints"
+    short_units:
+        nl: "%s toegevoegde punten/sprint"
+        en: "%s added points/sprint"
+    measurements:
+        unit: [point, sprint]
+    preferred: false
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
     category: backlog
