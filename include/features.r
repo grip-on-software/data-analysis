@@ -1300,7 +1300,7 @@ wrap_feature <- function(item, operations, result, filter=T) {
                   function(...) {
                       args <- as.list(...)
                       names(args) <- operations
-                      return(I(list(args)))
+                      return(I(args))
                   })
     result$data[filter, ][[item$column]] <- wrap
     result$data[, cols] <- NULL
