@@ -1387,7 +1387,8 @@ write_feature_metadata <- function(projects, specifications, output_directory,
                                    features=c(), items=c(),
                                    locales=c('descriptions',
                                              'long_descriptions', 'units',
-                                             'short_units', 'tags'),
+                                             'short_units', 'tags',
+                                             'predictor'),
                                    metadata=c('values', 'measurement',
                                               'preferred')) {
     if (length(items) == 0) {

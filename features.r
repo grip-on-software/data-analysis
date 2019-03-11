@@ -441,7 +441,7 @@ if (get_arg('--project', default=F)) {
         write_feature_metadata(projects, specifications, output_dir,
                                features=shown_features, items=result$items,
                                locales=c('descriptions', 'long_descriptions',
-                                         'units', 'short_units'))
+                                         'units', 'short_units', 'predictor'))
         write(toJSON(list(limit=recent, closed=closed,
                           old=with_old, future=futures),
                      auto_unbox=T),
