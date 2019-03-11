@@ -1030,6 +1030,7 @@ update_non_recent_features <- function(group, future, limit, join_cols, items,
                                        colnames) {
     late <- length(which(group$future))
     last <- length(which(!group$future))
+    close <- ifelse(group[last, 'sprint_is_closed'], last, last - 1)
     first <- max(1, last - limit + 1)
     group[first:(last + late), 'old'] <- F
     if (future == 0 || last < 2 || !('sprint_days' %in% colnames) ||
@@ -1047,7 +1048,7 @@ update_non_recent_features <- function(group, future, limit, join_cols, items,
     group <- rbind(group, multi)
 
     start <- group[last, 'start_date'][[1]]
-    length <- as.difftime(group[last, 'sprint_days'], units="days")
+    length <- as.difftime(group[close, 'sprint_days'], units="days")
     downtime <- length + start - group[last - 1, 'close_date'][[1]]
     start_date <- seq(start + downtime, by=downtime, length.out=future)
     group[group$future, 'start_date'] <- start_date
@@ -1061,7 +1062,7 @@ update_non_recent_features <- function(group, future, limit, join_cols, items,
         for (prediction in item$prediction) {
             if (!is.null(prediction$reference)) {
                 if (prediction$reference %in% colnames) {
-                    steps <- seq(1, future) * group[last, prediction$reference]
+                    steps <- seq(1, future) * group[close, prediction$reference]
                 }
                 else {
                     steps <- rep(0, future)
@@ -1239,7 +1240,7 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
 
     data <- yaml.load_file('sprint_features.yml')
     items <- list()
-    required <- c("sprint_num", "sprint_days")
+    required <- c("sprint_num", "sprint_days", "sprint_is_closed")
     for (item in data$files) {
         if (include_feature(item, features, exclude, required)) {
             items <- c(items, list(load_query(item, patterns, data$path)))
