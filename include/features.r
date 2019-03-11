@@ -1080,7 +1080,7 @@ update_non_recent_features <- function(group, future, limit, join_cols, items,
     if (length(prediction_columns) > 0) {
         # Remove future sprints where predicted values are all zero or negative
         down <- rowSums(group[, prediction_columns, drop=F] > 0) != 0
-        down[group$future][1] <- F
+        down[group$future & !down][1] <- T
     }
     group <- group[!group$future | down, ]
     return(group)
