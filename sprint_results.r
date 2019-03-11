@@ -12,7 +12,7 @@ source('include/project.r')
 source('include/sources.r')
 source('include/tracker.r')
 
-latest_date <- as.PSOXIct(get_arg('--latest-date', default=Sys.time()))
+latest_date <- as.POSIXct(get_arg('--latest-date', default=Sys.time()))
 sprint_days <- get_arg('--days', default=NA)
 sprint_patch <- ifelse(get_arg('--patch', default=F), NA, F)
 core <- get_arg('--core', default=F)

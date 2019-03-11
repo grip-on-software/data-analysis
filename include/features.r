@@ -835,7 +835,7 @@ get_expression_attrs <- function(expression, vars) {
 get_sprint_conditions <- function(latest_date='', core=F, sprint_days=NA,
                                   sprint_patch=NA, future=T) {
     conditions <- list()
-    if (!missing(latest_date) && latest_date != '') {
+    if (!is.character(latest_date) || latest_date != '') {
         conditions <- c(conditions,
                         '${t("sprint")}.start_date <= ${current_timestamp}')
     }
