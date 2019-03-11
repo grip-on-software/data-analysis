@@ -38,9 +38,11 @@ items <- load_queries('sprint_events.yml', 'sprint_definitions.yml', variables)
 
 sprint_days <- get_arg('--days', default=NA)
 sprint_patch <- ifelse(get_arg('--patch', default=F), NA, F)
+latest_date <- as.POSIXct(get_arg('--latest-date', default=Sys.time()))
 
 exportFeatures <- function(features, exclude, output_directory) {
     result <- get_sprint_features(conn, features, exclude, variables,
+                                  latest_date=latest_date,
                                   sprint_days=sprint_days,
                                   sprint_patch=sprint_patch,
                                   future=F)
@@ -213,7 +215,7 @@ for (item in items) {
 
 total_data <- list(min_date=safe_unbox(min(unlist(min_date), na.rm=T)),
                    max_date=safe_unbox(max(unlist(max_date), na.rm=T)),
-                   update_date=safe_unbox(dateFormat(Sys.time())),
+                   update_date=safe_unbox(dateFormat(latest_date)),
                    projects=names(projects_with_data),
                    boards=project_boards)
 

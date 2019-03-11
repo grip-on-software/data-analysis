@@ -837,8 +837,7 @@ get_sprint_conditions <- function(latest_date='', core=F, sprint_days=NA,
     conditions <- list()
     if (!missing(latest_date) && latest_date != '') {
         conditions <- c(conditions,
-                        paste('${t("sprint")}.start_date <= CAST(\'',
-                              latest_date, '\' AS TIMESTAMP)', sep=''))
+                        '${t("sprint")}.start_date <= ${current_timestamp}')
     }
     if (core) {
         conditions <- c(conditions, 'COALESCE(is_support_team, false) = false',
@@ -987,7 +986,8 @@ get_sprint_features <- function(conn, features, exclude, variables, latest_date,
 
     patterns <- load_definitions('sprint_definitions.yml',
                                  list(sprint_days=sprint_days,
-                                      join_cols=join_cols))
+                                      join_cols=join_cols),
+                                 current_time=latest_date)
 
     query <- paste('SELECT', paste(fields, collapse=', '),
                    'FROM gros.${t("sprint")}
@@ -1085,7 +1085,8 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
                                        project_meta=list(), old=F, future=0,
                                        details=F, combine=F, teams=list(),
                                        project_names=NULL, components=NULL,
-                                       prediction=list()) {
+                                       prediction=list(),
+                                       latest_date=Sys.time()) {
     fields <- list(project_name='${t("project")}.name',
                    sprint_name='${t("sprint")}.name',
                    start_date='${s(sprint_open)}',
@@ -1116,11 +1117,11 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
 
     if (future == 0) {
         sprint_conditions <- c(sprint_conditions,
-                               '${s(sprint_open)} < CURRENT_TIMESTAMP()')
+                               '${s(sprint_open)} < ${current_timestamp}')
     }
     if (closed) {
         sprint_conditions <- c(sprint_conditions,
-                               '${s(sprint_close)} < CURRENT_TIMESTAMP()')
+                               '${s(sprint_close)} < ${current_timestamp}')
     }
     colnames <- c(join_cols, names(fields)[names(fields) != ""])
     sprint_conditions <- paste(sprint_conditions, collapse=' AND ')
@@ -1164,7 +1165,8 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
                     ${s(project_condition)}
                     ORDER BY', paste(order_by, collapse=", "), '${limit}')
 
-    patterns <- load_definitions('sprint_definitions.yml', variables)
+    patterns <- load_definitions('sprint_definitions.yml', variables,
+                                 current_time=latest_date)
 
     if (!is.na(date)) {
         project_meta$recent <- date
@@ -1223,7 +1225,8 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
     }
     sprint_data$start_date <- as.POSIXct(sprint_data$start_date)
     sprint_data$close_date <- as.POSIXct(sprint_data$close_date)
-    sprint_data$future <- sprint_data$start_date >= as.POSIXct(Sys.Date())
+    sprint_data$future <-
+        as.Date(sprint_data$start_date) >= as.Date(latest_date)
     sprint_data <- arrange(sprint_data, sprint_data$project_name,
                            sprint_data$start_date, sprint_data$sprint_name)
 

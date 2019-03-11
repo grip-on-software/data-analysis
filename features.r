@@ -23,9 +23,11 @@ features <- get_arg('--features', default=NA)
 exclude <- get_arg('--exclude', default='^$')
 core <- get_arg('--core', default=F)
 recent <- get_arg('--recent', default=F)
+latest_date <- as.POSIXct(get_arg('--latest-date', default=Sys.time()))
 
 config <- get_config()
-patterns <- load_definitions('sprint_definitions.yml', config$fields)
+patterns <- load_definitions('sprint_definitions.yml', config$fields,
+                             current_time=latest_date)
 
 project_metadata <- get_arg('--project-metadata', default='recent,core,main')
 metadata <- get_meta_keys(project_metadata)
@@ -213,6 +215,7 @@ if (get_arg('--project', default=F)) {
     core <- get_arg('--core', default=F)
     sprint_days <- get_arg('--days', default=NA)
     sprint_patch <- ifelse(get_arg('--patch', default=F), NA, F)
+    # Latest date condition is handled by recent sprint features itself
     sprint_conditions <- get_sprint_conditions(latest_date='', core=core,
                                                sprint_days=sprint_days,
                                                sprint_patch=sprint_patch,
@@ -232,7 +235,8 @@ if (get_arg('--project', default=F)) {
                                          teams=teams,
                                          project_names=projects,
                                          components=config$components,
-                                         prediction=prediction)
+                                         prediction=prediction,
+                                         latest_date=latest_date)
     default_features <- default_features[default_features %in% result$colnames]
     old_features <- old_features[old_features %in% result$colnames]
     future_features <- future_features[future_features %in% result$colnames]
@@ -481,7 +485,6 @@ if (get_arg('--project', default=F)) {
                   row.names=F)
     }
 } else {
-    latest_date <- get_arg('--latest-date', default='')
     days <- get_arg('--days', default=NA)
     patch <- ifelse(get_arg('--patch', default=F), NA, F)
     combine <- get_arg('--combine', default=F)

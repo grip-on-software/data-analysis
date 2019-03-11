@@ -9,7 +9,7 @@ ${s(issue_join)}
 WHERE ${t("issue")}.story_points IS NOT NULL
 AND ${s(sprint_id, sprint="issue")} IS NOT NULL
 AND (
-  (new_issue.issue_id IS NULL AND ${s(sprint_close)} + interval '1' day > NOW())
+  (new_issue.issue_id IS NULL AND ${s(sprint_close)} + interval '1' day > ${current_timestamp})
   OR (
     new_issue.issue_id IS NOT NULL
 	AND ${f(join_cols, "new_issue", mask=2, alias="alias")} IS NULL

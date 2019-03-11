@@ -37,17 +37,13 @@ if (!exists('INC_DATABASE_R')) {
                       names(fields), fields))
     }
 
-    load_definitions <- function(definition_file, variables) {
+    load_definitions <- function(definition_file, variables=NULL,
+                                 current_time=Sys.time()) {
         definitions <- yaml.load_file(definition_file)
-        if (missing(variables)) {
-            variables <- NULL
-        }
-        else {
-            for (name in names(variables)) {
-                arg <- get_arg(paste('--', gsub('_', '-', name), sep=''),
-                               default=variables[[name]])
-                variables[[name]] <- arg
-            }
+        for (name in names(variables)) {
+            arg <- get_arg(paste('--', gsub('_', '-', name), sep=''),
+                           default=variables[[name]])
+            variables[[name]] <- arg
         }
         sources <- list(jira=list(issue="issue",
                                   sprint="sprint",
@@ -87,7 +83,9 @@ if (!exists('INC_DATABASE_R')) {
                       variables,
                       list(join_cols=c("project_id", "sprint_id"),
                            issue_join='', component_join='', source='',
-                           project_condition=''))
+                           project_condition='',
+                           current_timestamp=paste("CAST('", current_time,
+                                                   "' AS TIMESTAMP)", sep="")))
         recursive_str_interp <- function(string, ...) {
             vars <- c(..., as.list(parent.frame()), patterns)
             if (is.list(string)) {
@@ -337,25 +335,36 @@ if (!exists('INC_DATABASE_R')) {
         }
 
         if (!is.null(item$query)) {
-            item$patterns <- c(item$patterns, patterns)
+            source <- config$db$primary_source
+            item$patterns <- c(item$patterns,
+                               lapply(item$fields,
+                                      function(field) {
+                                          if (!is.null(field[[source]])) {
+                                              return(field[[source]])
+                                          }
+                                          return(field)
+                                      }),
+                               patterns)
             item$patterns$source <- names(item$source)[1]
             if (!is.null(item$patterns$source) &&
                 item$patterns$source %in% c("jira", "tfs") &&
-                config$db$primary_source != "jira_version") {
-                item$patterns$source <- config$db$primary_source
+                source != "jira_version") {
+                item$patterns$source <- source
             }
             item$query <- str_interp(item$query, item$patterns)
         }
         return(item)
     }
 
-    load_queries <- function(specification_file, definition_file, variables) {
+    load_queries <- function(specification_file, definition_file=NULL,
+                             variables=NULL, current_time=Sys.time()) {
         data <- yaml.load_file(specification_file)
         if (is.null(definition_file)) {
             patterns <- variables
         }
         else {
-            patterns <- load_definitions(definition_file, variables)
+            patterns <- load_definitions(definition_file, variables,
+                                         current_time=current_time)
         }
 
         lapply(data$files, load_query, patterns, data$path)

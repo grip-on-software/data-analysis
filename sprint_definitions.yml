@@ -48,7 +48,7 @@ fields:
         description: "The open date of a sprint"
         table: [sprint, fixversion, tfs_sprint]
         column: [start_date]
-        field: COALESCE(CAST(${t("sprint")}.start_date AS TIMESTAMP), NOW())
+        field: COALESCE(CAST(${t("sprint")}.start_date AS TIMESTAMP), ${current_timestamp})
     sprint_close:
         description: "The close date of a sprint"
         jira:
@@ -204,7 +204,7 @@ conditions:
         description: "Issues that are in a certain state after the sprint ended (use in combination with other conditions)"
         table: [issue, sprint, max_issue, tfs_work_item, tfs_sprint]
         column: [update, changelog_id]
-        condition: (${t("issue")}.updated > ${t("sprint")}.end_date OR (${t("issue")}.changelog_id = ${t("max_issue")}.changelog_id AND CAST(${t("sprint")}.end_date AS TIMESTAMP) < NOW()))
+        condition: (${t("issue")}.updated > ${t("sprint")}.end_date OR (${t("issue")}.changelog_id = ${t("max_issue")}.changelog_id AND CAST(${t("sprint")}.end_date AS TIMESTAMP) < ${current_timestamp}))
     issue_story:
         description: "Issues that are stories"
         jira:
@@ -262,35 +262,35 @@ conditions:
         jira:
             table: sprint
             column: [end_date, complete_date]
-            condition: COALESCE(COALESCE(${t("sprint")}.complete_date, ${t("sprint")}.end_date), NOW()) < NOW()
+            condition: COALESCE(COALESCE(${t("sprint")}.complete_date, ${t("sprint")}.end_date), ${current_timestamp}) < ${current_timestamp}
         jira_version:
             table: fixversion
             column: [release_date]
-            condition: COALESCE(CAST(${t("sprint")}.release_date AS TIMESTAMP), NOW()) < NOW()
+            condition: COALESCE(CAST(${t("sprint")}.release_date AS TIMESTAMP), ${current_timestamp}) < ${current_timestamp}
         tfs:
             table: tfs_sprint
             column: [end_date]
-            condition: COALESCE(${t("sprint")}.end_date, NOW()) < NOW()
+            condition: COALESCE(${t("sprint")}.end_date, ${current_timestamp}) < ${current_timestamp}
     planned_early:
         description: "Earliest time for stories that are planned for a sprint to start work on"
         table: [sprint, tfs_sprint]
         column: [start_date]
-        condition: COALESCE(CAST(${t("sprint")}.start_date AS TIMESTAMP), NOW()) - interval '1' day
+        condition: COALESCE(CAST(${t("sprint")}.start_date AS TIMESTAMP), ${current_timestamp}) - interval '1' day
     planned_end:
         description: "Latest time for stories to be planned for a sprint"
         table: [sprint, tfs_sprint]
         column: [start_date]
-        condition: COALESCE(CAST(${t("sprint")}.start_date AS TIMESTAMP), NOW()) + interval '1' day
+        condition: COALESCE(CAST(${t("sprint")}.start_date AS TIMESTAMP), ${current_timestamp}) + interval '1' day
     planned_late:
         description: "Latest time for stories that are planned for a sprint to have been worked on"
         jira:
             table: [sprint, tfs_sprint]
             column: [start_date, end_date]
-            condition: COALESCE(${t("sprint")}.start_date + (${t("sprint")}.end_date - ${t("sprint")}.start_date)/7, NOW())
+            condition: COALESCE(${t("sprint")}.start_date + (${t("sprint")}.end_date - ${t("sprint")}.start_date)/7, ${current_timestamp})
         jira_version:
             table: [fixversion]
             column: [start_date, release_date]
-            condition: COALESCE(CAST(${t("sprint")}.start_date + (${t("sprint")}.release_date - ${t("sprint")}.start_date)/7 AS TIMESTAMP), NOW())
+            condition: COALESCE(CAST(${t("sprint")}.start_date + (${t("sprint")}.release_date - ${t("sprint")}.start_date)/7 AS TIMESTAMP), ${current_timestamp})
     sprint_patch:
         description: "Sprints that have patch names"
         jira:

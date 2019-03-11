@@ -13,6 +13,7 @@ projects_list <- get_arg('--projects', default='')
 invert <- get_arg('--invert', default=F)
 
 interval <- get_arg('--interval', default='')
+latest_date <- as.POSIXct(get_arg('--latest-date', default=Sys.time()))
 
 report <- get_arg('--report', default='.*')
 
@@ -40,7 +41,7 @@ if (config$db$primary_source == "tfs") {
 project_sources <- strsplit(get_arg('--project-sources', default=''), ',')[[1]]
 
 run_reports <- function(definitions) {
-    reports <- get_analysis_reports(definitions)
+    reports <- get_analysis_reports(definitions, latest_date)
 
     for (item in reports$items) {
         if (length(grep(report, item$table)) > 0) {
@@ -67,7 +68,7 @@ if (interval != '') {
                        reports$patterns)
 
     start_date <- dbGetQuery(conn, item$query)[[1]]
-    intervals <- seq(as.POSIXct(start_date), Sys.time(), by=interval)
+    intervals <- seq(as.POSIXct(start_date), latest_date, by=interval)
     loginfo(intervals)
     rollapply(intervals, 2,
               function(range) {

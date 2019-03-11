@@ -11,10 +11,7 @@ export <- function(items, prefix, field) {
 }
 
 project_ids <- get_arg('--project-ids', default='0')
-definitions <- yaml.load_file('analysis_definitions.yml')
-analysis_definitions <- c(lapply(definitions$fields,
-                                 function(define) { define$field }),
-                          list(project_ids=project_ids))
+latest_date <- as.POSIXct(get_arg('--latest-date', default=Sys.time()))
 
 config <- get_config()
 if (config$db$primary_source == "tfs") {
@@ -23,16 +20,25 @@ if (config$db$primary_source == "tfs") {
     join_cols <- c('project_id', 'sprint_id')
 }
 
+definitions <- yaml.load_file('analysis_definitions.yml')
+analysis_definitions <- c(lapply(definitions$fields,
+                                 function(define) { define$field }),
+                          list(project_ids=project_ids,
+                               join_cols=join_cols))
+
 export(load_queries('sprint_features.yml', 'sprint_definitions.yml',
                     list(sprint_conditions='',
-                         join_cols=join_cols)),
+                         join_cols=join_cols),
+                    current_time=latest_date),
        'feature', 'table')
 export(load_queries('sprint_events.yml', 'sprint_definitions.yml',
                     list(project_ids=project_ids,
-                         join_cols=join_cols)),
+                         join_cols=join_cols),
+                    current_time=latest_date),
        'event', 'type')
 export(load_queries('analysis_reports.yml', 'sprint_definitions.yml',
-                    analysis_definitions),
+                    analysis_definitions,
+                    current_time=latest_date),
        'report', 'table')
 export(load_queries('project_features.yml', 'sprint_definitions.yml'),
        'project', 'column')

@@ -12,7 +12,7 @@ source('include/project.r')
 source('include/sources.r')
 source('include/tracker.r')
 
-latest_date <- get_arg('--latest-date', default='')
+latest_date <- as.PSOXIct(get_arg('--latest-date', default=Sys.time()))
 sprint_days <- get_arg('--days', default=NA)
 sprint_patch <- ifelse(get_arg('--patch', default=F), NA, F)
 core <- get_arg('--core', default=F)
@@ -20,10 +20,11 @@ core <- get_arg('--core', default=F)
 projects <- list()
 specifications <- yaml.load_file('sprint_features.yml')
 config <- get_config()
-patterns <- load_definitions('sprint_definitions.yml', config$fields)
+patterns <- load_definitions('sprint_definitions.yml', config$fields,
+                             current_time=latest_date)
 
 get_sprints <- function(conn) {
-    conditions <- get_sprint_conditions(latest_date, core=core,
+    conditions <- get_sprint_conditions(latest_date=latest_date, core=core,
                                         sprint_days=sprint_days,
                                         sprint_patch=sprint_patch)
     query <- paste('SELECT project.project_id, project.name AS project_key,

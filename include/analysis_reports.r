@@ -550,20 +550,12 @@ bigboat_status <- function(item, result, output_dir) {
 }
 
 load_report_query <- function(item, path, config, patterns, reports) {
-    fields <- c(lapply(item$fields,
-                       function(field) {
-                           if (!is.null(field[[config$db$primary_source]])) {
-                               return(field[[config$db$primary_source]])
-                           }
-                           return(field)
-                       }),
-                patterns)
-    item <- load_query(item, fields, path)
+    item <- load_query(item, patterns, path)
     item$report <- reports[[item$table]]
     return(item)
 }
 
-get_analysis_reports <- function(analysis_variables) {
+get_analysis_reports <- function(analysis_variables, latest_date) {
     reports <- list(not_done_ratio=not_done_ratio,
                     not_done_ratio_log=not_done_ratio,
                     sprint_burndown=sprint_burndown,
@@ -580,7 +572,8 @@ get_analysis_reports <- function(analysis_variables) {
                                                   define$field
                                               }),
                                        analysis_variables)
-    patterns <- load_definitions('sprint_definitions.yml', analysis_definitions)
+    patterns <- load_definitions('sprint_definitions.yml', analysis_definitions,
+                                 current_time=latest_date)
     spec <- yaml.load_file('analysis_reports.yml')
     config <- get_config()
     items <- lapply(spec$files, load_report_query,
