@@ -169,17 +169,20 @@ get_combined_features <- function(items, data, colnames, details, join_cols,
             start <- c(indexes[1] - 1, diffs[, 1] - 1)
             end <- c(diffs[, 2], indexes[length(indexes)])
         }
-        row_num <- start[1]
-        for (i in 1:length(start)) {
-            if (start[i] != end[i]) {
-                result <- update_combine_interval(items, data, new_data,
-                                                  row_num, details, colnames,
-                                                  c(start[i], end[i]),
-                                                  join_cols)
-                new_data[row_num, result$columns] <- result$row
-                details <- result$details
+        if (!is.null(start)) {
+            row_num <- start[1]
+            for (i in 1:length(start)) {
+                if (start[i] != end[i]) {
+                    result <- update_combine_interval(items, data, new_data,
+                                                      row_num, details,
+                                                      colnames,
+                                                      c(start[i], end[i]),
+                                                      join_cols)
+                    new_data[row_num, result$columns] <- result$row
+                    details <- result$details
+                }
+                row_num <- row_num + start[i+1] - end[i]
             }
-            row_num <- row_num + start[i+1] - end[i]
         }
     }
     else {
