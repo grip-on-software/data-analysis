@@ -212,15 +212,14 @@ if (!exists('INC_DATABASE_R')) {
             right_fields[right_fields == right_table] <- "id"
 
             vars <- c(..., as.list(parent.frame()), variables)
-            var_left_fields <- left_fields %in% names(vars)
-            if (var && any(var_left_fields)) {
-                left_fields[var_left_fields] <-
-                    vars[[left_fields[var_left_fields]]][[left_table]]
+            left <- left_fields %in% names(vars)
+            if (var && any(left) && is.list(vars[[left_fields[left]]])) {
+                left_fields[left] <- vars[[left_fields[left]]][[left_table]]
             }
-            var_right_fields <- right_fields %in% names(vars)
-            if (var && any(var_right_fields)) {
-                right_fields[var_right_fields] <-
-                    vars[[right_fields[var_right_fields]]][[right_table]]
+            right <- right_fields %in% names(vars)
+            if (var && any(right) && is.list(vars[[right_fields[right]]])) {
+                right_fields[right] <-
+                    vars[[right_fields[right]]][[right_table]]
             }
 
             joins <- paste(paste(left_table, left_fields, sep="."),
