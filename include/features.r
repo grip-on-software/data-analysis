@@ -1025,7 +1025,8 @@ update_non_recent_features <- function(group, future, limit, join_cols, items,
     last <- length(which(!group$future))
     first <- max(1, last - limit + 1)
     group[first:(last + late), 'old'] <- F
-    if (future == 0 || nrow(group) < 2) {
+    if (future == 0 || last < 2 || !('sprint_days' %in% colnames) ||
+        is.na(group[last, 'sprint_days'])) {
         return(group)
     }
 
@@ -1051,9 +1052,13 @@ update_non_recent_features <- function(group, future, limit, join_cols, items,
             group[group$future, item$column] <- 0
         }
         for (prediction in item$prediction) {
-            if (!is.null(prediction$reference) &&
-                prediction$reference %in% colnames) {
-                steps <- seq(1, future) * group[last, prediction$reference]
+            if (!is.null(prediction$reference)) {
+                if (prediction$reference %in% colnames) {
+                    steps <- seq(1, future) * group[last, prediction$reference]
+                }
+                else {
+                    steps <- rep(0, future)
+                }
                 predict <- pmax(0, group[last, item$column] - steps)
 
                 col <- ifelse(length(item$prediction) > 1,
@@ -1285,12 +1290,16 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
 
 wrap_feature <- function(item, operations, result, filter=T) {
     cols <- paste(item$column, operations, sep="_")
-    result$data[filter, ][[item$column]] <- apply(result$data[filter, cols], 1,
-                                                  function(...) {
-                                                      args <- as.list(...)
-                                                      names(args) <- operations
-                                                      return(I(args))
-                                                  })
+    if (!(item$column %in% result$colnames)) {
+        result$data[, item$column] <- rep(0, nrow(result$data))
+    }
+    wrap <- apply(result$data[filter, cols], 1,
+                  function(...) {
+                      args <- as.list(...)
+                      names(args) <- operations
+                      return(I(list(args)))
+                  })
+    result$data[filter, ][[item$column]] <- wrap
     result$data[, cols] <- NULL
     result$colnames <- c(result$colnames[!(result$colnames %in% cols)],
                          item$column)
