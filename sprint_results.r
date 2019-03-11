@@ -27,14 +27,34 @@ get_sprints <- function(conn) {
     conditions <- get_sprint_conditions(latest_date=latest_date, core=core,
                                         sprint_days=sprint_days,
                                         sprint_patch=sprint_patch)
-    query <- paste('SELECT project.project_id, project.name AS project_key,
-                   project.quality_name, project.quality_display_name,
-                   sprint.sprint_id, sprint.name,
-                   sprint.start_date, ${s(sprint_close)} AS close_date,
-                   sprint.board_id FROM gros.sprint
-                   JOIN gros.project ON sprint.project_id = project.project_id
-                   WHERE', paste(conditions, collapse=' AND '), '
-                   ORDER BY project.project_id, ${s(sprint_open)}, sprint.name')
+    fields <- list(project_id='${t("project")}.project_id',
+                   project_key='${t("project")}.name',
+                   quality_name='${t("project")}.quality_name',
+                   quality_display_name='${t("project")}.quality_display_name',
+                   sprint_id='${t("sprint")}.sprint_id',
+                   name='${t("sprint")}.name',
+                   start_date='${t("sprint")}.start_date',
+                   close_date='${s(sprint_close)}',
+                   board_id='${t("sprint")}.board_id')
+    join_cols <- c('project_id')
+    if (config$db$primary_source == "tfs") {
+        join_cols <- c('team_id')
+        fields$project_id <- '${t("project")}.team_id'
+        fields$quality_name <- NULL
+        fields$quality_display_name <- NULL
+        fields$board_id <- NULL
+    }
+    else if (config$db$primary_source == "jira_version") {
+        fields$sprint_id <- '${t("sprint")}.sprint_id'
+        fields$board_id <- NULL
+    }
+    query <- paste('SELECT', paste(format_aliases(fields), collapse=", "), '
+                    FROM gros.${t("sprint")}
+                    JOIN gros.${t("project")}
+                    ON ${j(join_cols, "project", "sprint", mask=1)}
+                    WHERE', paste(conditions, collapse=' AND '), '
+                    ORDER BY ${f(join_cols, "project", mask=1)},
+                    ${s(sprint_open)}, ${t("sprint")}.name')
     item <- load_query(list(query=query), c(patterns, sprint_days=sprint_days))
     logdebug(item$query)
     time <- system.time(sprint <- dbGetQuery(conn, item$query))

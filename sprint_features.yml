@@ -2087,7 +2087,31 @@ files:
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
     category: backlog
-  - expression: "pmax(0, rowSums(embed(done_story_points - backlog_added_story_points, 3)) / 3)"
+  - expression: "done_story_points - backlog_added_story_points"
+    column: backlog_adjustment
+    combine: sum
+    values:
+        type: fraction
+        denominator: 4
+    descriptions:
+        nl: Toegevoegde storypoints per sprint
+        en: Added story points per sprint
+    long_descriptions:
+        nl: Het aantal storypoints dat toegevoegd wordt aan de gehele backlog tijdens de sprint
+        en: The number of story points that is added to the whole backlog during the sprint
+    units:
+        nl: "%s toegevoegde storypoints aan de gehele backlog"
+        en: "%s added story points on the whole backlog"
+    short_units:
+        nl: "%s toegevoegde punten"
+        en: "%s added points"
+    measurement:
+        unit: point
+    preferred: false
+    source:
+        jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
+    category: backlog
+  - expression: "pmax(0, rowSums(embed(backlog_adjustment, 3)) / 3)"
     column: backlog_adjustment_velocity_three
     window:
         dimension: 3
@@ -2101,7 +2125,7 @@ files:
         nl: Toegevoegde storypoints over laatste 3 sprints
         en: Added story points over latest three sprints
     long_descriptions:
-        nl: Het aantal storypoints dat toegevoegd wordt per sprint van de gehele backlog over de afgelopen drie sprints
+        nl: Het aantal storypoints dat toegevoegd wordt per sprint aan de gehele backlog over de afgelopen drie sprints
         en: The number of story points per sprint that is added to the whole backlog during the past three sprints
     units:
         nl: "velocity van %s toegevoegde storypoints aan de gehele backlog over drie sprints"
