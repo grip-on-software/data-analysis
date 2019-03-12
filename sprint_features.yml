@@ -1917,7 +1917,7 @@ files:
     column: backlog_added_story_points
     default: 0
     patterns:
-        issue_backlog: ${s(issue_story)} and issue.updated <= ${s(sprint_close, sprint="interval_sprint")}
+        issue_backlog: ${s(issue_story)} and ${t("issue")}.updated <= ${s(sprint_close, sprint="interval_sprint")}
     summarize:
         operation: sum
         field: story_points
