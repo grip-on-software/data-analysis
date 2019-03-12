@@ -1952,7 +1952,7 @@ files:
     column: backlog_estimated_added_story_points
     default: 0
     patterns:
-        issue_backlog: ${s(issue_story)} and issue.updated <= ${s(sprint_close, sprint="interval_sprint")}
+        issue_backlog: ${s(issue_story)} and ${t("issue")}.updated <= ${s(sprint_close, sprint="interval_sprint")}
     summarize:
         operation: sum_of_na_avg
         field: story_points
