@@ -88,6 +88,9 @@ get_combined_features <- function(items, data, colnames, details, join_cols,
         combine <- 10
     }
     team_projects <- list()
+    if (!("project_id" %in% colnames)) {
+        data$project_id <- data$team_id
+    }
     data$original_project_id <- data$project_id
     projects$team <- T
     projects$component <- F
