@@ -1033,6 +1033,21 @@ update_non_recent_features <- function(group, future, limit, join_cols, items,
     close <- ifelse(group[last, 'sprint_is_closed'], last, last - 1)
     first <- max(1, last - limit + 1)
     group[first:(last + late), 'old'] <- F
+
+    prediction_columns <- list()
+    for (item in items) {
+        if (!is.null(item$prediction)) {
+            group[group$future, item$column] <- 0
+        }
+        for (prediction in item$prediction) {
+            if (!is.null(prediction$reference)) {
+                col <- paste(item$column, prediction$reference, sep='_')
+                prediction_columns[[col]] <- list(column=item$column,
+                                                  ref=prediction$reference)
+            }
+        }
+    }
+    group[, names(prediction_columns)] <- NA
     if (future == 0 || last < 2 || !('sprint_days' %in% colnames) ||
         is.na(group[last, 'sprint_days'])) {
         return(group)
@@ -1054,33 +1069,22 @@ update_non_recent_features <- function(group, future, limit, join_cols, items,
     group[group$future, 'start_date'] <- start_date
     group[group$future, 'close_date'] <- start_date + length
 
-    prediction_columns <- c()
-    for (item in items) {
-        if (!is.null(item$prediction)) {
-            group[group$future, item$column] <- 0
+    for (col in names(prediction_columns)) {
+        prediction <- prediction_columns[[col]]
+        if (prediction$ref %in% colnames) {
+            steps <- seq(1, future) * group[close, prediction$ref]
         }
-        for (prediction in item$prediction) {
-            if (!is.null(prediction$reference)) {
-                if (prediction$reference %in% colnames) {
-                    steps <- seq(1, future) * group[close, prediction$reference]
-                }
-                else {
-                    steps <- rep(0, future)
-                }
-                predict <- pmax(0, group[last, item$column] - steps)
+        else {
+            steps <- rep(0, future)
+        }
+        predict <- pmax(0, group[last, prediction$column] - steps)
 
-                col <- ifelse(length(item$prediction) > 1,
-                              paste(item$column, prediction$reference, sep='_'),
-                              item$column)
-                group[group$future, col] <- predict
-                prediction_columns <- c(prediction_columns, col)
-            }
-        }
+        group[group$future, col] <- predict
     }
     down <- F
     if (length(prediction_columns) > 0) {
         # Remove future sprints where predicted values are all zero or negative
-        down <- rowSums(group[, prediction_columns, drop=F] > 0) != 0
+        down <- rowSums(group[, names(prediction_columns), drop=F] > 0) != 0
         down[group$future & !down][1] <- T
     }
     group <- group[!group$future | down, ]
@@ -1284,7 +1288,7 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
             loginfo("Wrapping column %s", item$column)
             result <- wrap_feature(item, item$summarize$operation, result)
         }
-        if (!is.null(item$prediction) && length(item$prediction) > 1) {
+        if (!is.null(item$prediction$reference)) {
             loginfo("Wrapping predictions for %s", item$column)
             predictions <- unlist(lapply(item$prediction,
                                          function(prediction) {
