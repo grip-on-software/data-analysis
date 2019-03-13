@@ -1291,7 +1291,8 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
             loginfo("Wrapping column %s", item$column)
             result <- wrap_feature(item, item$summarize$operation, result)
         }
-        if (!is.null(item$prediction$reference)) {
+        if (!is.null(item$prediction) &&
+            !is.null(item$prediction[[1]]$reference)) {
             loginfo("Wrapping predictions for %s", item$column)
             predictions <- unlist(lapply(item$prediction,
                                          function(prediction) {
