@@ -94,7 +94,7 @@ features <- read.arff(feature_file)
 get_tags <- function(features_row) {
     tags <- list()
     for (file in specifications$files) {
-        if (!is.null(file$tags)) {
+        if (!is.null(file$tags) && file$column %in% colnames(features_row)) {
             tags <- c(tags,
                       file$column[as.logical(features_row[[file$column]])])
         }
