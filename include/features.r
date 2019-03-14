@@ -829,12 +829,10 @@ get_expression_attrs <- function(expression, vars) {
                               regexpr(" not found", ref) - 2)
                 assign(as.character(aux), vars[[aux]], envir=environment)
             }
-            else if (length(grep("wrong embedding dimension", ref[1])) > 0) {
-                return()
-            }
             else {
-                stop(paste("expression", expr, "could not be evaluated:",
-                           ref[1], "but a missing variable was not identified"))
+                logerror("expression %s could not be evaluated: %s",
+                         expr, ref[1])
+                return()
             }
         }
     }
