@@ -1006,6 +1006,7 @@ get_sprint_features <- function(conn, features, exclude, variables, latest_date,
                    where_clause,
                    'ORDER BY', paste(order_by, collapse=', '))
     sprint_query <- load_query(list(query=query), patterns)
+    logdebug(sprint_query$query)
 
     sprint_data <- dbGetQuery(conn, sprint_query$query)
 
