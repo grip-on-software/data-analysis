@@ -20,13 +20,15 @@ core <- get_arg('--core', default=F)
 projects <- list()
 specifications <- yaml.load_file('sprint_features.yml')
 config <- get_config()
-patterns <- load_definitions('sprint_definitions.yml', config$fields,
-                             current_time=latest_date)
 
 join_cols <- c('project_id')
 if (config$db$primary_source == "tfs") {
     join_cols <- c('team_id')
 }
+
+patterns <- load_definitions('sprint_definitions.yml',
+                             c(config$fields, list(join_cols=join_cols)),
+                             current_time=latest_date)
 
 get_sprints <- function(conn) {
     conditions <- get_sprint_conditions(latest_date=latest_date, core=core,
@@ -163,7 +165,8 @@ for (idx in 1:length(results$projects)) {
     feature_excludes <- c("project_id", "sprint_num", tag_names)
     feature_mask <- !(names(features) %in% feature_excludes)
     feature_names <- as.character(results$configuration$features)
-    if (!is.null(results$analogy_indexes)) {
+    if (!is.null(results$analogy_indexes) &&
+        nrow(results$analogy_indexes) >= idx) {
         analogies <- mapply(get_analogy_results,
                             1:length(results$analogy_indexes[idx, ]),
                             MoreArgs=list(idx=idx), SIMPLIFY=F)

@@ -279,7 +279,8 @@ build_sprint_source_urls <- function(conn, project_id, project_name,
                                 sprint_start_date=dateFormat(sprint$start_date),
                                 sprint_end_date=dateFormat(sprint$close_date))
     }
-    sprint_patterns$quality_name <- ifelse(is.na(quality_name), '',
+    sprint_patterns$quality_name <- ifelse(is.null(quality_name) ||
+                                           is.na(quality_name), '',
                                            quality_name)
     return(build_source_urls(project_id, project_name, items=source_items,
                              patterns=c(patterns, sprint_patterns),
