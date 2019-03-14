@@ -82,7 +82,10 @@ if (project_ids != '0') {
 
 project_metadata <- get_arg('--project-metadata', default='recent,core,main')
 metadata <- get_meta_keys(project_metadata)
-fields <- list('project_id', 'name', 'quality_display_name')
+fields <- list('project_id', 'name')
+if (config$db$primary_source != "tfs") {
+    fields <- c(fields, 'quality_display_name')
+}
 
 results <- read_json(input_file, simplifyVector=T)
 if (is.list(results$projects)) {
