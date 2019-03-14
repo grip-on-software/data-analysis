@@ -23,6 +23,11 @@ config <- get_config()
 patterns <- load_definitions('sprint_definitions.yml', config$fields,
                              current_time=latest_date)
 
+join_cols <- c('project_id')
+if (config$db$primary_source == "tfs") {
+    join_cols <- c('team_id')
+}
+
 get_sprints <- function(conn) {
     conditions <- get_sprint_conditions(latest_date=latest_date, core=core,
                                         sprint_days=sprint_days,
@@ -36,9 +41,7 @@ get_sprints <- function(conn) {
                    start_date='${t("sprint")}.start_date',
                    close_date='${s(sprint_close)}',
                    board_id='${t("sprint")}.board_id')
-    join_cols <- c('project_id')
     if (config$db$primary_source == "tfs") {
-        join_cols <- c('team_id')
         fields$project_id <- '${t("project")}.team_id'
         fields$quality_name <- NULL
         fields$quality_display_name <- NULL
@@ -55,7 +58,9 @@ get_sprints <- function(conn) {
                     WHERE', paste(conditions, collapse=' AND '), '
                     ORDER BY ${f(join_cols, "project", mask=1)},
                     ${s(sprint_open)}, ${t("sprint")}.name')
-    item <- load_query(list(query=query), c(patterns, sprint_days=sprint_days))
+    variables <- c(patterns, list(join_cols=join_cols,
+                                  sprint_days=sprint_days))
+    item <- load_query(list(query=query), variables)
     logdebug(item$query)
     time <- system.time(sprint <- dbGetQuery(conn, item$query))
     loginfo('Obtained sprints in %f seconds', time['elapsed'])
@@ -136,12 +141,14 @@ if (!is.null(results$configuration$assignments)) {
     results$configuration$assignments <- assignments
 }
 
-sprint_data <- get_sprint_projects(conn)
+sprint_data <- get_sprint_projects(conn, patterns=patterns,
+                                   join_cols=join_cols)
+project_col <- join_cols[1]
 for (idx in 1:length(results$projects)) {
     project_id <- results$projects[idx]
     project_sprints <- results$sprints[results$projects == project_id]
     if (project_ids != '1') {
-        project_name <- sprint_data[sprint_data$project_id == project_id,
+        project_name <- sprint_data[sprint_data[[project_col]] == project_id,
                                     'name']
     }
     else {

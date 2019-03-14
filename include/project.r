@@ -18,7 +18,8 @@ if (!exists('INC_PROJECT_R')) {
     }
 
     get_projects_meta <- function(conn, fields=list('project_id', 'name'),
-                                  metadata=list(), join_cols=NULL,
+                                  metadata=list(),
+                                  join_cols=c('project_id', 'sprint_id'),
                                   patterns=NULL, by=NULL) {
         joins <- list()
         aliases <- list()
@@ -105,14 +106,29 @@ if (!exists('INC_PROJECT_R')) {
                                ORDER BY', by))
     }
 
-    get_sprint_projects <- function(conn, by='project_id') {
-        dbGetQuery(conn, paste('SELECT project_id, name FROM
-                               (SELECT DISTINCT project.project_id, project.name
-                               FROM gros.project
-                               JOIN gros.sprint
-                               ON project.project_id = sprint.project_id)
-                               AS sprint_project
-                               ORDER BY', by))
+    get_sprint_projects <- function(conn, by=NULL, patterns=NULL,
+                                    join_cols=c('project_id', 'sprint_id')) {
+        if (is.null(by)) {
+            by <- join_cols[1]
+        }
+        if (is.null(patterns)) {
+            patterns <- load_definitions('sprint_definitions.yml',
+                                         list(join_cols=join_cols))
+        }
+
+        variables <- c(patterns, list(join_cols=join_cols))
+        query <- paste('SELECT ${f(join_cols, "sprint_project", mask=1)}, name
+                        FROM (
+                            SELECT DISTINCT ${f(join_cols, "project", mask=1)},
+                            ${t("project")}.name
+                            FROM gros.${t("project")}
+                            JOIN gros.${t("sprint")}
+                            ON ${j(join_cols, "project", "sprint", mask=1)}
+                        ) AS sprint_project
+                        ORDER BY', by)
+        item <- load_query(list(query=query), variables)
+        logdebug(item$query)
+        dbGetQuery(conn, item$query)
     }
 
     get_repo_projects <- function(conn, by='project_id') {
