@@ -177,7 +177,7 @@ for (idx in 1:length(results$projects)) {
 
     sprint_features <- as.list(results$features[idx, ])
     names(sprint_features) <- feature_names
-    features_row <- features[features$project_id == project_id &
+    features_row <- features[features[[project_col]] == project_id &
                              features$sprint_id == sprint_id, ]
     all_features <- modifyList(sprint_features,
                                as.list(features_row[, feature_mask]),
