@@ -78,6 +78,9 @@ get_sprint_by_id <- function(project_id, sprint_id) {
     return(sprint_cache[sprint_cache$project_id == project_id &
                         sprint_cache$sprint_id == sprint_id, ])
 }
+get_project <- function(project_id) {
+    return(sprint_cache[sprint_cache$project_id == project_id, ])
+}
 
 input_file <- get_arg('--file', default='sprint_labels.json')
 feature_file <- get_arg('--features', default='output/sprint_features.arff')
@@ -148,7 +151,7 @@ sprint_data <- get_sprint_projects(conn, patterns=patterns,
 project_col <- join_cols[1]
 for (idx in 1:length(results$projects)) {
     project_id <- results$projects[idx]
-    project_sprints <- results$sprints[results$projects == project_id]
+    sprint_ids <- sort(results$sprints[results$projects == project_id])
     if (project_ids != '1') {
         project_name <- sprint_data[sprint_data[[project_col]] == project_id,
                                     'name']
@@ -206,9 +209,12 @@ for (idx in 1:length(results$projects)) {
         dir.create(path)
     }
     data <- toJSON(project_data, auto_unbox=T, na="null", null="null")
-    if (all(sprint_id <= project_sprints)) {
+    if (all(sprint_id <= sprint_ids)) {
+        project_sprints <- get_project(project_id)
+        project_sprints$sprint_num <- 1:nrow(project_sprints)
         write(data, file=paste(path, "latest.json", sep="/"))
-        write(toJSON(sort(project_sprints)),
+        write(toJSON(project_sprints[project_sprints$sprint_id %in% sprint_ids,
+                                     c('name', 'sprint_num', 'sprint_id')]),
               file=paste(path, "sprints.json", sep="/"))
     }
     write(data, file=paste(path, paste(sprint_id, "json", sep="."), sep="/"))
@@ -227,7 +233,7 @@ for (idx in 1:length(results$projects)) {
     write(source_data, file=paste(path,
                                   paste("links", sprint_id, "json", sep="."),
                                   sep="/"))
-    if (all(sprint_id <= project_sprints)) {
+    if (all(sprint_id <= sprint_ids)) {
         write(source_data, file=paste(path, "links.json", sep="/"))
     }
 }
