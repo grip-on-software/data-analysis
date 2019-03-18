@@ -2148,3 +2148,63 @@ files:
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
     category: backlog
+  - expression: "cumsum(backlog_points_per_story) / sprint_num"
+    column: backlog_story_points_all_average
+    window:
+        dimension: 1
+        group: project_id
+    default: 0
+    combine: mean
+    values:
+        type: fraction
+        denominator: 10
+    descriptions:
+        nl: Points per story op backlog over alle sprints
+        en: Points per story on backlog over all sprints
+    long_descriptions:
+        nl: Het aantal storypoints dat iedere story gemiddeld heeft op de gehele backlog in de projecttracker over alle eerdere sprints heen
+        en: The average number of story points for each story on the whole backlog in the project tracker over all earlier sprints
+    units:
+        nl: "%s punten per story op de gehele backlog over alle sprints"
+        en: "%s points per story on the whole backlog over all sprints"
+    short_units:
+        nl: "%s punten/story"
+        en: "%s points/story"
+    measurement:
+        unit: [point, [item, sprint]]
+        dividend: backlog_story_points
+        divisor: [backlog_items, sprint_num]
+    preferred: false
+    source:
+        jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
+    category: backlog
+  - expression: "pmax(0, rowSums(embed(backlog_points_per_story, 3)) / 3)"
+    column: backlog_story_points_three_average
+    window:
+        dimension: 3
+        group: project_id
+    default: 0
+    combine: mean
+    values:
+        type: fraction
+        denominator: 10
+    descriptions:
+        nl: Points per story op backlog over drie sprints
+        en: Points per story on backlog over three sprints
+    long_descriptions:
+        nl: Het aantal storypoints dat iedere story gemiddeld heeft op de gehele backlog in de projecttracker over de afgelopen drie sprints
+        en: The average number of story points for each story on the whole backlog in the project tracker over the previous three sprints
+    units:
+        nl: "%s punten per story op de gehele backlog over 3 sprints"
+        en: "%s points per story on the whole backlog over 3 sprints"
+    short_units:
+        nl: "%s punten/story"
+        en: "%s points/story"
+    measurement:
+        unit: [point, [item, sprint]]
+        dividend: backlog_story_points
+        divisor: [backlog_items]
+    preferred: false
+    source:
+        jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
+    category: backlog
