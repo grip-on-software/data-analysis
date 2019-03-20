@@ -613,7 +613,7 @@ get_features <- function(conn, features, exclude, items, data, colnames,
             }
             else if (!is.null(item$expression)) {
                 expressions <- c(expressions, columns)
-                if (all(columns %in% required)) {
+                if (isTRUE(item$precompute) || all(columns %in% required)) {
                     data[, item$column] <- get_expression(item, data)
                     colnames <- c(colnames, columns)
                 }
@@ -640,12 +640,7 @@ get_features <- function(conn, features, exclude, items, data, colnames,
             }
             if (!is.null(item$summarize)) {
                 summarize <- item$summarize
-                if (length(summarize$group) == length(by)) {
-                    group_names <- by
-                }
-                else {
-                    group_names <- summarize$group
-                }
+                group_names <- by
                 group_cols <- lapply(result[, group_names], factor)
                 if (!is.null(components) && !is.null(result$component)) {
                     component_names <- get_component_names(components)
@@ -677,13 +672,28 @@ get_features <- function(conn, features, exclude, items, data, colnames,
                         n <- group_names[group_names != "original_component"]
                         summarizer <- function(operation, field, reference,
                                                with_missing) {
-                            data <- list(group[, field])
-                            if (is.list(details) && !is.na(reference)) {
+                            args <- list(group[, field])
+                            if (!is.na(reference) && is.list(details) &&
+                                !is.null(details[[reference]])) {
                                 name <- paste(group_result[n], collapse=".")
-                                data <- c(data,
+                                args <- c(args,
                                           details[[reference]][[name]][[field]])
                             }
-                            do.call(operation, c(data,
+                            else if (!is.na(reference) &&
+                                     isTRUE(summarize$expression)) {
+                                # Find the current sprint data and use it
+                                f <- mapply(function(value, name) {
+                                                if (is.na(value)) {
+                                                    return(is.na(data[[name]]))
+                                                }
+                                                return(data[[name]] == value)
+                                            },
+                                            group_result[, n], n)
+                                r <- rowSums(f, na.rm=T)
+                                ref <- data[r == length(n), reference]
+                                args <- c(args, list(reference=ref))
+                            }
+                            do.call(operation, c(args,
                                                  list(na.rm=!with_missing)))
                         }
                         group_result[, columns] <- mapply(summarizer, operation,
