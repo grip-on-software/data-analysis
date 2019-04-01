@@ -406,10 +406,8 @@ get_combined_team <- function(team, team_id, data, projects, team_projects,
 update_combine_interval <- function(items, old_data, data, row_num, details,
                                     colnames, interval, join_cols) {
     range <- seq(interval[1], interval[2])
-    project_col <- ifelse('project_name' %in% colnames, 'project_name',
-                          join_cols[1])
+    project_col <- join_cols[1]
     sprint_col <- join_cols[2]
-    project <- old_data[range[1], project_col]
     num_projects <- length(unique(old_data[range, project_col]))
     result <- list(row=data.frame(sprint_count=length(range)),
                    columns=c("sprint_count"))
@@ -744,11 +742,15 @@ get_features <- function(conn, features, exclude, items, data, colnames,
             data <- join(data, result, by=by, type="left", match=match)
             if (isTRUE(item$carry)) {
                 projects <- data[[join_cols[1]]]
-                for (project_id in unique(projects)) {
-                    data[projects == project_id, item$column] <-
-                        na.locf(data[projects == project_id, item$column],
-                                na.rm=F)
+                groups <- split(data, list(factor(data[[join_cols[1]]]),
+                                           addNA(factor(data$component))),
+                                drop=T)
+                group_locf <- function(group, column) {
+                    group[, column] <- na.locf(group[, column], na.rm=F)
+                    return(group)
                 }
+                data <- do.call("rbind",
+                                lapply(groups, group_locf, item$column))
             }
             if (!is.null(item$default)) {
                 for (column in columns) {
