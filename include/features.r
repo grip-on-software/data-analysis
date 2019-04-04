@@ -742,9 +742,11 @@ get_features <- function(conn, features, exclude, items, data, colnames,
             data <- join(data, result, by=by, type="left", match=match)
             if (isTRUE(item$carry)) {
                 projects <- data[[join_cols[1]]]
-                groups <- split(data, list(factor(data[[join_cols[1]]]),
-                                           addNA(factor(data$component))),
-                                drop=T)
+                factors <- list(factor(data[[join_cols[1]]]))
+                if ("component" %in% colnames(result)) {
+                    factors$component <- addNA(factor(data$component))
+                }
+                groups <- split(data, as.list(factors), drop=T)
                 group_locf <- function(group, column) {
                     group[, column] <- na.locf(group[, column], na.rm=F)
                     return(group)
