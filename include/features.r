@@ -1412,7 +1412,7 @@ write_feature_metadata <- function(projects, specifications, output_directory,
                                              'short_units', 'tags',
                                              'predictor'),
                                    metadata=c('values', 'measurement',
-                                              'preferred')) {
+                                              'preferred', 'prediction')) {
     if (length(items) == 0) {
         items <- specifications$files
     }
