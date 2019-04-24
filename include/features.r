@@ -1043,7 +1043,7 @@ get_sprint_features <- function(conn, features, exclude, variables, latest_date,
 }
 
 update_non_recent_features <- function(group, future, limit, join_cols, items,
-                                       colnames) {
+                                       colnames, error=NULL) {
     late <- length(which(group$future))
     last <- length(which(!group$future))
     close <- ifelse(group[last, 'sprint_is_closed'], last, last - 1)
@@ -1051,9 +1051,11 @@ update_non_recent_features <- function(group, future, limit, join_cols, items,
     group[first:(last + late), 'old'] <- F
 
     prediction_columns <- list()
+    real_columns <- list()
     for (item in items) {
         if (!is.null(item$prediction)) {
             group[group$future, item$column] <- 0
+            real_columns[[item$column]] <- item$prediction
         }
         for (prediction in item$prediction) {
             if (!is.null(prediction$reference)) {
@@ -1104,6 +1106,15 @@ update_non_recent_features <- function(group, future, limit, join_cols, items,
         down[group$future & !down][1] <- T
     }
     group <- group[!group$future | down, ]
+    if (!is.null(error)) {
+        future <- group[group$future, names(prediction_columns)]
+        error_columns <- list()
+        for (col in names(real_columns)) {
+            mae <- min(colMeans(abs(error[1:nrow(future), col] - future)))
+            error_columns[[col]] <- mae
+        }
+        return(as.data.frame(error_columns))
+    }
     return(group)
 }
 
@@ -1291,12 +1302,24 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
     }
 
     if (old || future > 0) {
-        result$data <- do.call("rbind",
-                               lapply(split(result$data,
-                                            result$data[, 'project_name']),
-                                      update_non_recent_features, future,
-                                      limit, join_cols, result$items,
-                                      result$colnames))
+        project_data <- split(result$data, result$data[, 'project_name'])
+        result$data <- do.call("rbind", lapply(project_data,
+                                               update_non_recent_features,
+                                               future, limit, join_cols,
+                                               result$items, result$colnames))
+        result$errors <- list()
+        for (project in project_data) {
+            n <- as.integer(nrow(project) / 3) + 1
+            d <- update_non_recent_features(project[1:n, ], n, limit, join_cols,
+                                            result$items, result$colnames,
+                                            error=project[-1:-n, ])
+            e <- update_non_recent_features(project[n:(n*2), ], n, limit,
+                                            join_cols, result$items,
+                                            result$colnames,
+                                            error=project[-1:(-n*2), ])
+            result$errors[[project[1, 'project_name']]] <- colMeans(rbind(d, e),
+                                                                    na.rm=T)
+        }
     }
 
     for (item in result$items) {
