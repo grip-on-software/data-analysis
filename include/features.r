@@ -987,6 +987,60 @@ get_component_names <- function(components, source_type="name") {
     return(unique(unlist(lapply(components, component_filter))))
 }
 
+get_story_features <- function(conn, features, exclude='^$',
+                               latest_date=Sys.time(), changelog=T,
+                               project_fields=list('project_id'),
+                               project_meta=list(), project_names=NULL) {
+    fields <- list(project_name='${t("project")}.name',
+                   sprint_name='${t("sprint")}.name',
+                   story_name='${t("issue")}.title',
+                   latest='max_changelog.changelog_id IS NOT NULL')
+
+    # Features from the table itself - TODO move to story_features.yml
+    table <- list(overdue=paste('NOT ${s(issue_closed}) AND',
+                                'CAST(${t("issue").duedate AS TIMESTAMP) <=',
+                                '${current_timestamp}'),
+                  num_attachments='${t("issue")}.attachments',
+                  story_points='${s(story_points)}')
+
+    join_cols <- c("project_id", "issue_id")
+    if (changelog) {
+        join_cols <- c(join_cols, "changelog_id")
+    }
+
+    query <- paste('SELECT ${f(join_cols, "issue")},',
+                   paste(format_aliases(fields), collapse=", "),
+                   'FROM gros.${t("issue")}
+                    JOIN gros.${t("project")}
+                    ON ${j(join_cols, "project", "issue", mask=1)}
+                    LEFT JOIN gros.${t("sprint")}
+                    ON ${j(join_cols, "sprint", "issue", mask=1)}
+                    AND ${t("sprint")}.sprint_id = ${t("issue")}.sprint_id',
+                    ifelse(changelog, 'LEFT', ''), 'JOIN (
+                        SELECT ${f(join_cols, "issue", mask=1:2)},
+                        MAX(changelog_id) AS changelog_id
+                        FROM gros.${t("issue")}
+                        ${g(join_cols, "issue", mask=1:2)}
+                    ) AS max_changelog
+                    ON ${j(join_cols, "issue", "max_changelog", mask=2)}
+                    WHERE ${t("issue")}.updated <= ${current_timestamp}
+                    AND ${s(issue_story)}')
+
+    variables <- list(join_cols=list(default=join_cols))
+    patterns <- load_definitions('sprint_definitions.yml', variables,
+                                 current_time=latest_date)
+
+    story_query <- load_query(list(query=query), patterns)
+    logdebug(story_query$query)
+
+    data <- dbGetQuery(conn, story_query$query)
+
+    items <- load_queries('story_features.yml', NULL, patterns)
+    result <- get_features(conn, features, exclude, items, data, c(), join_cols)
+
+    return(result)
+}
+
 get_sprint_features <- function(conn, features, exclude, variables, latest_date,
                                 core=F, sprint_days=NA, sprint_patch=NA,
                                 future=T, combine=F, details=F, time=F,
