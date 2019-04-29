@@ -584,6 +584,23 @@ expand_feature_names <- function(feature, items, categories=list()) {
     return(unique(unlist(features)))
 }
 
+merge_features <- function(data, result, join_cols, components) {
+    by <- join_cols
+    match <- "first"
+    if (!is.null(components)) {
+        if ("component" %in% colnames(result)) {
+            by <- c(by, "component")
+            if ("original_component" %in% colnames(result)) {
+                by <- c(by, "original_component")
+            }
+        }
+        else {
+            match <- "all"
+        }
+    }
+    return(join(data, result, by=by, type="left", match=match))
+}
+
 get_features <- function(conn, features, exclude, items, data, colnames,
                          join_cols, details=F, required=c(), components=NULL) {
     if (length(features) == 1) {
@@ -604,15 +621,14 @@ get_features <- function(conn, features, exclude, items, data, colnames,
         if (include_feature(item, features, exclude, required)) {
             selected_items <- c(selected_items, list(item))
             columns <- item$column
-            by <- join_cols
-            match <- "first"
             if (!is.null(item$result)) {
                 result <- item$result
             }
             else if (!is.null(item$expression)) {
                 expressions <- c(expressions, columns)
                 if (isTRUE(item$precompute) || all(columns %in% required)) {
-                    data[, item$column] <- get_expression(item, data)
+                    data <- get_expression(item, data, join_cols,
+                                           components=components, merge=T)
                     colnames <- c(colnames, columns)
                 }
                 next
@@ -638,7 +654,7 @@ get_features <- function(conn, features, exclude, items, data, colnames,
             }
             if (!is.null(item$summarize)) {
                 summarize <- item$summarize
-                group_names <- by
+                group_names <- join_cols
                 group_cols <- lapply(result[, group_names], factor)
                 if (!is.null(components) && !is.null(result$component)) {
                     component_names <- get_component_names(components)
@@ -728,18 +744,7 @@ get_features <- function(conn, features, exclude, items, data, colnames,
                     details[[item$column[1]]] <- lapply(groups, detailer)
                 }
             }
-            if (!is.null(components)) {
-                if ("component" %in% colnames(result)) {
-                    by <- c(by, "component")
-                    if ("original_component" %in% colnames(result)) {
-                        by <- c(by, "original_component")
-                    }
-                }
-                else {
-                    match <- "all"
-                }
-            }
-            data <- join(data, result, by=by, type="left", match=match)
+            data <- merge_features(data, result, join_cols, components)
             if (isTRUE(item$carry)) {
                 projects <- data[[join_cols[1]]]
                 factors <- list(factor(data[[join_cols[1]]]))
@@ -774,16 +779,17 @@ get_features <- function(conn, features, exclude, items, data, colnames,
          join_cols=join_cols, items=selected_items, expressions=expressions)
 }
 
-get_expressions <- function(items, data, expressions) {
+get_expressions <- function(items, data, expressions, join_cols,
+                            components=NULL) {
     for (item in items) {
         if (!is.null(item$expression) && all(item$column %in% expressions)) {
-            data[, item$column] <- get_expression(item, data)
+            data <- get_expression(item, data, join_cols, components, merge=F)
         }
     }
     return(data)
 }
 
-get_expression <- function(item, data) {
+get_expression <- function(item, data, join_cols, components=NULL, merge=NA) {
     loginfo("Calculating expression %s", item$column)
     expression <- parse(text=item$expression)
     if (!is.null(item$window)) {
@@ -792,7 +798,7 @@ get_expression <- function(item, data) {
             group[group == "project_id"] <- "project_name"
         }
         else if (!("project_id" %in% colnames(data))) {
-            group[group == "project_id"] <- "team_id"
+            group[group == "project_id"] <- join_cols[1]
         }
         if (length(group) == 1) {
             group_cols <- list(factor(data[, group]))
@@ -802,16 +808,30 @@ get_expression <- function(item, data) {
             group_cols <- lapply(data[, group], factor)
         }
         groups <- split(data, as.list(group_cols), drop=T)
-        all <- do.call("c", lapply(groups, function(group_data) {
-            eval(expression,
-                 rbind(group_data[rep(1, item$window$dimension - 1), ],
-                       group_data))
+        all <- do.call("rbind", lapply(groups, function(group_data) {
+            res <- eval(expression,
+                        rbind(group_data[rep(1, item$window$dimension - 1), ],
+                              group_data))
+            result <- group_data[, join_cols]
+            if (!is.null(components)) {
+                result$component <- group_data$component
+            }
+            result[[item$column]] <- res
+            return(result)
         }))
+        if (identical(merge, F)) {
+            data[[item$column]] <- all[[item$column]]
+        }
+        else {
+            data[[item$column]] <- NULL
+            data <- merge_features(data, all, join_cols, components)
+        }
     }
     else {
         all <- eval(expression, data)
+        data[, item$column] <- all
     }
-    return(all)
+    return(data)
 }
 
 get_expressions_metadata <- function(items, data) {
@@ -1036,7 +1056,8 @@ get_sprint_features <- function(conn, features, exclude, variables, latest_date,
                                         result$colnames, result$details,
                                         join_cols, combine=combine, teams=teams)
     }
-    result$data <- get_expressions(result$items, result$data, expressions)
+    result$data <- get_expressions(result$items, result$data, expressions,
+                                   join_cols)
     result$colnames <- c(result$colnames, expressions)
     result$patterns <- patterns
     return(result)
@@ -1295,7 +1316,8 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
                                         main=T, projects=result$projects,
                                         components=components)
     }
-    result$data <- get_expressions(result$items, result$data, expressions)
+    result$data <- get_expressions(result$items, result$data, expressions,
+                                   join_cols, components)
     result$colnames <- c(result$colnames, expressions)
     if (prediction$data != '' && identical(prediction$combine, F)) {
         result <- get_prediction_feature(prediction, result)
