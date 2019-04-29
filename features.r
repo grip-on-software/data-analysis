@@ -404,6 +404,8 @@ if (get_arg('--project', default=F)) {
                 }
             }
 
+            write(toJSON(result$errors[[project]]),
+                  file=paste(project_dir, "errors.json", sep="/"))
             project_urls <- source_urls[as.character(project_id)]
             names(project_urls) <- NULL
             project_urls <- do.call("c", project_urls)
@@ -468,8 +470,6 @@ if (get_arg('--project', default=F)) {
         write(toJSON(get_expressions_metadata(result$items, sprint_data),
                      auto_unbox=T),
               file=paste(output_dir, "expressions.json", sep="/"))
-        write(toJSON(result$errors),
-              file=paste(output_dir, "errors.json", sep="/"))
         default_targets <- get_metric_targets(conn, NA, result$items)
         write_metric_targets(default_targets, output_dir, result$items)
         if (isTRUE(metadata$team) && project_ids != '1') {
