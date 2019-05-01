@@ -1076,13 +1076,15 @@ update_non_recent_features <- function(group, future, limit, join_cols, items,
     for (item in items) {
         if (!is.null(item$prediction)) {
             group[group$future, item$column] <- 0
-            real_columns[[item$column]] <- item$prediction
+            real_columns[[item$column]] <- c()
         }
         for (prediction in item$prediction) {
             if (!is.null(prediction$reference)) {
                 col <- paste(item$column, prediction$reference, sep='_')
                 prediction_columns[[col]] <- list(column=item$column,
                                                   ref=prediction$reference)
+                real_columns[[item$column]] <- c(real_columns[[item$column]],
+                                                 prediction$reference)
             }
         }
     }
@@ -1128,13 +1130,13 @@ update_non_recent_features <- function(group, future, limit, join_cols, items,
     }
     group <- group[!group$future | down, ]
     if (!is.null(error)) {
-        sprints <- group[group$future, names(prediction_columns)]
         error_columns <- list()
         for (col in names(real_columns)) {
-            mae <- min(colMeans(abs(error[1:nrow(sprints), col] - sprints)))
-            error_columns[[col]] <- mae / nrow(sprints)
+            sprints <- group[group$future, real_columns[[col]]]
+            bias <- colMeans(sprints - error[1:nrow(sprints), col])
+            error_columns[[col]] <- bias / nrow(sprints)
         }
-        return(as.data.frame(error_columns))
+        return(error_columns)
     }
     return(group)
 }
@@ -1333,17 +1335,22 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
         for (project in project_data) {
             project_name <- project[1, 'project_name']
             num_sprints <- as.integer(nrow(project) / 3) + 1
+            second_sprints <- (num_sprints - 1) * 2 + 1
             first <- update_non_recent_features(project[1:num_sprints, ],
                                                 num_sprints, limit, join_cols,
                                                 result$items, result$colnames,
                                                 project[-1:-num_sprints, ])
-            second_seq <- num_sprints:(num_sprints*2)
+            second_seq <- num_sprints:second_sprints
             second <- update_non_recent_features(project[second_seq, ],
                                                  num_sprints, limit,
                                                  join_cols, result$items,
                                                  result$colnames,
-                                                 project[-1:(-num_sprints*2), ])
-            result$errors[[project_name]] <- as.list(rbind(first, second))
+                                                 project[-1:-second_sprints, ])
+            errors <- mapply(function(one, two) {
+                                 as.list(as.data.frame(rbind(one, two)))
+                             },
+                             first, second, SIMPLIFY=F)
+            result$errors[[project_name]] <- as.list(errors)
         }
     }
 
