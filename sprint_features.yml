@@ -2065,11 +2065,11 @@ files:
         type: fraction
         denominator: 4
     descriptions:
-        nl: (On)gepokerde punten op backlog
-        en: (Non-)pokered points on backlog
+        nl: Volledige backloginschatting
+        en: Total backlog estimation
     long_descriptions:
-        nl: Het totaal aantal storypoints dat op de gehele backlog in de projecttracker staat bij het begin van de sprint (inclusief inschattingen van andere items)
-        en: The total number of story points on the whole backlog in the project tracker at the start of the sprint (including estimates of other items)
+        nl: Het totaal aantal storypoints dat op de gehele backlog in de projecttracker staat bij het begin van de sprint, inclusief inschattingen van ongepokerde stories
+        en: The total number of story points on the whole backlog in the project tracker at the start of the sprint, including estimates of non-pokered stories
     measurement:
         unit: point
     units:
