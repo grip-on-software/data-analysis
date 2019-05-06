@@ -1135,6 +1135,22 @@ update_non_recent_features <- function(group, future, limit, join_cols, items,
             sprints <- group[group$future, real_columns[[col]]]
             bias <- colMeans(sprints - error[1:nrow(sprints), col])
             error_columns[[col]] <- bias / nrow(sprints)
+            alt <- "two.sided"
+            if (all(bias < 0, na.rm=T)) {
+                alt <- "greater"
+            }
+            else if (all(bias > 0, na.rm=T)) {
+                alt <- "less"
+            }
+            t_tests <- lapply(sprints,
+                              function(x, y, alt) {
+                                  tryCatch(t.test(x, y, alt)$p.value,
+                                           error=function(cond) { NA })
+                              },
+                              error[1:nrow(sprints), col], alt)
+            probabilities <- as.data.frame(t_tests)
+            colnames(probabilities) <- real_columns[[col]]
+            error_columns[[paste(col, 'probability')]] <- probabilities
         }
         return(error_columns)
     }
