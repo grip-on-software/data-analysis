@@ -1063,37 +1063,15 @@ get_sprint_features <- function(conn, features, exclude, variables, latest_date,
     return(result)
 }
 
-update_non_recent_features <- function(group, future, limit, join_cols, items,
-                                       colnames, error=NULL) {
-    late <- length(which(group$future))
-    last <- length(which(!group$future))
-    close <- ifelse(group[last, 'sprint_is_closed'], last, last - 1)
-    first <- max(1, last - limit + 1)
-    group[first:(last + late), 'old'] <- F
-
-    prediction_columns <- list()
-    real_columns <- list()
-    for (item in items) {
-        if (!is.null(item$prediction)) {
-            group[group$future, item$column] <- 0
-            real_columns[[item$column]] <- c()
-        }
-        for (prediction in item$prediction) {
-            if (!is.null(prediction$reference)) {
-                col <- paste(item$column, prediction$reference, sep='_')
-                prediction_columns[[col]] <- list(column=item$column,
-                                                  ref=prediction$reference)
-                real_columns[[item$column]] <- c(real_columns[[item$column]],
-                                                 prediction$reference)
-            }
-        }
-    }
+make_future_sprints <- function(group, future, join_cols, colnames,
+                                prediction_columns, late, last) {
     group[, names(prediction_columns)] <- NA
     if (future == 0 || last < 2 || !('sprint_days' %in% colnames) ||
         is.na(group[last, 'sprint_days'])) {
         return(group)
     }
 
+    close <- ifelse(group[last, 'sprint_is_closed'], last, last - 1)
     extra <- group[nrow(group), ]
     extra$old <- F
     extra$future <- T
@@ -1129,32 +1107,104 @@ update_non_recent_features <- function(group, future, limit, join_cols, items,
         down[group$future & !down][1] <- T
     }
     group <- group[!group$future | down, ]
-    if (!is.null(error)) {
-        error_columns <- list()
-        for (col in names(real_columns)) {
-            sprints <- group[group$future, real_columns[[col]]]
-            bias <- colMeans(sprints - error[1:nrow(sprints), col])
-            error_columns[[col]] <- bias / nrow(sprints)
-            alt <- "two.sided"
-            if (all(bias < 0, na.rm=T)) {
-                alt <- "greater"
-            }
-            else if (all(bias > 0, na.rm=T)) {
-                alt <- "less"
-            }
-            t_tests <- lapply(sprints,
-                              function(x, y, alt) {
-                                  tryCatch(t.test(x, y, alt)$p.value,
-                                           error=function(cond) { NA })
-                              },
-                              error[1:nrow(sprints), col], alt)
-            probabilities <- as.data.frame(t_tests)
-            colnames(probabilities) <- real_columns[[col]]
-            error_columns[[paste(col, 'probability')]] <- probabilities
-        }
-        return(error_columns)
-    }
     return(group)
+}
+
+update_non_recent_features <- function(group, future, limit, join_cols, items,
+                                       colnames) {
+    late <- length(which(group$future))
+    last <- length(which(!group$future))
+    first <- max(1, last - limit + 1)
+    group[first:(last + late), 'old'] <- F
+
+    prediction_columns <- list()
+    real_columns <- list()
+    for (item in items) {
+        if (!is.null(item$prediction)) {
+            group[group$future, item$column] <- 0
+            real_columns[[item$column]] <- c()
+        }
+        for (prediction in item$prediction) {
+            if (!is.null(prediction$reference)) {
+                col <- paste(item$column, prediction$reference, sep='_')
+                prediction_columns[[col]] <- list(column=item$column,
+                                                  ref=prediction$reference)
+                real_columns[[item$column]] <- c(real_columns[[item$column]],
+                                                 prediction$reference)
+            }
+        }
+    }
+
+    group <- make_future_sprints(group, future, join_cols, colnames,
+                                 prediction_columns, late, last)
+
+    return(list(group=group, columns=real_columns,
+                prediction_columns=prediction_columns))
+}
+
+validate_future <- function(project, res, future, join_cols, colnames, error) {
+    group <- make_future_sprints(project, future, join_cols, colnames,
+                                 res$prediction_columns, 0, nrow(project))
+    error_columns <- list()
+    for (col in names(res$columns)) {
+        sprints <- group[group$future, res$columns[[col]]]
+        bias <- colMeans(sprints - error[1:nrow(sprints), col])
+        error_columns[[col]] <- bias / nrow(sprints)
+        alt <- "two.sided"
+        if (all(bias < 0, na.rm=T)) {
+            alt <- "greater"
+        }
+        else if (all(bias > 0, na.rm=T)) {
+            alt <- "less"
+        }
+        t_tests <- lapply(sprints,
+                          function(x, y, alt) {
+                              tryCatch(t.test(x, y, alt)$p.value,
+                                       error=function(cond) { NA })
+                          },
+                          error[1:nrow(sprints), col], alt)
+        probabilities <- as.data.frame(t_tests)
+        colnames(probabilities) <- res$columns[[col]]
+        error_columns[[paste(col, 'probability', sep='_')]] <- probabilities
+    }
+    return(error_columns)
+}
+
+simulate_monte_carlo <- function(group, future, items, columns, count=1000) {
+    # Calculate the cumulative density at each sprint
+    density <- list()
+    last <- length(which(!group$future))
+    for (item in items) {
+        if (!is.null(item$prediction)) {
+            for (prediction in item$prediction) {
+                if (!is.null(prediction$monte_carlo)) {
+                    counts <- rep(future, count)
+                    samples <- rep(0, future * count)
+                    for (factor in prediction$monte_carlo$factors) {
+                        weights <- dgamma(last:1, 1, rate=0.5)
+                        multipliers <- group[!group$future &
+                                             !is.na(group[[factor$multiplier]]),
+                                             factor$multiplier]
+                        samples <- samples +
+                            factor$scalar * multipliers[length(multipliers)] *
+                            sample(group[!group$future, factor$column],
+                                   future * count, replace=T, prob=weights)
+                    }
+                    for (i in 1:count) {
+                        end <- group[last, item$column] +
+                            cumsum(samples[(i-1)*future+1:i*future])
+                        if (any(end < 0, na.rm=T)) {
+                            counts[i] <- which(end < 0)[1]
+                        }
+                    }
+                    P <- ecdf(counts)
+                    cdf <- P(seq(future))
+                    density[[paste(item$column, 'density', sep='_')]] <- cdf
+                }
+            }
+        }
+    }
+    return(density)
 }
 
 get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
@@ -1343,29 +1393,28 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
 
     if (old || future > 0) {
         project_data <- split(result$data, result$data[, 'project_name'])
-        result$data <- do.call("rbind", lapply(project_data,
-                                               update_non_recent_features,
-                                               future, limit, join_cols,
-                                               result$items, result$colnames))
+        result$data <- data.frame()
         result$errors <- list()
         for (project in project_data) {
+            res <- update_non_recent_features(project, future, limit, join_cols,
+                                              result$items, result$colnames)
             project_name <- project[1, 'project_name']
             num_sprints <- as.integer(nrow(project) / 3) + 1
             second_sprints <- (num_sprints - 1) * 2 + 1
-            first <- update_non_recent_features(project[1:num_sprints, ],
-                                                num_sprints, limit, join_cols,
-                                                result$items, result$colnames,
-                                                project[-1:-num_sprints, ])
-            second_seq <- num_sprints:second_sprints
-            second <- update_non_recent_features(project[second_seq, ],
-                                                 num_sprints, limit,
-                                                 join_cols, result$items,
-                                                 result$colnames,
-                                                 project[-1:-second_sprints, ])
+            first <- validate_future(project[1:num_sprints, ], res, num_sprints,
+                                     join_cols, result$colnames,
+                                     project[-1:-num_sprints, ])
+            second <- validate_future(project[num_sprints:second_sprints, ],
+                                      res, num_sprints, join_cols,
+                                      result$colnames,
+                                      project[-1:-second_sprints, ])
             errors <- mapply(function(one, two) {
                                  as.list(as.data.frame(rbind(one, two)))
                              },
                              first, second, SIMPLIFY=F)
+            errors <- c(errors, simulate_monte_carlo(res$group, future,
+                                                     result$items, res$columns))
+            result$data <- rbind(result$data, res$group)
             result$errors[[project_name]] <- as.list(errors)
         }
     }
