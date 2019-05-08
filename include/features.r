@@ -1170,7 +1170,7 @@ validate_future <- function(project, res, future, join_cols, colnames, error) {
     return(error_columns)
 }
 
-simulate_monte_carlo <- function(group, future, items, columns, count=1000) {
+simulate_monte_carlo <- function(group, future, items, columns, count=10000) {
     # Calculate the cumulative density at each sprint
     density <- list()
     last <- length(which(!group$future))
