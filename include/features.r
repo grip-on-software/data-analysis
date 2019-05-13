@@ -1192,7 +1192,7 @@ simulate_monte_carlo <- function(group, future, items, columns, count=10000) {
                     }
                     for (i in 1:count) {
                         end <- group[last, item$column] +
-                            cumsum(samples[(i-1)*future+1:i*future])
+                            cumsum(samples[(future * (i-1) + 1):(future * i)])
                         if (any(end < 0, na.rm=T)) {
                             counts[i] <- which(end < 0)[1]
                         }
