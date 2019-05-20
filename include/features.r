@@ -1063,6 +1063,17 @@ get_sprint_features <- function(conn, features, exclude, variables, latest_date,
     return(result)
 }
 
+get_future_date <- function(group, last, future) {
+    close <- ifelse(group[last, 'sprint_is_closed'], last, last - 1)
+    start <- group[last, 'start_date'][[1]]
+    length <- as.difftime(group[close, 'sprint_days'], units="days")
+    downtime <- length + start - group[last - 1, 'close_date'][[1]]
+    start_date <- seq(start + downtime, by=downtime, length.out=future)
+    return(list(start_date=start_date,
+                close_date=start_date + length,
+                close=close))
+}
+
 make_future_sprints <- function(group, future, join_cols, colnames,
                                 prediction_columns, late, last) {
     group[, names(prediction_columns)] <- NA
@@ -1071,7 +1082,6 @@ make_future_sprints <- function(group, future, join_cols, colnames,
         return(group)
     }
 
-    close <- ifelse(group[last, 'sprint_is_closed'], last, last - 1)
     extra <- group[nrow(group), ]
     extra$old <- F
     extra$future <- T
@@ -1081,17 +1091,14 @@ make_future_sprints <- function(group, future, join_cols, colnames,
     multi$sprint_num <- seq(extra$sprint_num + 1, length.out=future - late)
     group <- rbind(group, multi)
 
-    start <- group[last, 'start_date'][[1]]
-    length <- as.difftime(group[close, 'sprint_days'], units="days")
-    downtime <- length + start - group[last - 1, 'close_date'][[1]]
-    start_date <- seq(start + downtime, by=downtime, length.out=future)
-    group[group$future, 'start_date'] <- start_date
-    group[group$future, 'close_date'] <- start_date + length
+    dates <- get_future_date(group, last, future)
+    group[group$future, 'start_date'] <- dates$start_date
+    group[group$future, 'close_date'] <- dates$close_date
 
     for (col in names(prediction_columns)) {
         prediction <- prediction_columns[[col]]
         if (prediction$ref %in% colnames) {
-            steps <- seq(1, future) * group[close, prediction$ref]
+            steps <- seq(1, future) * group[dates$close, prediction$ref]
         }
         else {
             steps <- rep(0, future)
@@ -1139,7 +1146,7 @@ update_non_recent_features <- function(group, future, limit, join_cols, items,
                                  prediction_columns, late, last)
 
     return(list(group=group, columns=real_columns,
-                prediction_columns=prediction_columns))
+                prediction_columns=prediction_columns, last=last))
 }
 
 validate_future <- function(project, res, future, join_cols, colnames, error) {
@@ -1170,12 +1177,15 @@ validate_future <- function(project, res, future, join_cols, colnames, error) {
     return(error_columns)
 }
 
-simulate_monte_carlo <- function(group, future, items, columns, count=10000) {
+simulate_monte_carlo <- function(group, future, items, columns,
+                                 name='density', target=0, count=10000) {
     # Calculate the cumulative density at each sprint
-    density <- list()
+    res <- list()
     last <- length(which(!group$future))
     for (item in items) {
         if (!is.null(item$prediction)) {
+            column <- paste(item$column, name, sep='_')
+            res[[column]] <- list()
             for (prediction in item$prediction) {
                 if (!is.null(prediction$monte_carlo)) {
                     counts <- rep(future, count)
@@ -1193,18 +1203,21 @@ simulate_monte_carlo <- function(group, future, items, columns, count=10000) {
                     for (i in 1:count) {
                         end <- group[last, item$column] +
                             cumsum(samples[(future * (i-1) + 1):(future * i)])
-                        if (any(end < 0, na.rm=T)) {
-                            counts[i] <- which(end < 0)[1]
+                        if (any(end < target, na.rm=T)) {
+                            counts[i] <- which(end < target)[1]
                         }
                     }
                     P <- ecdf(counts)
                     cdf <- P(seq(future))
-                    density[[paste(item$column, 'density', sep='_')]] <- cdf
+                    res[[column]][[prediction$monte_carlo$name]] <- cdf
                 }
+            }
+            if (length(res[[column]]) == 0) {
+                res[[column]] <- NULL
             }
         }
     }
-    return(density)
+    return(res)
 }
 
 get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
@@ -1391,6 +1404,7 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
         result <- get_prediction_feature(prediction, result)
     }
 
+    predictions <- list()
     if (old || future > 0) {
         project_data <- split(result$data, result$data[, 'project_name'])
         result$data <- data.frame()
@@ -1412,8 +1426,14 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
                                  as.list(as.data.frame(rbind(one, two)))
                              },
                              first, second, SIMPLIFY=F)
-            errors <- c(errors, simulate_monte_carlo(res$group, future,
+
+            unfinished <- any(res$group[nrow(res$group),
+                                        names(res$prediction_columns)] > 0)
+            more <- ifelse(unfinished, future*2, future)
+            errors <- c(errors, simulate_monte_carlo(res$group, more,
                                                      result$items, res$columns))
+            errors$date <- get_future_date(res$group, res$last, more)$start_date
+
             result$data <- rbind(result$data, res$group)
             result$errors[[project_name]] <- as.list(errors)
         }
