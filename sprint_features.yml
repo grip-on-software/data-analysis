@@ -1280,8 +1280,8 @@ files:
         nl: "%s punten/sprint"
         en: "%s points/sprint"
     predictor:
-        nl: Bij velocity
-        en: With velocity
+        nl: Enkel velocity
+        en: Only velocity
     measurements:
         unit: [point, sprint]
         dividend: done_story_points
@@ -2201,7 +2201,7 @@ files:
         nl: "%s afgevoerde punten/sprint"
         en: "%s dismissed points/sprint"
     predictor:
-        nl: Bij afvoeren
+        nl: Met afvoeren
         en: With dismissal
     measurements:
         unit: [point, sprint]
@@ -2257,7 +2257,7 @@ files:
         nl: "%s toegevoegde punten/sprint"
         en: "%s added points/sprint"
     predictor:
-        nl: Bij toevoeging
+        nl: Met toevoeging
         en: With additions
     measurements:
         unit: [point, sprint]
@@ -2288,7 +2288,7 @@ files:
         nl: "%s veranderde punten/sprint"
         en: "%s adjusted points/sprint"
     predictor:
-        nl: Alle veranderinden
+        nl: Alle veranderingen
         en: All adjustments
     measurements:
         unit: [point, sprint]
