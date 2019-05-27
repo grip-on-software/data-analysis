@@ -1404,7 +1404,6 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
         result <- get_prediction_feature(prediction, result)
     }
 
-    predictions <- list()
     if (old || future > 0) {
         project_data <- split(result$data, result$data[, 'project_name'])
         result$data <- data.frame()
@@ -1412,30 +1411,35 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
         for (project in project_data) {
             res <- update_non_recent_features(project, future, limit, join_cols,
                                               result$items, result$colnames)
-            project_name <- project[1, 'project_name']
-            num_sprints <- as.integer(nrow(project) / 3) + 1
-            second_sprints <- (num_sprints - 1) * 2 + 1
-            first <- validate_future(project[1:num_sprints, ], res, num_sprints,
-                                     join_cols, result$colnames,
-                                     project[-1:-num_sprints, ])
-            second <- validate_future(project[num_sprints:second_sprints, ],
-                                      res, num_sprints, join_cols,
-                                      result$colnames,
-                                      project[-1:-second_sprints, ])
-            errors <- mapply(function(one, two) {
-                                 as.list(as.data.frame(rbind(one, two)))
-                             },
-                             first, second, SIMPLIFY=F)
+            if (future > 0) {
+                project_name <- project[1, 'project_name']
+                num_sprints <- as.integer(nrow(project) / 3) + 1
+                second_sprints <- (num_sprints - 1) * 2 + 1
+                first <- validate_future(project[1:num_sprints, ],
+                                         res, num_sprints, join_cols,
+                                         result$colnames,
+                                         project[-1:-num_sprints, ])
+                second <- validate_future(project[num_sprints:second_sprints, ],
+                                          res, num_sprints, join_cols,
+                                          result$colnames,
+                                          project[-1:-second_sprints, ])
+                errors <- mapply(function(one, two) {
+                                     as.list(as.data.frame(rbind(one, two)))
+                                 },
+                                 first, second, SIMPLIFY=F)
 
-            unfinished <- any(res$group[nrow(res$group),
-                                        names(res$prediction_columns)] > 0)
-            more <- ifelse(unfinished, future*2, future)
-            errors <- c(errors, simulate_monte_carlo(res$group, more,
-                                                     result$items, res$columns))
-            errors$date <- get_future_date(res$group, res$last, more)$start_date
+                unfinished <- any(res$group[nrow(res$group),
+                                            names(res$prediction_columns)] > 0)
+                more <- ifelse(unfinished, future*2, future)
+                errors <- c(errors, simulate_monte_carlo(res$group, more,
+                                                         result$items,
+                                                         res$columns))
+                dates <- get_future_date(res$group, res$last, more)
+                errors$date <- dates$start_date
 
-            result$data <- rbind(result$data, res$group)
-            result$errors[[project_name]] <- as.list(errors)
+                result$data <- rbind(result$data, res$group)
+                result$errors[[project_name]] <- as.list(errors)
+            }
         }
     }
 
