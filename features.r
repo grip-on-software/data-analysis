@@ -353,8 +353,10 @@ if (get_arg('--project', default=F)) {
                 meta <- result$projects[result$projects$project_id == team_id, ]
                 result$projects[result$projects$project_id == team_id,
                                 'num_sprints'] <- nrow(old) + nrow(new)
+                future_dates <- result$errors[[project]]$date
+                num_future_sprints <- max(c(nrow(future), length(future_dates)))
                 result$projects[result$projects$project_id == team_id,
-                                'future_sprints'] <- nrow(future)
+                                'future_sprints'] <- num_future_sprints
                 project_id <- meta$project_ids[[1]]
                 team_projects <- meta$project_names[[1]]
                 components <- meta$component[[1]]
