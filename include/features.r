@@ -1437,9 +1437,9 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
                 dates <- get_future_date(res$group, res$last, more)
                 errors$date <- dates$start_date
 
-                result$data <- rbind(result$data, res$group)
                 result$errors[[project_name]] <- as.list(errors)
             }
+            result$data <- rbind(result$data, res$group)
         }
     }
 
