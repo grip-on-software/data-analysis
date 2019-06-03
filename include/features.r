@@ -1097,7 +1097,9 @@ make_future_sprints <- function(group, future, join_cols, colnames,
 
     for (col in names(prediction_columns)) {
         prediction <- prediction_columns[[col]]
-        if (prediction$ref %in% colnames) {
+        if (prediction$ref %in% colnames &&
+            group[dates$close, prediction$ref] > 0
+        ) {
             steps <- seq(1, future) * group[dates$close, prediction$ref]
         }
         else {
@@ -1428,9 +1430,14 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
                                  },
                                  first, second, SIMPLIFY=F)
 
-                unfinished <- any(res$group[nrow(res$group),
-                                            names(res$prediction_columns)] > 0)
-                more <- ifelse(unfinished, future*2, future)
+                predictions <- res$group[nrow(res$group),
+                                         names(res$prediction_columns)]
+                initial <- res$group[res$last,
+                                     unlist(lapply(res$prediction_columns,
+                                                   function(p) { p$column }))]
+                unfinished <- any(predictions != initial & predictions > 0)
+                more <- ifelse(unfinished, future * 2, future)
+
                 errors <- c(errors, simulate_monte_carlo(res$group, more,
                                                          result$items,
                                                          res$columns))
