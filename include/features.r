@@ -1190,7 +1190,7 @@ simulate_monte_carlo <- function(group, future, items, columns,
             res[[column]] <- list()
             for (prediction in item$prediction) {
                 if (!is.null(prediction$monte_carlo)) {
-                    counts <- rep(future, count)
+                    counts <- rep(NA, count)
                     samples <- rep(0, future * count)
                     for (factor in prediction$monte_carlo$factors) {
                         weights <- dgamma(last:1, 1, rate=0.5)
@@ -1206,11 +1206,16 @@ simulate_monte_carlo <- function(group, future, items, columns,
                         end <- group[last, item$column] +
                             cumsum(samples[(future * (i-1) + 1):(future * i)])
                         if (any(end < target, na.rm=T)) {
-                            counts[i] <- which(end < target)[1]
+                            counts[i] <- which(end <= target)[1]
                         }
                     }
-                    P <- ecdf(counts)
-                    cdf <- P(seq(future))
+                    if (all(is.na(counts))) {
+                        cdf <- list()
+                    }
+                    else {
+                        P <- ecdf(counts)
+                        cdf <- P(seq(future))
+                    }
                     res[[column]][[prediction$monte_carlo$name]] <- cdf
                 }
             }
