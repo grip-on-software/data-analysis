@@ -211,7 +211,6 @@ if (get_arg('--project', default=F)) {
     }
     old_features <- unique(c(sprint_meta, default_features, extra_features))
     future_features <- unique(c(sprint_meta, prediction_features, 'future'))
-    cat_features <- list()
 
     core <- get_arg('--core', default=F)
     sprint_days <- get_arg('--days', default=NA)
@@ -244,21 +243,6 @@ if (get_arg('--project', default=F)) {
     extra_features <- extra_features[extra_features %in% result$colnames]
     sprint_meta <- sprint_meta[sprint_meta %in% result$colnames]
 
-    for (cat in names(specifications$categories)) {
-        cat_mask <- sapply(result$items, function(item) {
-            return("category" %in% names(item) && item$category == cat)
-        })
-        if (length(cat_mask) > 0) {
-            for (item in result$items[cat_mask]) {
-                for (column in item$column) {
-                    if (!(column %in% old_features)) {
-                        cat_features[[cat]] <- c(cat_features[[cat]], column)
-                    }
-                }
-            }
-        }
-    }
-    old_features <- c(old_features, unlist(cat_features))
     details_features <- c()
 
     if (!identical(combine, F)) {
@@ -327,15 +311,6 @@ if (get_arg('--project', default=F)) {
                       file=paste(project_dir,
                                    paste(feature, 'json', sep='.'),
                                  sep='/'))
-            }
-            for (cat in names(specifications$categories)) {
-                for (column in cat_features[[cat]]) {
-                    write(toJSON(new[[column]], auto_unbox=T,
-                                 na="null", null="null"),
-                          file=paste(project_dir,
-                                       paste(column, 'json', sep='.'),
-                                     sep='/'))
-                }
             }
 
             # There may be multiple original project IDs for team projects.
@@ -441,8 +416,7 @@ if (get_arg('--project', default=F)) {
             write_metric_targets(metric_targets, project_dir, result$items)
         }
 
-        known_features <- c(default_features, extra_features,
-                            unlist(cat_features))
+        known_features <- c(default_features, extra_features)
         shown_features <- known_features[!(known_features %in% sprint_meta)]
         write_feature_metadata(projects, specifications, output_dir,
                                features=shown_features, items=result$items,

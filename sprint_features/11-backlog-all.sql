@@ -13,9 +13,6 @@ WHERE (${f(join_cols, "sprint", mask=2, alias="alias")} IS NULL
 AND ${s(issue_not_done)}
 AND ${s(issue_backlog)}
 AND ${t("issue")}.updated <= ${s(sprint_open, sprint="interval_sprint")}
-AND (
-	newer_issue.updated IS NULL OR
-	newer_issue.updated > ${s(sprint_open, sprint="interval_sprint")}
-)
+AND COALESCE(newer_issue.updated, ${current_timestamp}) >= ${s(sprint_open, sprint="interval_sprint")}
 ${s(project_condition, project="issue")}
 ${g(join_cols, "sprint", f("issue_key"), sprint="interval_sprint")}
