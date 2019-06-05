@@ -1440,8 +1440,9 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
                 initial <- res$group[res$last,
                                      unlist(lapply(res$prediction_columns,
                                                    function(p) { p$column }))]
-                unfinished <- any(predictions != initial & predictions > 0)
-                more <- ifelse(unfinished, future * 2, future)
+                more <- ifelse(length(predictions) > 0 && length(initial) > 0 &&
+                               any(predictions != initial & predictions > 0),
+                               future * 2, future)
 
                 errors <- c(errors, simulate_monte_carlo(res$group, more,
                                                          result$items,
