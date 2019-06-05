@@ -44,6 +44,11 @@ sum_of_na_avg <- function(data, reference=NULL, na.rm=F) {
     return(sub / length(which(!is.na(reference))) * length(which(is.na(data))))
 }
 
+mode <- function(data, na.rm=F) {
+    unique_data <- unique(data[!is.na(data)])
+    return(unique_data[which.max(tabulate(match(data, unique_data)))])
+}
+
 end <- function(data, na.rm=F) {
     return(tail(data[!na.rm | !is.na(data)], n=1))
 }
