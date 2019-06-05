@@ -1257,29 +1257,32 @@ files:
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
     category: velocity
-  - expression: "done_story_points / num_done_stories"
-    column: done_points_per_story
+  - expression: "pmax(0, rowSums(embed(done_story_points / num_done_stories, 3)) / 3)"
+    column: done_points_per_story_three_average
+    window:
+        dimension: 3
+        group: project_id
     default: 0
     combine: mean
     values:
         type: fraction
         denominator: 10
     descriptions:
-        nl: Punten per afgemaakte story
-        en: Points per done story
+        nl: Punten per afgemaakte story over drie sprints
+        en: Points per done story over three sprints
     long_descriptions:
-        nl: Het aantal storypoints per story dat in de sprint wordt gerealiseerd
-        en: The number of story points per story that are realized during the sprint
+        nl: Het aantal storypoints per story gemiddeld wordt gerealiseerd over de afgelopen drie sprints
+        en: The number of story points per story that are realized on average over the previous three sprints
     units:
-        nl: "%s storypoints per story"
-        en: "%s story points per story"
+        nl: "%s storypoints per story over 3 sprints"
+        en: "%s story points per story over 3 sprints"
     short_units:
         nl: "%s punten/story"
         en: "%s points/story"
     measurement:
-        unit: [point, item]
+        unit: [point, [item, sprint]]
         dividend: done_story_points
-        divisor: num_done_stories
+        divisor: [num_done_stories]
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
     preferred: false
@@ -2153,13 +2156,13 @@ files:
             name: velocity_three
             factors:
                 - column: num_done_stories
-                  multiplier: done_points_per_story
+                  multiplier: done_points_per_story_three_average
                   scalar: -1
         - monte_carlo:
             name: backlog_all_velocity_three
             factors:
                 - column: num_done_stories
-                  multiplier: backlog_story_points_three_average
+                  multiplier: done_points_per_story_three_average
                   scalar: -1
                 - column: backlog_removed_stories
                   multiplier: backlog_story_points_three_average

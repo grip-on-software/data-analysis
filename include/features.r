@@ -1179,11 +1179,13 @@ validate_future <- function(project, res, future, join_cols, colnames, error) {
     return(error_columns)
 }
 
-simulate_monte_carlo <- function(group, future, items, columns,
+simulate_monte_carlo <- function(group, future, items, columns, last=NA,
                                  name='density', target=0, count=10000) {
     # Calculate the cumulative density at each sprint
     res <- list()
-    last <- length(which(!group$future))
+    if (is.na(last)) {
+        last <- length(which(!group$future))
+    }
     for (item in items) {
         if (!is.null(item$prediction)) {
             column <- paste(item$column, name, sep='_')
@@ -1199,7 +1201,7 @@ simulate_monte_carlo <- function(group, future, items, columns,
                                              factor$multiplier]
                         samples <- samples +
                             factor$scalar * multipliers[length(multipliers)] *
-                            sample(group[!group$future, factor$column],
+                            sample(group[1:last, factor$column],
                                    future * count, replace=T, prob=weights)
                     }
                     for (i in 1:count) {
@@ -1444,10 +1446,11 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
                                any(predictions != initial & predictions > 0),
                                future * 2, future)
 
+                dates <- get_future_date(res$group, res$last, more)
                 errors <- c(errors, simulate_monte_carlo(res$group, more,
                                                          result$items,
-                                                         res$columns))
-                dates <- get_future_date(res$group, res$last, more)
+                                                         res$columns,
+                                                         dates$close))
                 errors$date <- dates$start_date
 
                 result$errors[[project_name]] <- as.list(errors)
