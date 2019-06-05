@@ -23,6 +23,9 @@ if (!exists('INC_ARGS_R')) {
             return(args[arg + 1])
         }
         else {
+            if (isTRUE(default)) {
+                return(!get_arg(sub("^--", "--no-", name), default=F))
+            }
             return(default)
         }
     }

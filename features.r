@@ -154,6 +154,7 @@ if (get_arg('--project', default=F)) {
     futures <- get_arg('--future', default=0)
     closed <- get_arg('--closed', default=F)
     combine <- get_arg('--combine', default='')
+    details <- get_arg('--details', default=T)
     if (combine == '') {
         combine <- F
     }
@@ -230,7 +231,7 @@ if (get_arg('--project', default=F)) {
                                          project_meta=metadata,
                                          old=with_old,
                                          future=futures,
-                                         details=split,
+                                         details=split && details,
                                          combine=combine,
                                          teams=teams,
                                          project_names=projects,
@@ -243,7 +244,7 @@ if (get_arg('--project', default=F)) {
     extra_features <- extra_features[extra_features %in% result$colnames]
     sprint_meta <- sprint_meta[sprint_meta %in% result$colnames]
 
-    details_features <- c()
+    details_features <- list()
 
     if (!identical(combine, F)) {
         project_column <- "team_id"
@@ -359,25 +360,27 @@ if (get_arg('--project', default=F)) {
             }
             sprint <- c(sprint, list(quality_name=quality_name))
 
-            new_details <- lapply(result$details, map_details,
-                                  team_ids, unlist(new[[sprint_column]]),
-                                  component, result$join_cols)
-            old_details <- lapply(result$details, map_details,
-                                  team_ids, unlist(old[[sprint_column]]),
-                                  component, result$join_cols)
-            details_features <- c(details_features, names(new_details))
-            default_details <- default[default %in% names(new_details)]
-            write(toJSON(new_details[default_details]),
-                  file=paste(project_dir, "details.json", sep="/"))
-            write(toJSON(old_details[default_details]),
-                  file=paste(project_dir, "details.old.json", sep="/"))
-            for (detail in names(new_details)) {
-                if (!(detail %in% default_details)) {
-                    write(toJSON(c(old_details[[detail]],
-                                   new_details[[detail]])),
-                          file=paste(project_dir,
-                                     paste("details", detail, "json", sep="."),
-                                     sep="/"))
+            if (details) {
+                new_details <- lapply(result$details, map_details,
+                                      team_ids, unlist(new[[sprint_column]]),
+                                      component, result$join_cols)
+                old_details <- lapply(result$details, map_details,
+                                      team_ids, unlist(old[[sprint_column]]),
+                                      component, result$join_cols)
+                details_features <- c(details_features, names(new_details))
+                default_details <- default[default %in% names(new_details)]
+                write(toJSON(new_details[default_details]),
+                      file=paste(project_dir, "details.json", sep="/"))
+                write(toJSON(old_details[default_details]),
+                      file=paste(project_dir, "details.old.json", sep="/"))
+                for (detail in names(new_details)) {
+                    if (!(detail %in% default_details)) {
+                        write(toJSON(c(old_details[[detail]],
+                                       new_details[[detail]])),
+                              file=paste(project_dir, paste("details", detail,
+                                                            "json", sep="."),
+                                         sep="/"))
+                    }
                 }
             }
 
