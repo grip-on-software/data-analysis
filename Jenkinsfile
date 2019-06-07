@@ -5,6 +5,8 @@ pipeline {
         AGENT_TAG = env.BRANCH_NAME.replaceFirst('^master$', 'latest')
         AGENT_NAME = "${env.DOCKER_REGISTRY}/gros-data-analysis-dashboard"
         AGENT_IMAGE = "${env.AGENT_NAME}:${env.AGENT_TAG}"
+        REPO_NAME = "${env.DOCKER_REPOSITORY}/gros-data-analysis-dashboard"
+        REPO_IMAGE = "${env.REPO_NAME}:${env.AGENT_TAG}"
         GITLAB_TOKEN = credentials('data-analysis-gitlab-token')
     }
 
@@ -49,6 +51,7 @@ pipeline {
             when { branch 'master' }
             steps {
                 sh 'docker push $AGENT_IMAGE'
+                sh 'docker push $REPO_IMAGE'
             }
         }
     }
