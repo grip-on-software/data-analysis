@@ -1434,7 +1434,7 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
         for (project in project_data) {
             res <- update_non_recent_features(project, future, limit, join_cols,
                                               result$items, result$colnames)
-            if (future > 0) {
+            if (future > 0 && nrow(res$group) > 1) {
                 project_name <- project[1, 'project_name']
                 num_sprints <- as.integer(nrow(project) / 3) + 1
                 second_sprints <- (num_sprints - 1) * 2 + 1
