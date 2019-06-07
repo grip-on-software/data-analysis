@@ -1291,21 +1291,30 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
         components <- NULL
     }
     if (!is.null(components)) {
-        jira_join <- 'LEFT JOIN gros.issue_component
-                      ON ${t("issue")}.issue_id = issue_component.issue_id
-                      AND issue_component.end_date IS NULL
-                      ${s(component_join, project="issue")}
-                      AND issue_component.component_id = component.component_id'
-        component_join <- 'LEFT JOIN gros.component
-                           ON ${t("project")}.project_id = component.project_id
-                           AND component.name IN (${components})'
+        if (config$db$primary_source == "jira_component_version") {
+            jira_join <- 'LEFT JOIN gros.fixversion
+                          ON ${t("issue")}.fixversion = fixversion.id
+                          AND fixversion.name IN (${components})'
+        }
+        else {
+            jira_join <- 'LEFT JOIN gros.${t("issue_component")}
+                          ON ${j("issue_id", "issue", "issue_component")}
+                          AND ${t("issue_component")}.end_date IS NULL
+                          ${s(component_join, project="issue")} AND
+                          ${j("component_id", "issue_component", "component")}'
+        }
+        component_join <- 'LEFT JOIN gros.${t("component")}
+                           ON ${j(join_cols, "project", "component", mask=1)}
+                           AND ${t("component")}.name IN (${components})'
 
         component_names <- get_component_names(components, "jira")
 
         variables$issue_join <- jira_join
         variables$component_join <- component_join
-        variables$join_cols$jira <- list(component="component.name")
-        variables$join_cols$jira_version <- list(component="component.name")
+        component <- get_primary_tables()$component
+        component_join_cols <- list(component=paste(component, 'name', sep="."))
+        variables$join_cols$jira <- component_join_cols
+        variables$join_cols[[config$db$primary_source]] <- component_join_cols
         variables$components <- paste(dbQuoteString(conn, component_names),
                                       collapse=", ")
         colnames <- c(colnames, "component")

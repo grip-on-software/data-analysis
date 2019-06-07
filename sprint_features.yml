@@ -583,9 +583,7 @@ files:
     table: expected_story_points
     column: num_story_points
     patterns:
-        story_point_types:
-            jira: ${t("issue")}.type NOT IN (1,12)
-            tfs: ${t("issue")}.type <> 'Bug' 
+        story_point_types: NOT (${s(issue_bug)})
     default: 0
     summarize:
         operation: sum
@@ -614,9 +612,7 @@ files:
     table: done_story_points
     column: done_story_points
     patterns:
-        story_point_types:
-            jira: ${t("issue")}.type NOT IN (1,12)
-            tfs: ${t("issue")}.type <> 'Bug'
+        story_point_types: NOT (${s(issue_bug)})
     default: 0
     summarize:
         operation: sum
@@ -648,9 +644,7 @@ files:
     table: expected_bug_points
     column: planned_bug_points
     patterns:
-        story_point_types:
-            jira: ${t("issue")}.type IN (1,12)
-            tfs: ${t("issue")}.type = 'Bug'
+        story_point_types: ${s(issue_bug)}
     default: 0
     summarize:
         operation: sum
@@ -678,9 +672,7 @@ files:
     table: done_bug_points
     column: done_bug_points
     patterns:
-        story_point_types:
-            jira: ${t("issue")}.type IN (1,12)
-            tfs: ${t("issue")}.type = 'Bug'
+        story_point_types: ${s(issue_bug)}
     default: 0
     summarize:
         operation: sum
@@ -1055,9 +1047,7 @@ files:
     table: removed_story_points
     column: num_removed_points
     patterns:
-        issue_removed:
-            jira: new_issue.status IN (5,6) AND new_issue.resolution IN (2,3,4,5,7,17,18,19,20)
-            tfs: new_issue.status = 'Removed'
+        issue_removed: ${s(issue_excluded, issue="new_issue")}
     default: 0
     summarize:
         operation: sum
@@ -1722,6 +1712,7 @@ files:
     patterns:
         issue_backlog:
             jira: ${t("issue")}."type" NOT IN (5, 6, 9, 10, 12, 20, 22, 10301)
+            jira_component_version: ${t("issue")}."type" NOT IN (5, 6)
             tfs: ${t("issue")}."type" NOT IN ('Task', 'Test Case', 'Test Suite', 'Test Plan', 'Use Case')
     summarize:
         operation: count

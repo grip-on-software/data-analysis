@@ -37,6 +37,29 @@ if (!exists('INC_DATABASE_R')) {
                       names(fields), fields))
     }
 
+    get_primary_tables <- function() {
+        sources <- list(jira=list(issue="issue",
+                                  sprint="sprint",
+                                  project="project",
+                                  component="component",
+                                  developer="developer"),
+                        jira_component_version=list(issue="issue",
+                                                    sprint="sprint",
+                                                    project="project",
+                                                    component="fixversion",
+                                                    developer="developer"),
+                        jira_version=list(issue="issue",
+                                          sprint="fixversion",
+                                          project="project",
+                                          component="component",
+                                          developer="developer"),
+                        tfs=list(issue="tfs_work_item",
+                                 sprint="tfs_sprint",
+                                 project="tfs_team",
+                                 developer="tfs_developer"))
+        return(sources[[config$db$primary_source]])
+    }
+
     load_definitions <- function(definition_file, variables=NULL,
                                  current_time=Sys.time()) {
         definitions <- yaml.load_file(definition_file)
@@ -45,19 +68,7 @@ if (!exists('INC_DATABASE_R')) {
                            default=variables[[name]])
             variables[[name]] <- arg
         }
-        sources <- list(jira=list(issue="issue",
-                                  sprint="sprint",
-                                  project="project",
-                                  developer="developer"),
-                        jira_version=list(issue="issue",
-                                          sprint="fixversion",
-                                          project="project",
-                                          developer="developer"),
-                        tfs=list(issue="tfs_work_item",
-                                 sprint="tfs_sprint",
-                                 project="tfs_team",
-                                 developer="tfs_developer"))
-        primary_tables <- sources[[config$db$primary_source]]
+        primary_tables <- get_primary_tables()
         variables <- c(variables, primary_tables)
 
         has_aliasing <- function(alias, table) {
@@ -206,12 +217,12 @@ if (!exists('INC_DATABASE_R')) {
                 left_fields <- fields
                 right_fields <- fields
             }
-            left_table <- var_str_interp(left, ...)
-            right_table <- var_str_interp(right, ...)
+            vars <- c(..., as.list(parent.frame()), variables)
+            left_table <- var_str_interp(left, vars)
+            right_table <- var_str_interp(right, vars)
             left_fields[left_fields == left_table] <- "id"
             right_fields[right_fields == right_table] <- "id"
 
-            vars <- c(..., as.list(parent.frame()), variables)
             left <- left_fields %in% names(vars)
             if (var && any(left) && is.list(vars[[left_fields[left]]])) {
                 left_fields[left] <- vars[[left_fields[left]]][[left_table]]
