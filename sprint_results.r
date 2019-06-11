@@ -241,7 +241,7 @@ for (idx in 1:length(results$projects)) {
 write_projects_metadata(conn, fields, metadata, projects=NA,
                         project_ids=project_ids,
                         output_directory=output_directory,
-                        patterns=patterns)
+                        patterns=patterns, join_cols=join_cols)
 write_feature_metadata(unique(projects), specifications, output_directory)
 write(toJSON(results$configuration, auto_unbox=T),
       file=paste(output_directory, "configuration.json", sep="/"))

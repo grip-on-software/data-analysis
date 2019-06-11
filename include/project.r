@@ -28,6 +28,9 @@ if (!exists('INC_PROJECT_R')) {
         if (is.null(names(fields))) {
             names(fields) <- fields
         }
+        if (is.null(join_cols)) {
+            join_cols <- c('project_id', 'sprint_id')
+        }
         if (is.null(patterns)) {
             patterns <- load_definitions('sprint_definitions.yml',
                                          list(join_cols=join_cols))
@@ -50,9 +53,6 @@ if (!exists('INC_PROJECT_R')) {
             groups <- c(groups, '${f("project_main")}')
         }
 
-        if (is.null(join_cols)) {
-            join_cols <- c('project_id', 'sprint_id')
-        }
         if (is.null(by)) {
             by <- join_cols[1]
         }
@@ -224,7 +224,7 @@ if (!exists('INC_PROJECT_R')) {
         else {
             project_col <- join_cols[1]
         }
-        if (project_ids != '0') {
+        if (project_ids != '0' && nrow(projects) > 0) {
             projects$name <- paste('Proj', projects[[project_col]], sep='')
             projects$quality_display_name <- NULL
             projects <- projects[order(projects[[project_col]]), ]
