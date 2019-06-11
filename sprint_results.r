@@ -212,7 +212,7 @@ for (idx in 1:length(results$projects)) {
     if (all(sprint_id <= sprint_ids)) {
         write(data, file=paste(path, "latest.json", sep="/"))
         project_sprints <- get_project(project_id)
-        project_sprints$sprint_num <- row(sprints)[, 1]
+        project_sprints$sprint_num <- row(project_sprints)[, 1]
         write(toJSON(project_sprints[project_sprints$sprint_id %in% sprint_ids,
                                      c('name', 'sprint_num', 'sprint_id')]),
               file=paste(path, "sprints.json", sep="/"))
