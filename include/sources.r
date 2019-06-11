@@ -94,17 +94,30 @@ get_source_pattern <- function(item, project_urls) {
     return(NA)
 }
 
-get_jira_filters <- function(filters) {
+query_names <- list(jira=list(project='project',
+                              sprint='sprint',
+                              component='component'),
+                    jira_version=list(project='project',
+                                      sprint='fixversion',
+                                      component='component'),
+                    jira_component_version=list(project='project',
+                                                sprint='sprint',
+                                                component='fixversion'))
+
+get_jira_filters <- function(filters, config) {
     query <- c()
+
     if (!is.null(filters$include)) {
-        query <- c(query, paste('component in (',
-                                paste(filters$include, collapse=','), ')',
-                                sep=''))
+        query <- c(query,
+                   paste(query_names[[config$db$primary_source]]$component,
+                         ' in (', paste(filters$include, collapse=','), ')',
+                         sep=''))
     }
     if (!is.null(filters$exclude)) {
-        query <- c(query, paste('component not in (',
-                                paste(filters$exclude, collapse=','), ')',
-                                sep=''))
+        query <- c(query,
+                   paste(query_names[[config$db$primary_source]]$component,
+                         ' not in (', paste(filters$exclude, collapse=','), ')',
+                         sep=''))
     }
     return(query)
 }
@@ -122,23 +135,20 @@ build_source_urls <- function(project_id, project_name, items=list(),
         project_urls <- get_source_urls(conn, project_id)
     }
 
+    project <- query_names[[config$db$primary_source]]$project
+    sprint <- query_names[[config$db$primary_source]]$sprint
+
     jira_keys <- paste(team_projects, collapse=',')
-    jira_project <- paste('project in (', jira_keys, ')', sep='')
+    jira_project <- paste(project, ' in (', jira_keys, ')', sep='')
     if (!is.na(component)) {
         for (filters in components) {
             if (filters$name == component) {
                 jira_project <- paste(c(jira_project,
-                                        get_jira_filters(filters$jira)),
+                                        get_jira_filters(filters$jira, config)),
                                       collapse=' and ')
                 break
             }
         }
-    }
-    if (config$db$primary_source == "jira_version") {
-        sprint <- 'fixversion'
-    }
-    else {
-        sprint <- 'sprint'
     }
 
     project_patterns <- c(list(jira_key=ifelse(length(team_projects) > 0,
@@ -173,6 +183,7 @@ build_project_source_urls <- function(conn, project_id, project_name, patterns,
     metric_options_url <- paste("${metric_options_url}", "blob/master",
                                 "${metric_options_file}", sep="/")
     quality_url <- "${quality_url}/${quality_name}"
+    config <- get_config()
     if (!identical(components, F) && length(components) > 0) {
         if (isTRUE(components)) {
             components <- list(include=project_name)
@@ -182,7 +193,7 @@ build_project_source_urls <- function(conn, project_id, project_name, patterns,
         }
         jira_url <- paste("${jira_url}/secure/IssueNavigator.jspa?jqlQuery=",
                           paste(c("project = ${project_name}",
-                                  get_jira_filters(components)),
+                                  get_jira_filters(components, config)),
                                 collapse=' and '),
                           "&runQuery=true", sep="")
     }
@@ -193,7 +204,6 @@ build_project_source_urls <- function(conn, project_id, project_name, patterns,
     else {
         jira_url <- "${jira_url}/browse/${project_name}"
     }
-    config <- get_config()
     default_urls <- config$fields[endsWith(names(config$fields), '_url')]
     source_types <- names(yaml.load_file('source_types.yml'))
     types <- unique(c(names(default_urls), url_names(source_types)))
