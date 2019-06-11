@@ -442,7 +442,7 @@ if (get_arg('--project', default=F)) {
         write(toJSON(list(default=default_features,
                           all=known_features,
                           future=future_features,
-                          details=unique(details_features),
+                          details=unlist(unique(details_features)),
                           metrics=metrics,
                           meta=sprint_meta)),
               file=paste(output_dir, "features.json", sep="/"))
