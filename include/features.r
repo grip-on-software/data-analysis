@@ -1291,10 +1291,16 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
         components <- NULL
     }
     if (!is.null(components)) {
+        component_join <- 'LEFT JOIN gros.${t("component")}
+                           ON ${j(join_cols, "project", "component", mask=1)}
+                           AND ${t("component")}.name IN (${components})'
         if (config$db$primary_source == "jira_component_version") {
             jira_join <- 'LEFT JOIN gros.fixversion
                           ON ${t("issue")}.fixversion = fixversion.id
                           AND fixversion.name IN (${components})'
+            component_join <- paste(component_join,
+                                    'AND ${t("component")}.start_date <=
+                                     CAST(${t("sprint")}.start_date AS DATE)')
         }
         else {
             jira_join <- 'LEFT JOIN gros.${t("issue_component")}
@@ -1303,9 +1309,6 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
                           ${s(component_join, project="issue")} AND
                           ${j("component_id", "issue_component", "component")}'
         }
-        component_join <- 'LEFT JOIN gros.${t("component")}
-                           ON ${j(join_cols, "project", "component", mask=1)}
-                           AND ${t("component")}.name IN (${components})'
 
         component_names <- get_component_names(components, "jira")
 
