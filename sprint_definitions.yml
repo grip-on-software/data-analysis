@@ -160,6 +160,16 @@ conditions:
             table: tfs_team
             column: [name]
             condition: 'true'
+    issue_open:
+        description: "Issues that are not yet determined to have no work left"
+        jira:
+            table: issue
+            column: [status]
+            condition: ${t("issue")}.status NOT IN (5,6,10008)
+        tfs:
+            table: tfs_work_item
+            column: [status]
+            condition: ${t("issue")}.status NOT IN ('Closed', 'Done', 'done', 'Removed', 'Completed')
     issue_in_progress:
         description: "Issues that are in progress"
         jira:
