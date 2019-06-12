@@ -1308,6 +1308,7 @@ files:
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
     category: velocity
+    preferred: true
   - expression: "rowSums(embed(done_story_points, 7)) / 7"
     column: velocity_seven
     window:

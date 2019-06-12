@@ -193,9 +193,10 @@ if (get_arg('--project', default=F)) {
                          'start_date', 'close_date')
     }
     else {
-        sprint_meta <- c('sprint_name', 'sprint_num', 'start_date', '')
+        sprint_meta <- c('sprint_name', 'sprint_num', 'start_date')
     }
 
+    future_features <- unique(c(sprint_meta, prediction_features, 'future'))
     if (!closed) {
         sprint_meta <- c(sprint_meta, 'sprint_is_closed', 'sprint_is_complete')
     }
@@ -211,7 +212,6 @@ if (get_arg('--project', default=F)) {
         extra_features <- c(extra_features, 'prediction')
     }
     old_features <- unique(c(sprint_meta, default_features, extra_features))
-    future_features <- unique(c(sprint_meta, prediction_features, 'future'))
 
     core <- get_arg('--core', default=F)
     sprint_days <- get_arg('--days', default=NA)
@@ -439,9 +439,9 @@ if (get_arg('--project', default=F)) {
         if (is.null(metrics)) {
             metrics <- list()
         }
-        write(toJSON(list(default=default_features,
+        write(toJSON(list(default=setdiff(default_features, sprint_meta),
                           all=known_features,
-                          future=future_features,
+                          future=setdiff(future_features, sprint_meta),
                           details=unlist(unique(details_features)),
                           metrics=metrics,
                           meta=sprint_meta)),
