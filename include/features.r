@@ -488,8 +488,7 @@ update_combine_interval <- function(items, old_data, data, row_num, details,
                                                               detail[[d]][[1]]
                                                           })))
                 }
-                key <- ifelse(is.null(item$summarize$key), "key",
-                              item$summarize$key)
+                key <- item$summarize$key
                 if (key %in% colnames(current)) {
                     duplicates <- duplicated(current[[key]][[1]])
                     for (d in item$summarize$details) {
@@ -498,12 +497,11 @@ update_combine_interval <- function(items, old_data, data, row_num, details,
                 }
                 details[[item$column[1]]][[detail_name]] <- current
 
-                if (item$summarize$field %in% colnames(current) &&
-                    is.null(item$summarize$reference) &&
-                    item$column[1] %in% result$columns && !isTRUE(item$carry) &&
+                if (!isTRUE(item$carry) && is.na(item$summarize$reference[1]) &&
+                    item$summarize$field %in% colnames(current) &&
+                    item$column[1] %in% result$columns &&
                     length(current[[item$summarize$field]][[1]]) > 1) {
-                    with_missing <- ifelse(is.null(item$summarize$with_missing),
-                                           F, item$summarize$with_missing)
+                    with_missing <- item$summarize$with_missing[1]
                     summarized <- do.call(item$summarize$operation[1],
                                           c(current[[item$summarize$field]],
                                             list(na.rm=!with_missing)))
@@ -671,15 +669,8 @@ get_features <- function(conn, features, exclude, items, data, colnames,
                     }
                 }
                 groups <- split(result, as.list(group_cols), drop=T)
-                operation <- summarize$operation
-                with_missing <- ifelse(is.null(summarize$with_missing),
-                                       rep(F, length(operation)),
-                                       summarize$with_missing)
-                reference_column <- ifelse(is.null(summarize$reference),
-                                           rep(NA, length(operation)),
-                                           summarize$reference)
-                if (length(columns) == 1 && length(operation) > 1) {
-                    columns <- paste(columns, operation, sep="_")
+                if (length(columns) == 1 && length(summarize$operation) > 1) {
+                    columns <- paste(columns, summarize$operation, sep="_")
                 }
                 if (nrow(result) == 0) {
                     result <- result[, group_names]
@@ -687,54 +678,15 @@ get_features <- function(conn, features, exclude, items, data, colnames,
                 }
                 else {
                     result <- do.call("rbind", lapply(groups, function(group) {
-                        group_result <- data.frame(group[1, group_names])
-                        n <- group_names[group_names != "original_component"]
-                        summarizer <- function(operation, field, reference,
-                                               with_missing) {
-                            args <- list(group[, field])
-                            if (!is.na(reference) && is.list(details) &&
-                                !is.null(details[[reference]])) {
-                                name <- paste(group_result[n], collapse=".")
-                                args <- c(args,
-                                          details[[reference]][[name]][[field]])
-                            }
-                            else if (!is.na(reference) &&
-                                     isTRUE(summarize$expression)) {
-                                # Find the current sprint data and use it
-                                f <- mapply(function(value, name) {
-                                                if (is.na(value)) {
-                                                    return(is.na(data[[name]]))
-                                                }
-                                                return(data[[name]] == value)
-                                            },
-                                            group_result[, n], n)
-                                r <- rowSums(f, na.rm=T)
-                                ref <- data[r == length(n), reference]
-                                args <- c(args, list(reference=ref))
-                            }
-                            do.call(operation, c(args,
-                                                 list(na.rm=!with_missing)))
-                        }
-                        group_result[, columns] <- mapply(summarizer, operation,
-                                                          summarize$field,
-                                                          reference_column,
-                                                          with_missing)
-                        return(group_result)
+                        return(get_summarize_group(group, group_names,
+                                                   data, columns, summarize))
                     }))
                 }
 
                 if (is.list(details)) {
-                    if (!is.null(summarize$filter)) {
-                        filter <- parse(text=summarize$filter)
-                    }
-                    else {
-                        filter <- NULL
-                    }
-
+                    filter <- parse(text=summarize$filter)
                     detailer <- function(group) {
-                        if (!is.null(filter)) {
-                            group <- group[eval(filter, group), ]
-                        }
+                        group <- group[eval(filter, group), ]
                         group_details <- data.frame(group[1, group_names])
                         if (length(summarize$details) == 1) {
                             details <- list(list(group[, summarize$details]))
@@ -782,6 +734,37 @@ get_features <- function(conn, features, exclude, items, data, colnames,
     }
     list(data=data, details=details, colnames=unique(colnames),
          join_cols=join_cols, items=selected_items, expressions=expressions)
+}
+
+get_summarize_group <- function(group, group_names, data, columns, summarize) {
+    group_result <- data.frame(group[1, group_names])
+    n <- group_names[group_names != "original_component"]
+    summarizer <- function(operation, field, reference, with_missing) {
+        args <- list(group[, field])
+        if (!is.na(reference) && is.list(details) &&
+            !is.null(details[[reference]])) {
+            name <- paste(group_result[n], collapse=".")
+            args <- c(args, details[[reference]][[name]][[field]])
+        }
+        else if (!is.na(reference) && isTRUE(summarize$expression)) {
+            # Find the current sprint data and use it
+            f <- mapply(function(value, name) {
+                            if (is.na(value)) {
+                                return(is.na(data[[name]]))
+                            }
+                            return(data[[name]] == value)
+                        },
+                        group_result[, n], n)
+            r <- rowSums(f, na.rm=T)
+            ref <- data[r == length(n), reference]
+            args <- c(args, list(reference=ref))
+        }
+        do.call(operation, c(args, list(na.rm=!with_missing)))
+    }
+    group_result[, columns] <- mapply(summarizer, summarize$operation,
+                                      summarize$field, summarize$reference,
+                                      summarize$with_missing)
+    return(group_result)
 }
 
 get_expressions <- function(items, data, expressions, join_cols,
@@ -971,7 +954,7 @@ get_components <- function(data, result, components, source_type, field,
                 result[conditions, "component"] <- component$name
             }
             if (isTRUE(component$remove) && !is.null(summarize)) {
-                key <- ifelse(!is.null(summarize$key), summarize$key, "key")
+                key <- summarize$key
                 remove <- project_condition & !conditions &
                     result[[key]] %in% result[conditions, key]
                 loginfo('Removing %d from other components than %s',

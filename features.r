@@ -33,8 +33,7 @@ project_metadata <- get_arg('--project-metadata', default='recent,core,main')
 metadata <- get_meta_keys(project_metadata)
 fields <- list('project_id', 'name', 'quality_display_name')
 
-map_details <- function(details, project_ids, sprint_ids, component,
-                        join_cols) {
+map_details <- function(details, project_ids, component, join_cols) {
     project_col <- join_cols[1]
     sprint_col <- join_cols[2]
     project <- Filter(function(detail) {
@@ -51,8 +50,7 @@ map_details <- function(details, project_ids, sprint_ids, component,
                               cond <- "component" %in% colnames(detail) &
                                   detail$component == component
                           }
-                          return(detail[[project_col]] %in% project_ids &
-                                 detail[[sprint_col]] %in% sprint_ids & cond)
+                          return(detail[[project_col]] %in% project_ids & cond)
                       },
                       details)
     feature_details <- Map(function(detail) {
@@ -71,6 +69,10 @@ map_details <- function(details, project_ids, sprint_ids, component,
                                       project)
     }
     return(feature_details[!duplicated(names(feature_details))])
+}
+
+filter_sprint_details <- function(feature_details, sprint_ids) {
+    return(feature_details[names(feature_details) %in% sprint_ids])
 }
 
 if (get_arg('--project', default=F)) {
@@ -361,22 +363,26 @@ if (get_arg('--project', default=F)) {
             sprint <- c(sprint, list(quality_name=quality_name))
 
             if (details) {
-                new_details <- lapply(result$details, map_details,
-                                      team_ids, unlist(new[[sprint_column]]),
-                                      component, result$join_cols)
-                old_details <- lapply(result$details, map_details,
-                                      team_ids, unlist(old[[sprint_column]]),
-                                      component, result$join_cols)
-                details_features <- c(details_features, names(new_details))
-                default_details <- default[default %in% names(new_details)]
-                write(toJSON(new_details[default_details]),
+                all_details <- lapply(result$details, map_details,
+                                      team_ids, component, result$join_cols)
+
+                details_features <- c(details_features, names(all_details))
+                default_details <- default[default %in% names(all_details)]
+
+                new_sprint_ids <- unlist(new[[sprint_column]])
+                old_sprint_ids <- unlist(old[[sprint_column]])
+                new_details <- lapply(all_details[default_details],
+                                      filter_sprint_details, new_sprint_ids)
+                old_details <- lapply(all_details[default_details],
+                                      filter_sprint_details, old_sprint_ids)
+
+                write(toJSON(new_details),
                       file=paste(project_dir, "details.json", sep="/"))
-                write(toJSON(old_details[default_details]),
+                write(toJSON(old_details),
                       file=paste(project_dir, "details.old.json", sep="/"))
-                for (detail in names(new_details)) {
+                for (detail in names(all_details)) {
                     if (!(detail %in% default_details)) {
-                        write(toJSON(c(old_details[[detail]],
-                                       new_details[[detail]])),
+                        write(toJSON(all_details[[detail]]),
                               file=paste(project_dir, paste("details", detail,
                                                             "json", sep="."),
                                          sep="/"))

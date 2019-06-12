@@ -363,6 +363,13 @@ if (!exists('INC_DATABASE_R')) {
             }
             item$query <- str_interp(item$query, item$patterns)
         }
+        if (!is.null(item$summarize)) {
+            def <- list(with_missing=rep(F, length(item$summarize$operation)),
+                        reference=rep(NA, length(item$summarize$operation)),
+                        filter='TRUE',
+                        key='key')
+            item$summarize <- modifyList(def, item$summarize)
+        }
         return(item)
     }
 
