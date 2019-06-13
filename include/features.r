@@ -678,8 +678,8 @@ get_features <- function(conn, features, exclude, items, data, colnames,
                 }
                 else {
                     result <- do.call("rbind", lapply(groups, function(group) {
-                        return(get_summarize_group(group, group_names,
-                                                   data, columns, summarize))
+                        return(get_summarize_group(group, group_names, data,
+                                                   columns, details, summarize))
                     }))
                 }
 
@@ -736,7 +736,8 @@ get_features <- function(conn, features, exclude, items, data, colnames,
          join_cols=join_cols, items=selected_items, expressions=expressions)
 }
 
-get_summarize_group <- function(group, group_names, data, columns, summarize) {
+get_summarize_group <- function(group, group_names, data, columns, details,
+                                summarize) {
     group_result <- data.frame(group[1, group_names])
     n <- group_names[group_names != "original_component"]
     summarizer <- function(operation, field, reference, with_missing) {
