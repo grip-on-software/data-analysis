@@ -1397,7 +1397,7 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
 
     result$projects <- projects
     if (prediction$data != '' && !identical(prediction$combine, F)) {
-        result <- get_prediction_feature(prediction, result)
+        result <- get_prediction_feature(prediction, result, join_cols)
     }
     if (!identical(combine, F)) {
         result <- get_combined_features(result$items, result$data,
@@ -1411,7 +1411,7 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
                                    join_cols, components)
     result$colnames <- c(result$colnames, expressions)
     if (prediction$data != '' && identical(prediction$combine, F)) {
-        result <- get_prediction_feature(prediction, result)
+        result <- get_prediction_feature(prediction, result, join_cols)
     }
 
     if (old || future > 0) {
@@ -1499,19 +1499,19 @@ wrap_feature <- function(item, operations, result, filter=T) {
     return(result)
 }
 
-get_prediction_feature <- function(prediction, result) {
+get_prediction_feature <- function(prediction, result, join_cols) {
     loginfo('Collecting predictions from %s', prediction$data)
     data <- fromJSON(url(prediction$data))
     predictions <- do.call("rbind",
                            mapply(function(labels, projects, sprints) {
-                                      data.frame(project_id=projects,
-                                                 sprint_num=sprints,
-                                                 prediction=labels)
+                                      data.frame(projects, sprints, labels,
+                                                 fix.empty.names=F)
                            },
                            data$labels, data$projects, data$sprints,
                            SIMPLIFY=F, USE.NAMES=F))
+    colnames(predictions) <- c(join_cols, "prediction")
     result$data <- join(result$data, predictions,
-                        by=c("project_id", "sprint_num"), type="left",
+                        by=join_cols, type="left",
                         match="first")
     item <- list(column="prediction",
                  combine=prediction$combine,
