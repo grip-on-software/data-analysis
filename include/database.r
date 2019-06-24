@@ -291,24 +291,43 @@ if (!exists('INC_DATABASE_R')) {
             else {
                 field <- item$column
             }
-            if (item$aggregate == "end") {
-                columns <- c(columns, 'metric_value.value')
-                aggregate <- 'MAX(metric_value.date) AS end_date'
-            }
-            else {
-                aggregate <- paste(toupper(item$aggregate), "(value) AS ",
-                                   field, collapse=", ", sep="")
-            }
+
             table <- sub("(.)([A-Z][a-z]+)", "\\1_\\2", item$metric)
             table <- tolower(sub("([a-z0-9])([A-Z])", "\\1_\\2", table))
             table <- paste("metric", table, sep="_")
+            if (item$aggregate == "end") {
+                columns <- c(columns, 'metric_value.value')
+                colnames <- sub("^.*\\.", "", columns[-c(1, length(columns))])
+                table_cols <- c(paste('${f(join_cols, "', table, '")}', sep=''),
+                                colnames)
+                cols <- paste(c('${f(join_cols, "metric_value")}', colnames),
+                                  collapse=",")
+
+                aggregate <- 'MAX(metric_value.date)'
+                aggregate <- c(aggregate,
+                               paste('ROW_NUMBER() OVER (
+                                          PARTITION BY', cols, 'ORDER BY',
+                                          cols, ',', aggregate, 'DESC
+                                      )'))
+                aggregate_fields <- c('end_date', 'rev_row')
+                wrap_query <- paste('SELECT', paste(table_cols, collapse=","),
+                                    ', MAX(value) AS', field,
+                                    'FROM ($query) AS', table,
+                                    'WHERE rev_row = 1
+                                     GROUP BY', paste(table_cols, collapse=","))
+            }
+            else {
+                aggregate <- paste(toupper(item$aggregate), "(value)", sep="")
+                aggregate_fields <- field
+            }
             item$table <- table
             item$category <- "metrics"
             if (!("combine" %in% names(item))) {
                 item$combine <- list(project="sum", sprint="end")
             }
             item$query <- paste('SELECT', paste(columns, collapse=","), ",",
-                                aggregate,
+                                paste(aggregate, aggregate_fields,
+                                      sep=" AS ", collapse=", "),
                                 'FROM gros.metric_value
                                  JOIN gros.metric
                                  ON metric_value.metric_id = metric.metric_id
@@ -319,23 +338,7 @@ if (!exists('INC_DATABASE_R')) {
                                  GROUP BY', paste(columns, collapse=","))
 
             if (item$aggregate == "end") {
-                colnames <- sub("^.*\\.", "", columns[-c(1, length(columns))])
-                table_cols <- c(paste('${f(join_cols, "', table, '")}', sep=''),
-                                colnames)
-                row_cols <- paste(c('${f(join_cols, "metric_rows")}', colnames),
-                                  collapse=",")
-                item$query <- paste('SELECT', paste(table_cols, collapse=","),
-                                    ', MAX(value) AS', field,
-                                    'FROM (
-                                        SELECT', row_cols, ', value,',
-                                        'ROW_NUMBER() OVER (
-                                            PARTITION BY', row_cols, 'ORDER BY',
-                                            row_cols, ', end_date DESC
-                                        ) AS rev_row
-                                        FROM (', item$query, ') AS metric_rows
-                                    ) AS', table,
-                                    'WHERE rev_row = 1
-                                     GROUP BY', paste(table_cols, collapse=","))
+                item$query <- str_replace(wrap_query, '\\$query', item$query)
             }
         }
         else if (!is.null(item$filename)) {

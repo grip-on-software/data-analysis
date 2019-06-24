@@ -555,6 +555,9 @@ expand_feature_names <- function(feature, items, categories=list()) {
         if (!is.null(item$category) && item$category == feature) {
             return(item$column)
         }
+        if (feature == "metrics" && !is.null(item$metric)) {
+            return(item$column)
+        }
     }
 
     collect <- function(current, feature) {
