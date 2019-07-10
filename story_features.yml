@@ -1,2 +1,57 @@
 path: story_features
-files: []
+files:
+    - filename: story-statistics.sql
+      table: story_statistics
+      column:
+          - story_points
+          - attachments
+          - labels
+          - watchers
+          - expected_ltcs
+          - expected_phtcs
+      default: [0, 0, 0, 0, 0, 0]
+      descriptions:
+          nl:
+              - Storypoints
+              - Bijlagen
+              - Labels
+              - Story-watchers
+              - Logische testgevallen
+              - Fysieke testgevallen
+          en:
+              - Story points
+              - Attachments
+              - Labels
+              - Story watchers
+              - Logical test cases
+              - Physical test cases
+      long_descriptions:
+          nl:
+              - Het aantal storypoints
+              - Het aantal bijlagen in de story
+              - Het aantal labels in de story
+              - Het aantal personen dat notificaties van aanpassingen aan de story ontvangt
+              - Het aantal verwachte logische testgevallen voor de story
+              - Het aantal verwachte fysieke testgevallen voor de story
+          en:
+              - The number of story points
+              - The number of attachments in the story
+              - The number of labels in the story
+              - The number of persons that receive notifications of changes to the story
+              - The number of expected logical test cases for the story
+              - The number of expected physical test cases for the story
+      units:
+          nl:
+              - "%s storypoints"
+              - "%s bijlagen"
+              - "%s labels"
+              - "%s story-watchers"
+              - "%s LTC's"
+              - "%s PhTC's"
+          en:
+              - "%s story points"
+              - "%s attachments"
+              - "%s labels"
+              - "%s story watchers"
+              - "%s LTCs"
+              - "%s PhTCs"
