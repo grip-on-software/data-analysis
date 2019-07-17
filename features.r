@@ -124,10 +124,11 @@ if (get_arg('--project', default=F)) {
           file=paste(output_directory, "project_features_links.json", sep="/"))
     loginfo("Wrote project_features_links.json")
 
-    write(toJSON(list(descriptions=get_feature_locales(result$items)),
-                      sources=get_locales(yaml.load_file("source_types.yml"))),
+    write(toJSON(list(descriptions=get_feature_locales(result$items),
+                      sources=get_locales(yaml.load_file("source_types.yml")))),
           file=paste(output_directory, "project_features_localization.json",
                        sep="/"))
+    loginfo("Wrote project_features_localization.json")
 
     groups <- list()
     for (item in result$items) {
