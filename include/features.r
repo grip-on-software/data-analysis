@@ -1022,7 +1022,8 @@ get_story_features <- function(conn, features, exclude='^$',
                         FROM gros.${t("issue")}
                         ${g(join_cols, "issue", mask=1:2)}
                     ) AS max_changelog
-                    ON ${j(join_cols, "issue", "max_changelog", mask=2)}
+                    ON ${j(join_cols, "issue", "max_changelog", mask=1:2)}
+                    AND ${t("issue")}.changelog_id = max_changelog.changelog_id
                     WHERE ${t("issue")}.updated <= ${current_timestamp}
                     AND ${s(issue_story)}
                     ${s(project_condition)}')

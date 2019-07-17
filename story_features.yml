@@ -9,7 +9,7 @@ files:
           - watchers
           - expected_ltcs
           - expected_phtcs
-      default: [0, 0, 0, 0, 0, 0]
+      default: 0
       descriptions:
           nl:
               - Storypoints

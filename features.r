@@ -488,7 +488,7 @@ if (get_arg('--project', default=F)) {
                                  project_meta=metadata, project_names=projects)
     story_data <- result$data
 
-    write.arff(story_data[, result$colnames],
+    write.arff(story_data,
                file=paste(output_directory, "story_features.arff", sep="/"),
                relation="story_data")
 } else {
