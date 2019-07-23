@@ -33,6 +33,10 @@ project_metadata <- get_arg('--project-metadata', default='recent,core,main')
 metadata <- get_meta_keys(project_metadata)
 fields <- list('project_id', 'name', 'quality_display_name')
 
+sprint_metadata <- get_arg('--sprint-metadata',
+                           default='sprint_name,sprint_num,start_date')
+sprint_meta <- strsplit(sprint_metadata, ',')[[1]]
+
 map_details <- function(details, project_ids, component, join_cols) {
     project_col <- join_cols[1]
     sprint_col <- join_cols[2]
@@ -187,11 +191,7 @@ if (get_arg('--project', default=F)) {
     }
 
     if (split) {
-        sprint_meta <- c('sprint_name', 'sprint_num', 'board_id',
-                         'start_date', 'close_date')
-    }
-    else {
-        sprint_meta <- c('sprint_name', 'sprint_num', 'start_date')
+        sprint_meta <- c(sprint_meta, 'board_id', 'close_date')
     }
 
     future_features <- unique(c(sprint_meta, prediction_features, 'future'))
