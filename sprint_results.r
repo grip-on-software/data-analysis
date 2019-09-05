@@ -187,6 +187,7 @@ for (idx in 1:length(results$projects)) {
     else {
         project_name <- paste("Proj", project_id, sep="")
     }
+    projects <- c(projects, project_name)
 
     sprint_features <- as.list(results$features[idx, ])
     names(sprint_features) <- feature_names
