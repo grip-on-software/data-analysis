@@ -52,6 +52,7 @@ pipeline {
             steps {
                 sh 'docker push $AGENT_IMAGE'
                 withDockerRegistry(credentialsId: 'docker-credentials', url: env.DOCKER_URL) {
+                    sh 'docker tag $AGENT_IMAGE $REPO_IMAGE'
                     sh 'docker push $REPO_IMAGE'
                 }
             }
