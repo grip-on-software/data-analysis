@@ -1228,7 +1228,8 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
                                        details=F, combine=F, teams=list(),
                                        project_names=NULL, components=NULL,
                                        prediction=list(),
-                                       latest_date=Sys.time()) {
+                                       latest_date=Sys.time(),
+                                       variables=list()) {
     fields <- list(project_name='${t("project")}.name',
                    sprint_name='${t("sprint")}.name',
                    start_date='${s(sprint_open)}',
@@ -1268,11 +1269,12 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
     colnames <- c(join_cols, names(fields)[names(fields) != ""])
     sprint_conditions <- paste(sprint_conditions, collapse=' AND ')
 
-    variables <- list(sprint_conditions=sprint_conditions,
-                      join_cols=list(default=join_cols),
-                      jira_='',
-                      jira_join='',
-                      component_join='')
+    variables <- c(variables,
+                   list(sprint_conditions=sprint_conditions,
+                        join_cols=list(default=join_cols),
+                        jira_='',
+                        jira_join='',
+                        component_join))
     query_join <- ''
     if (identical(combine, F)) {
         components <- NULL

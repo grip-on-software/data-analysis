@@ -94,7 +94,7 @@ if (!exists('INC_DATABASE_R')) {
                       variables,
                       list(join_cols=c("project_id", "sprint_id"),
                            issue_join='', component_join='', source='',
-                           project_condition='',
+                           project_condition='', project_ids='0',
                            current_timestamp=paste("CAST('", current_time,
                                                    "' AS TIMESTAMP)", sep="")))
         recursive_str_interp <- function(string, ...) {

@@ -219,6 +219,7 @@ if (get_arg('--project', default=F)) {
                                                sprint_days=sprint_days,
                                                sprint_patch=sprint_patch,
                                                future=futures > 0)
+    variables <- list(project_ids=project_ids)
     result <- get_recent_sprint_features(conn,
                                          unique(c(meta_features, features)),
                                          exclude,
@@ -235,7 +236,8 @@ if (get_arg('--project', default=F)) {
                                          project_names=projects,
                                          components=config$components,
                                          prediction=prediction,
-                                         latest_date=latest_date)
+                                         latest_date=latest_date,
+                                         variables=variables)
     default_features <- default_features[default_features %in% result$colnames]
     old_features <- old_features[old_features %in% result$colnames]
     future_features <- future_features[future_features %in% result$colnames]
