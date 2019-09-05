@@ -388,21 +388,28 @@ if (get_arg('--project', default=F)) {
 
             write(toJSON(result$errors[[project]]),
                   file=paste(project_dir, "errors.json", sep="/"))
-            project_urls <- source_urls[as.character(project_id)]
-            names(project_urls) <- NULL
-            project_urls <- do.call("c", project_urls)
-            write(toJSON(build_sprint_source_urls(project_urls, project_id,
-                                                  project, quality_name,
-                                                  NULL, result$items,
-                                                  patterns, team_projects,
-                                                  config$components,
-                                                  component)),
-                  file=paste(project_dir, "links.json", sep="/"))
 
-            project_source_ids <- source_ids[as.character(project_id)]
-            names(project_source_ids) <- NULL
-            write(toJSON(do.call("c", project_source_ids)),
-                  file=paste(project_dir, "source_ids.json", sep="/"))
+            if (project_ids != '1') {
+                project_urls <- source_urls[as.character(project_id)]
+                names(project_urls) <- NULL
+                project_urls <- do.call("c", project_urls)
+                write(toJSON(build_sprint_source_urls(project_urls, project_id,
+                                                      project, quality_name,
+                                                      NULL, result$items,
+                                                      patterns, team_projects,
+                                                      config$components,
+                                                      component)),
+                      file=paste(project_dir, "links.json", sep="/"))
+
+                project_source_ids <- source_ids[as.character(project_id)]
+                names(project_source_ids) <- NULL
+                write(toJSON(do.call("c", project_source_ids)),
+                      file=paste(project_dir, "source_ids.json", sep="/"))
+            }
+            else {
+                write("{}", file=paste(project_dir, "links.json", sep="/"))
+                write("{}", file=paste(project_dir, "source_ids.json", sep="/"))
+            }
 
             dates <- get_tracker_dates(conn, project_id, aggregate=max)
             urls <- build_project_source_urls(project_urls, project_id, project,
@@ -411,11 +418,13 @@ if (get_arg('--project', default=F)) {
                                               components=components)
             write(toJSON(mapply(function(date, url) {
                                     if (!is.na(date) && !is.null(url)) {
-                                        list(date=unbox(date), url=unbox(url))
+                                        list(date=unbox(date),
+                                             url=ifelse(project_ids != '1',
+                                                        unbox(url), NULL))
                                     }
                                 },
                                 dates, urls[names(dates)],
-                                USE.NAMES=T, SIMPLIFY=F)),
+                                USE.NAMES=T, SIMPLIFY=F), null="null"),
                   file=paste(project_dir, "sources.json", sep="/"))
             metric_targets <- targets[targets$project_id %in% project_id, ]
             write_metric_targets(metric_targets, project_dir, result$items)

@@ -19,7 +19,7 @@ fields:
         jira:
             table: issue
             column: [key]
-            field: ${t("issue")}.key
+            field: CASE WHEN ${project_ids} THEN CONCAT('#', ${t("issue")}.issue_id) ELSE ${t("issue")}.key END
         tfs:
             table: tfs_work_item
             column: [issue_id]
