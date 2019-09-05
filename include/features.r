@@ -1272,9 +1272,8 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
     variables <- c(variables,
                    list(sprint_conditions=sprint_conditions,
                         join_cols=list(default=join_cols),
-                        jira_='',
                         jira_join='',
-                        component_join))
+                        component_join=''))
     query_join <- ''
     if (identical(combine, F)) {
         components <- NULL
