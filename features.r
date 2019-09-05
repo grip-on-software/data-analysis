@@ -391,10 +391,10 @@ if (get_arg('--project', default=F)) {
             write(toJSON(result$errors[[project]]),
                   file=paste(project_dir, "errors.json", sep="/"))
 
+            project_urls <- source_urls[as.character(project_id)]
+            names(project_urls) <- NULL
+            project_urls <- do.call("c", project_urls)
             if (project_ids != '1') {
-                project_urls <- source_urls[as.character(project_id)]
-                names(project_urls) <- NULL
-                project_urls <- do.call("c", project_urls)
                 write(toJSON(build_sprint_source_urls(project_urls, project_id,
                                                       project, quality_name,
                                                       NULL, result$items,
