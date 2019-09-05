@@ -18,7 +18,7 @@ fields:
         description: "Human-readable identifier of an issue"
         jira:
             table: issue
-            column: [key]
+            column: [issue_id, key]
             field: CASE WHEN ${project_ids} THEN CONCAT('#', ${t("issue")}.issue_id) ELSE ${t("issue")}.key END
         tfs:
             table: tfs_work_item
