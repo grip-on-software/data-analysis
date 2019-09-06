@@ -420,13 +420,13 @@ if (get_arg('--project', default=F)) {
                                               components=components)
             write(toJSON(mapply(function(date, url) {
                                     if (!is.na(date) && !is.null(url)) {
-                                        list(date=unbox(date),
+                                        list(date=date,
                                              url=ifelse(project_ids != '1',
-                                                        unbox(url), NULL))
+                                                        url, NA))
                                     }
                                 },
                                 dates, urls[names(dates)],
-                                USE.NAMES=T, SIMPLIFY=F), null="null"),
+                                USE.NAMES=T, SIMPLIFY=F), auto_unbox=T),
                   file=paste(project_dir, "sources.json", sep="/"))
             metric_targets <- targets[targets$project_id %in% project_id, ]
             write_metric_targets(metric_targets, project_dir, result$items)
