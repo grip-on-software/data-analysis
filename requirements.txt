@@ -14,3 +14,4 @@ padr
 zoo
 viridis
 lintr
+CORElearn

@@ -4,6 +4,7 @@ library(jsonlite)
 library(plyr)
 library(yaml)
 library(zoo)
+library(CORElearn)
 source('include/database.r')
 source('include/log.r')
 source('include/project.r')
@@ -1221,6 +1222,22 @@ simulate_monte_carlo <- function(group, future, items, columns, last=NA,
     return(res)
 }
 
+calculate_feature_scores <- function(data, column, join_cols) {
+    meta_columns <- c(join_cols, 'sprint_name', 'board_id', 'start_date',
+                      'close_date', 'future')
+    selectors <- data[!data$future, !(names(data) %in% meta_columns)]
+    selectors$target <- selectors[[column]]
+    selectors[[column]] <- NULL
+    if (ncol(selectors) > 1) {
+        estimators <- c("RReliefFequalK", "RReliefFwithMSE", "MSEofMean")
+        for (estimator in estimators) {
+            loginfo("%s selection for estimating %s", estimator, column)
+            attr <- attrEval(target ~ ., data=selectors, estimator=estimator)
+            print(attr[order(attr, decreasing=T)])
+        }
+    }
+}
+
 get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
                                        limit=5, closed=T, sprint_conditions=c(),
                                        project_fields=list('project_id'),
@@ -1461,6 +1478,12 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
                 result$errors[[project_name]] <- as.list(errors)
             }
             result$data <- rbind(result$data, res$group)
+        }
+    }
+
+    for (item in result$items) {
+        if (!is.null(item$prediction)) {
+            calculate_feature_scores(result$data, item$column, join_cols)
         }
     }
 
