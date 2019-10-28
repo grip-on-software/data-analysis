@@ -1247,7 +1247,7 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
                                        project_meta=list(), old=F, future=0,
                                        details=F, combine=F, teams=list(),
                                        project_names=NULL, components=NULL,
-                                       prediction=list(),
+                                       prediction=list(), scores=F,
                                        latest_date=Sys.time(),
                                        variables=list()) {
     fields <- list(project_name='${t("project")}.name',
@@ -1484,9 +1484,11 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
         }
     }
 
-    for (item in result$items) {
-        if (!is.null(item$prediction)) {
-            calculate_feature_scores(result$data, item$column, join_cols)
+    if (scores) {
+        for (item in result$items) {
+            if (!is.null(item$prediction)) {
+                calculate_feature_scores(result$data, item$column, join_cols)
+            }
         }
     }
 

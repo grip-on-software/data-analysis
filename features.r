@@ -157,6 +157,7 @@ if (get_arg('--project', default=F)) {
     closed <- get_arg('--closed', default=F)
     combine <- get_arg('--combine', default='')
     details <- get_arg('--details', default=T)
+    scores <- get_arg('--scores', default=F)
     if (combine == '') {
         combine <- F
     }
@@ -236,6 +237,7 @@ if (get_arg('--project', default=F)) {
                                          project_names=projects,
                                          components=config$components,
                                          prediction=prediction,
+                                         scores=scores,
                                          latest_date=latest_date,
                                          variables=variables)
     default_features <- default_features[default_features %in% result$colnames]
