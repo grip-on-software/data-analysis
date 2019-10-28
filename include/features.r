@@ -390,7 +390,9 @@ get_combined_team <- function(team, team_id, data, projects, team_projects,
                 }
                 board_project <- list(name=project$key,
                                       display_name=display_name,
-                                      board=team$board,
+                                      board=ifelse(isTRUE(project$own_board),
+                                                   project$board[1],
+                                                   team$board),
                                       team=F,
                                       projects=list(c(project,
                                                       list(replace=T))))
