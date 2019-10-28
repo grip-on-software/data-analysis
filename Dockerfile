@@ -1,4 +1,4 @@
-FROM r-base:3.3.2
+FROM r-base:3.6.1
 RUN apt-get update \
 	&& apt-get install -y --no-install-recommends libnetcdf-dev procps libssl-dev libxml2-dev \
 	&& rm -rf /var/lib/apt/lists/*
