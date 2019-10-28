@@ -1226,7 +1226,7 @@ simulate_monte_carlo <- function(group, future, items, columns, last=NA,
 
 calculate_feature_scores <- function(data, column, join_cols) {
     meta_columns <- c(join_cols, 'sprint_name', 'board_id', 'start_date',
-                      'close_date', 'future')
+                      'close_date', 'future', 'old')
     selectors <- data[!data$future, !(names(data) %in% meta_columns)]
     selectors$target <- selectors[[column]]
     selectors[[column]] <- NULL
