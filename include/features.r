@@ -1229,7 +1229,8 @@ calculate_feature_scores <- function(data, column, join_cols) {
     selectors$target <- selectors[[column]]
     selectors[[column]] <- NULL
     if (ncol(selectors) > 1) {
-        estimators <- c("RReliefFequalK", "RReliefFwithMSE", "MSEofMean")
+        estimators <- c("RReliefFequalK", "ReliefFexpRank", "RReliefFwithMSE",
+                        "MSEofMean")
         for (estimator in estimators) {
             loginfo("%s selection for estimating %s", estimator, column)
             attr <- attrEval(target ~ ., data=selectors, estimator=estimator)
