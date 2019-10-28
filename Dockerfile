@@ -1,6 +1,6 @@
 FROM r-base:3.3.2
 RUN apt-get update \
-	&& apt-get install -y --no-install-recommends libnetcdf-dev procps libssl-dev \
+	&& apt-get install -y --no-install-recommends libnetcdf-dev procps libssl-dev libxml2-dev \
 	&& rm -rf /var/lib/apt/lists/*
 COPY requirements.txt /tmp/
 RUN Rscript -e "install.packages(readLines('/tmp/requirements.txt'))"
