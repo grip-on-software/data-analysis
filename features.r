@@ -23,6 +23,7 @@ features <- get_arg('--features', default=NA)
 exclude <- get_arg('--exclude', default='^$')
 core <- get_arg('--core', default=F)
 recent <- get_arg('--recent', default=F)
+story <- get_arg('--story', default=F)
 latest_date <- as.POSIXct(get_arg('--latest-date', default=Sys.time()))
 
 config <- get_config()
@@ -482,6 +483,16 @@ if (get_arg('--project', default=F)) {
                              sep="/"),
                   row.names=F)
     }
+} else if (story) {
+    changelog <- !get_arg('--latest', default=F)
+    result <- get_story_features(conn, features, exclude, latest_date,
+                                 changelog=changelog, project_fields=fields,
+                                 project_meta=metadata, project_names=projects)
+    story_data <- result$data
+
+    write.arff(story_data,
+               file=paste(output_directory, "story_features.arff", sep="/"),
+               relation="story_data")
 } else {
     days <- get_arg('--days', default=NA)
     patch <- ifelse(get_arg('--patch', default=F), NA, F)

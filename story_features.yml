@@ -1,0 +1,77 @@
+path: story_features
+files:
+    - filename: story-statistics.sql
+      table: story_statistics
+      column:
+          - story_points
+          - attachments
+          - labels
+          - watchers
+          - expected_ltcs
+          - expected_phtcs
+          - description_length
+      default: 0
+      descriptions:
+          nl:
+              - Storypoints
+              - Bijlagen
+              - Labels
+              - Story-watchers
+              - Logische testgevallen
+              - Fysieke testgevallen
+              - Lengte van beschrijving
+          en:
+              - Story points
+              - Attachments
+              - Labels
+              - Story watchers
+              - Logical test cases
+              - Physical test cases
+              - Length of description
+      long_descriptions:
+          nl:
+              - Het aantal storypoints
+              - Het aantal bijlagen in de story
+              - Het aantal labels in de story
+              - Het aantal personen dat notificaties van aanpassingen aan de story ontvangt
+              - Het aantal verwachte logische testgevallen voor de story
+              - Het aantal verwachte fysieke testgevallen voor de story
+              - Het aantal karakters in de beschrijving van de story
+          en:
+              - The number of story points
+              - The number of attachments in the story
+              - The number of labels in the story
+              - The number of persons that receive notifications of changes to the story
+              - The number of expected logical test cases for the story
+              - The number of expected physical test cases for the story
+              - The number of characters in the description of the story
+      units:
+          nl:
+              - "%s storypoints"
+              - "%s bijlagen"
+              - "%s labels"
+              - "%s story-watchers"
+              - "%s LTC's"
+              - "%s PhTC's"
+              - "%s karakters"
+          en:
+              - "%s story points"
+              - "%s attachments"
+              - "%s labels"
+              - "%s story watchers"
+              - "%s LTCs"
+              - "%s PhTCs"
+              - "%s characters"
+    - filename: number-of-links.sql
+      table: issuelinks
+      column: num_links
+      default: 0
+      descriptions:
+          nl: "Aantal links"
+          en: "Number of links"
+      long_descriptions:
+          nl: "Het aantal links waarin de story betrokken is"
+          en: "The number of links in which the story is involved"
+      units:
+          nl: "%s links"
+          en: "%s links"
