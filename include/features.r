@@ -294,9 +294,12 @@ get_combined_team <- function(team, team_id, data, projects, team_projects,
                     team_projects=team_projects))
     }
     loginfo("Team %s has %d unmerged sprints", team$name, t)
+    display_name <- ifelse(is.null(team$display_name),
+                           data[team_conditions, 'quality_display_name'][1],
+                           team$display_name)
     team_meta <- list(team_id=rep(team_id, t),
                       project_name=rep(team$name, t),
-                      quality_display_name=rep(team$display_name, t),
+                      quality_display_name=rep(display_name, t),
                       board_id=rep(team$board, t),
                       duplicate=rep(F, t))
 
@@ -345,7 +348,7 @@ get_combined_team <- function(team, team_id, data, projects, team_projects,
                            project_ids=0,
                            project_names=0,
                            name=team$name,
-                           quality_display_name=team$display_name,
+                           quality_display_name=display_name,
                            recent=recent,
                            main=T,
                            core=core,
