@@ -292,7 +292,7 @@ if (!exists('INC_DATABASE_R')) {
                 field <- item$column
             }
 
-            table <- sub("(.)([A-Z][a-z]+)", "\\1_\\2", item$metric)
+            table <- sub("(.)([A-Z][a-z]+)", "\\1_\\2", item$metric[1])
             table <- tolower(sub("([a-z0-9])([A-Z])", "\\1_\\2", table))
             table <- paste("metric", table, sep="_")
             if (item$aggregate == "end") {
@@ -331,9 +331,10 @@ if (!exists('INC_DATABASE_R')) {
                                 'FROM gros.metric_value
                                  JOIN gros.metric
                                  ON metric_value.metric_id = metric.metric_id
-                                 WHERE metric.base_name =',
-                                 paste('\'', item$metric, '\'', sep=""),
-                                'AND metric_value.sprint_id <> 0
+                                 WHERE metric.base_name IN (',
+                                 paste('\'', item$metric, '\'',
+                                       sep="", collapse=","),
+                                ') AND metric_value.sprint_id <> 0
                                  AND metric_value.value > -1
                                  GROUP BY', paste(columns, collapse=","))
 

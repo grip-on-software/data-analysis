@@ -348,7 +348,7 @@ files:
     measurement:
         unit: line
     backends: [sonar]
-  - metric: UnittestLineCoverage
+  - metric: [UnittestLineCoverage, LineCoverage]
     column: unittest_line_coverage
     aggregate: end
     summarize: [min, max]
@@ -370,7 +370,7 @@ files:
         dividend: number_of_covered_lines
         divisor: lines_of_code
     backends: [sonar]
-  - metric: UnittestBranchCoverage
+  - metric: [UnittestBranchCoverage, BranchCoverage]
     column: unittest_branch_coverage
     aggregate: end
     summarize: [min, max]
