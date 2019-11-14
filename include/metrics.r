@@ -43,7 +43,7 @@ write_metric_targets <- function(targets, output_directory, items) {
     names(feature_targets) <- list()
     for (item in items) {
         if (!is.null(item$metric)) {
-            feature <- targets[targets$base_name == item$metric, ]
+            feature <- targets[targets$base_name == item$metric[1], ]
             feature$project_id <- NULL
             feature$base_name <- NULL
             feature$date <- as.POSIXct(feature$commit_date)
