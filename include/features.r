@@ -352,8 +352,9 @@ get_combined_team <- function(team, team_id, data, projects, team_projects,
                            recent=recent,
                            main=T,
                            core=core,
-                           team=ifelse(is.null(team$team), team$board,
-                                       as.logical(team$team)),
+                           team=ifelse(isTRUE(team$invisible), -1,
+                                       ifelse(is.null(team$team), team$board,
+                                              as.logical(team$team))),
                            component=F,
                            stringsAsFactors=F)[, colnames(projects)]
     metadata$project_ids <- list(project_id)
