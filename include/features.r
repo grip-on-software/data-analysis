@@ -424,12 +424,7 @@ update_combine_interval <- function(items, old_data, data, row_num, details,
     result <- list(row=data.frame(sprint_count=length(range)),
                    columns=c("sprint_count"))
     for (item in items) {
-        if (!is.null(item$summarize) && length(item$summarize$operation) > 1) {
-            columns <- paste(item$column, item$summarize$operation, sep="_")
-        }
-        else {
-            columns <- item$column
-        }
+        columns <- get_summarize_columns(item)
         columns <- columns[columns %in% colnames]
 
         if (length(columns) > 0) {
@@ -613,6 +608,13 @@ merge_features <- function(data, result, join_cols, components) {
     return(join(data, result, by=by, type="left", match=match))
 }
 
+get_summarize_columns <- function(item) {
+    if (length(item$column) == 1 && length(item$summarize$operation) > 1) {
+        return(paste(item$column, item$summarize$operation, sep="_"))
+    }
+    return(item$column)
+}
+
 get_features <- function(conn, features, exclude, items, data, colnames,
                          join_cols, details=F, required=c(), components=NULL) {
     if (length(features) == 1) {
@@ -632,7 +634,7 @@ get_features <- function(conn, features, exclude, items, data, colnames,
     for (item in items) {
         if (include_feature(item, features, exclude, required)) {
             selected_items <- c(selected_items, list(item))
-            columns <- item$column
+            columns <- get_summarize_columns(item)
             if (!is.null(item$result)) {
                 result <- item$result
             }
@@ -678,9 +680,6 @@ get_features <- function(conn, features, exclude, items, data, colnames,
                     }
                 }
                 groups <- split(result, as.list(group_cols), drop=T)
-                if (length(columns) == 1 && length(summarize$operation) > 1) {
-                    columns <- paste(columns, summarize$operation, sep="_")
-                }
                 if (nrow(result) == 0) {
                     result <- result[, group_names]
                     result[, columns] <- numeric()
@@ -723,7 +722,7 @@ get_features <- function(conn, features, exclude, items, data, colnames,
                     return(group)
                 }
                 data <- do.call("rbind",
-                                lapply(groups, group_locf, item$column))
+                                lapply(groups, group_locf, columns))
             }
             if (!is.null(item$default)) {
                 for (column in columns) {

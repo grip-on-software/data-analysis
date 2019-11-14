@@ -350,6 +350,7 @@ files:
     backends: [sonar]
   - metric: [UnittestLineCoverage, LineCoverage]
     column: unittest_line_coverage
+    carry: True
     aggregate: end
     summarize: [min, max]
     combine: [min, max]
@@ -372,6 +373,7 @@ files:
     backends: [sonar]
   - metric: [UnittestBranchCoverage, BranchCoverage]
     column: unittest_branch_coverage
+    carry: True
     aggregate: end
     summarize: [min, max]
     combine: [min, max]
