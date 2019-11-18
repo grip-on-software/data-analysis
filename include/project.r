@@ -58,15 +58,23 @@ if (!exists('INC_PROJECT_R')) {
         }
         if (length(joins) > 0) {
             project_fields <- names(fields)
-            fields <- sprintf('${t("project")}.%s', fields)
+            fields <- as.list(sprintf('${t("project")}.%s', fields))
             names(fields) <- project_fields
 
             by <- sprintf('${t("project")}.%s', by)
         }
+
         group_by <- ''
         if (must_group) {
+            if (!is.null(fields$quality_display_name)) {
+                fields$quality_display_name <- "${f('project_display_name')}"
+            }
             group_by <- paste('GROUP BY', paste(c(fields, groups),
                                                 collapse=', '))
+        }
+
+        if (!is.null(fields$quality_display_name)) {
+            fields$quality_display_name <- "${s(project_display_name)}"
         }
         fields <- c(fields, aliases)
 

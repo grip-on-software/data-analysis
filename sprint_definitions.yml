@@ -9,6 +9,16 @@ fields:
             table: tfs_team
             column: [team_id, name]
             field: CASE WHEN ${project_ids} THEN CONCAT('Team', ${t("project")}.team_id) ELSE ${t("project")}.name END
+    project_display_name:
+        description: "Human-readable description of the project or team"
+        jira:
+            table: project
+            column: [quality_display_name, jira_name, name]
+            field: CASE WHEN ${project_ids} THEN NULL ELSE CASE WHEN COALESCE(${t("project")}.quality_display_name, ${t("project")}.name) = ${t("project")}.name THEN ${t("project")}.jira_name ELSE ${t("project")}.quality_display_name END END
+        tfs:
+            table: tfs_team
+            column: [name]
+            field: CASE WHEN ${project_ids} THEN NULL ELSE ${t("project")}.name END
     sprint_id:
         description: "Ascending identifier of a sprint"
         table: [sprint, tfs_sprint, fixversion]

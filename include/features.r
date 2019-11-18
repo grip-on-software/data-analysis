@@ -1358,7 +1358,7 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
         project_fields$quality_display_name <- NULL
     } else {
         fields <- c(fields,
-                    list(quality_display_name='project.quality_display_name',
+                    list(quality_display_name='${s(project_display_name)}',
                          quality_name='project.quality_name'))
         if (primary_source == "jira_version") {
             join_cols <- c("project_id", "fixversion")
