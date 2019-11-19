@@ -24,6 +24,7 @@ exclude <- get_arg('--exclude', default='^$')
 core <- get_arg('--core', default=F)
 recent <- get_arg('--recent', default=F)
 story <- get_arg('--story', default=F)
+scores <- get_arg('--scores', default=F)
 latest_date <- as.POSIXct(get_arg('--latest-date', default=Sys.time()))
 
 config <- get_config()
@@ -162,7 +163,6 @@ if (get_arg('--project', default=F)) {
     closed <- get_arg('--closed', default=F)
     combine <- get_arg('--combine', default='')
     details <- get_arg('--details', default=T)
-    scores <- get_arg('--scores', default=F)
     if (combine == '') {
         combine <- F
     }
@@ -491,7 +491,8 @@ if (get_arg('--project', default=F)) {
     changelog <- !get_arg('--latest', default=F)
     result <- get_story_features(conn, features, exclude, latest_date,
                                  changelog=changelog, project_fields=fields,
-                                 project_meta=metadata, project_names=projects)
+                                 project_meta=metadata, project_names=projects,
+                                 scores=scores)
     story_data <- result$data
     colnames <- unique(c(story_metadata, result$colnames))
 

@@ -995,7 +995,8 @@ get_component_names <- function(components, source_type="name") {
 get_story_features <- function(conn, features, exclude='^$',
                                latest_date=Sys.time(), changelog=T,
                                project_fields=list('project_id'),
-                               project_meta=list(), project_names=NULL) {
+                               project_meta=list(), project_names=NULL,
+                               scores=F) {
     fields <- list(project_name='${t("project")}.name',
                    sprint_name='${t("sprint")}.name',
                    story_name='${t("issue")}.title',
@@ -1056,6 +1057,15 @@ get_story_features <- function(conn, features, exclude='^$',
                            join_cols)
     result$projects <- projects
     result$colnames <- features
+
+    if (scores) {
+        result$data$future <- F
+        for (item in result$items) {
+            for (column in item$prediction) {
+                calculate_feature_scores(result$data, column, join_cols)
+            }
+        }
+    }
 
     return(result)
 }
