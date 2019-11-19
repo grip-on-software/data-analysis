@@ -1001,13 +1001,6 @@ get_story_features <- function(conn, features, exclude='^$',
                    story_name='${t("issue")}.title',
                    latest='max_changelog.changelog_id IS NOT NULL')
 
-    # Features from the table itself - TODO move to story_features.yml
-    table <- list(overdue=paste('NOT ${s(issue_closed}) AND',
-                                'CAST(${t("issue").duedate AS TIMESTAMP) <=',
-                                '${current_timestamp}'),
-                  num_attachments='${t("issue")}.attachments',
-                  story_points='${s(story_points)}')
-
     join_cols <- c("project_id", "issue_id")
     if (changelog) {
         join_cols <- c(join_cols, "changelog_id")
@@ -1050,8 +1043,19 @@ get_story_features <- function(conn, features, exclude='^$',
     data <- dbGetQuery(conn, story_query$query)
 
     items <- load_queries('story_features.yml', NULL, patterns)
-    result <- get_features(conn, features, exclude, items, data, c(), join_cols)
+    if (length(features) == 1) {
+        if (is.na(features)) {
+            features <- unlist(sapply(items, function(item) { item$column }))
+        }
+        else {
+            features <- expand_feature_names(features, items)
+        }
+    }
+
+    result <- get_features(conn, features, exclude, items, data, c(),
+                           join_cols)
     result$projects <- projects
+    result$colnames <- features
 
     return(result)
 }

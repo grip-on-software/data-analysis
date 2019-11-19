@@ -10,6 +10,9 @@ files:
           - expected_ltcs
           - expected_phtcs
           - description_length
+          - priority
+          - ready_status
+          - overdue
       default: 0
       descriptions:
           nl:
@@ -20,6 +23,9 @@ files:
               - Logische testgevallen
               - Fysieke testgevallen
               - Lengte van beschrijving
+              - Prioriteit
+              - Ready status
+              - Achterstallig
           en:
               - Story points
               - Attachments
@@ -28,6 +34,9 @@ files:
               - Logical test cases
               - Physical test cases
               - Length of description
+              - Priority
+              - Ready status
+              - Overdue
       long_descriptions:
           nl:
               - Het aantal storypoints
@@ -37,6 +46,9 @@ files:
               - Het aantal verwachte logische testgevallen voor de story
               - Het aantal verwachte fysieke testgevallen voor de story
               - Het aantal karakters in de beschrijving van de story
+              - Prioriteit van de story
+              - Ready status van de story
+              - Of de story niet gesloten is terwijl dat de bedoeling was voor de huidige datum
           en:
               - The number of story points
               - The number of attachments in the story
@@ -45,6 +57,9 @@ files:
               - The number of expected logical test cases for the story
               - The number of expected physical test cases for the story
               - The number of characters in the description of the story
+              - Priority of the story
+              - Ready status of the story
+              - Whether the story was not closed when it was meant to before thecurrent date
       units:
           nl:
               - "%s storypoints"
@@ -54,6 +69,9 @@ files:
               - "%s LTC's"
               - "%s PhTC's"
               - "%s karakters"
+              - "%s"
+              - "%s"
+              - "%s"
           en:
               - "%s story points"
               - "%s attachments"
@@ -62,6 +80,9 @@ files:
               - "%s LTCs"
               - "%s PhTCs"
               - "%s characters"
+              - "%s"
+              - "%s"
+              - "%s"
     - filename: number-of-links.sql
       table: issuelinks
       column: num_links

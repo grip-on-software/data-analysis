@@ -32,6 +32,10 @@ patterns <- load_definitions('sprint_definitions.yml', config$fields,
 
 project_metadata <- get_arg('--project-metadata', default='recent,core,main')
 metadata <- get_meta_keys(project_metadata)
+
+story_meta_keys <- 'project_name,sprint_name,story_name,latest'
+story_metadata <- strsplit(get_arg('--story-metadata',
+                                   default=story_meta_keys), ',')[[1]]
 fields <- list('project_id', 'name', 'quality_display_name')
 
 sprint_metadata <- get_arg('--sprint-metadata',
@@ -489,8 +493,9 @@ if (get_arg('--project', default=F)) {
                                  changelog=changelog, project_fields=fields,
                                  project_meta=metadata, project_names=projects)
     story_data <- result$data
+    colnames <- unique(c(story_metadata, result$colnames))
 
-    write.arff(story_data,
+    write.arff(story_data[, colnames],
                file=paste(output_directory, "story_features.arff", sep="/"),
                relation="story_data")
 } else {
