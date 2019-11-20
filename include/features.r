@@ -180,7 +180,7 @@ get_combined_features <- function(items, data, colnames, details, join_cols,
         }
         if (!is.null(start)) {
             row_num <- start[1]
-            for (i in 1:length(start)) {
+            for (i in seq_len(start)) {
                 if (start[i] != end[i]) {
                     result <- update_combine_interval(items, data, new_data,
                                                       row_num, details,
@@ -1247,7 +1247,7 @@ validate_future <- function(project, res, future, join_cols, colnames, error) {
     error_columns <- list()
     for (col in names(res$columns)) {
         sprints <- group[group$future, res$columns[[col]]]
-        bias <- colMeans(sprints - error[1:nrow(sprints), col])
+        bias <- colMeans(sprints - error[seq_along(sprints), col])
         error_columns[[col]] <- bias / nrow(sprints)
         alt <- "two.sided"
         if (all(bias < 0, na.rm=T)) {
@@ -1261,7 +1261,7 @@ validate_future <- function(project, res, future, join_cols, colnames, error) {
                               tryCatch(t.test(x, y, alt)$p.value,
                                        error=function(cond) { NA })
                           },
-                          error[1:nrow(sprints), col], alt)
+                          error[seq_along(sprints), col], alt)
         probabilities <- as.data.frame(t_tests)
         colnames(probabilities) <- res$columns[[col]]
         error_columns[[paste(col, 'probability', sep='_')]] <- probabilities
