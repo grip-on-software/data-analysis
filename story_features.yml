@@ -15,7 +15,11 @@ files:
           - overdue
       default: 0
       prediction:
-          - story_points
+          - column: story_points
+            monte_carlo:
+                name: backlog
+                monte_carlo:
+                    name: story
       descriptions:
           nl:
               - Storypoints

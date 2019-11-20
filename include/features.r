@@ -996,7 +996,7 @@ get_story_features <- function(conn, features, exclude='^$',
                                latest_date=Sys.time(), changelog=T,
                                project_fields=list('project_id'),
                                project_meta=list(), project_names=NULL,
-                               scores=F) {
+                               scores=F, old=F, future=0) {
     fields <- list(project_name='${t("project")}.name',
                    sprint_name='${t("sprint")}.name',
                    story_name='${t("issue")}.title',
@@ -1061,8 +1061,23 @@ get_story_features <- function(conn, features, exclude='^$',
     if (scores) {
         result$data$future <- F
         for (item in result$items) {
-            for (column in item$prediction) {
-                calculate_feature_scores(result$data, column, join_cols)
+            for (prediction in item$prediction) {
+                calculate_feature_scores(result$data, prediction$column,
+                                         join_cols)
+            }
+        }
+    }
+    if (old || future > 0) {
+        project_data <- split(result$data, result$data[, 'project_name'])
+        result$errors <- list()
+        for (project in project_data) {
+            if (future > 0 && nrow(project) > 1) {
+                project_name <- project[1, 'project_name']
+                errors <- simulate_monte_carlo(project, future, result$items,
+                                               result$columns,
+                                               last=nrow(project),
+                                               name='backlog', count=100)
+                result$errors[[project_name]] <- as.list(errors)
             }
         }
     }
@@ -1254,6 +1269,70 @@ validate_future <- function(project, res, future, join_cols, colnames, error) {
     return(error_columns)
 }
 
+simulate_monte_carlo_feature <- function(group, future, item, parameters, last,
+                                         target, count) {
+    counts <- rep(NA, count)
+    samples <- rep(0, future * count)
+    for (factor in parameters$factors) {
+        weights <- dgamma(last:1, 1, rate=0.5)
+        multipliers <- group[!group$future &
+                             !is.na(group[[factor$multiplier]]),
+                             factor$multiplier]
+        samples <- samples +
+            factor$scalar * multipliers[length(multipliers)] *
+            sample(group[1:last, factor$column],
+                   future * count, replace=T, prob=weights)
+    }
+    for (i in 1:count) {
+        end <- group[last, item$column] +
+            cumsum(samples[(future * (i-1) + 1):(future * i)])
+        if (any(end < target, na.rm=T)) {
+            counts[i] <- which(end <= target)[1]
+        }
+    }
+    if (all(is.na(counts))) {
+        cdf <- list()
+    }
+    else {
+        P <- ecdf(counts)
+        cdf <- P(seq(future))
+    }
+    return(cdf)
+}
+
+simulate_monte_carlo_story <- function(group, future, item, parameters, last,
+                                       target, count, column) {
+    if (nrow(group) <= 1) {
+        return(list())
+    }
+
+    diff <- group[2:last, column] - group[1:(last - 1), column]
+    counts <- rep(NA, count)
+    samples <- rep(0, future * count) +
+        sample(diff, future * count, replace=T, prob=dunif(1:(last-1)))
+    for (factor in parameters$factors) {
+        prob <- paste('d', factor$prob, sep='')
+        weights <- do.call(prob, c(list(last:1), factor$params))
+        samples <- samples + sample(group[1:last, column], future * count,
+                                    replace=T, prob=weights)
+    }
+    for (i in 1:count) {
+        end <- sum(group[group$latest, column]) +
+            cumsum(samples[(future * (i-1) + 1):(future * i)])
+        if (any(end < target, na.rm=T)) {
+            counts[i] <- which(end <= target)[1]
+        }
+    }
+    if (all(is.na(counts))) {
+        cdf <- list()
+    }
+    else {
+        P <- ecdf(counts)
+        cdf <- P(seq(future))
+    }
+    return(cdf)
+}
+
 simulate_monte_carlo <- function(group, future, items, columns, last=NA,
                                  name='density', target=0, count=10000) {
     # Calculate the cumulative density at each sprint
@@ -1263,36 +1342,25 @@ simulate_monte_carlo <- function(group, future, items, columns, last=NA,
     }
     for (item in items) {
         if (!is.null(item$prediction)) {
-            column <- paste(item$column, name, sep='_')
+            column <- paste(item$column[1], name, sep='_')
             res[[column]] <- list()
             for (prediction in item$prediction) {
-                if (!is.null(prediction$monte_carlo)) {
-                    counts <- rep(NA, count)
-                    samples <- rep(0, future * count)
-                    for (factor in prediction$monte_carlo$factors) {
-                        weights <- dgamma(last:1, 1, rate=0.5)
-                        multipliers <- group[!group$future &
-                                             !is.na(group[[factor$multiplier]]),
-                                             factor$multiplier]
-                        samples <- samples +
-                            factor$scalar * multipliers[length(multipliers)] *
-                            sample(group[1:last, factor$column],
-                                   future * count, replace=T, prob=weights)
+                if (!is.null(prediction$column)) {
+                    if (length(res[[column]]) == 0) {
+                        res[[column]] <- NULL
                     }
-                    for (i in 1:count) {
-                        end <- group[last, item$column] +
-                            cumsum(samples[(future * (i-1) + 1):(future * i)])
-                        if (any(end < target, na.rm=T)) {
-                            counts[i] <- which(end <= target)[1]
-                        }
-                    }
-                    if (all(is.na(counts))) {
-                        cdf <- list()
-                    }
-                    else {
-                        P <- ecdf(counts)
-                        cdf <- P(seq(future))
-                    }
+                    column <- paste(prediction$column, name, sep='_')
+                    res[[column]] <- list()
+                    cdf <- simulate_monte_carlo_story(group, future, item,
+                                                      prediction$monte_carlo,
+                                                      last, target, count,
+                                                      prediction$column)
+                    res[[column]][[prediction$monte_carlo$name]] <- cdf
+                }
+                else if (!is.null(prediction$monte_carlo)) {
+                    cdf <- simulate_monte_carlo_feature(group, future, item,
+                                                        prediction$monte_carlo,
+                                                        last, target, count)
                     res[[column]][[prediction$monte_carlo$name]] <- cdf
                 }
             }
