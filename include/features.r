@@ -1019,6 +1019,7 @@ get_story_features <- function(conn, features, exclude='^$',
                         SELECT ${f(join_cols, "issue", mask=1:2)},
                         MAX(changelog_id) AS changelog_id
                         FROM gros.${t("issue")}
+                        WHERE updated <= ${current_timestamp}
                         ${g(join_cols, "issue", mask=1:2)}
                     ) AS max_changelog
                     ON ${j(join_cols, "issue", "max_changelog", mask=1:2)}
@@ -1076,7 +1077,7 @@ get_story_features <- function(conn, features, exclude='^$',
                 errors <- simulate_monte_carlo(project, future, result$items,
                                                result$columns,
                                                last=nrow(project),
-                                               name='backlog', count=100)
+                                               name='backlog')
                 result$errors[[project_name]] <- as.list(errors)
             }
         }
@@ -1306,23 +1307,24 @@ simulate_monte_carlo_story <- function(group, future, item, parameters, last,
         return(list())
     }
 
-    diff <- group[2:last, column] - group[1:(last - 1), column]
+    diff <- (group[2:last, column] - group[1:(last - 1), column]) * 15
+    diff <- diff[!is.na(diff)]
     counts <- rep(NA, count)
-    samples <- rep(0, future * count) +
-        sample(diff, future * count, replace=T, prob=dunif(1:(last-1)))
+    samples <- rep(0, future * count) + sample(diff, future * count, replace=T)
     for (factor in parameters$factors) {
         prob <- paste('d', factor$prob, sep='')
         weights <- do.call(prob, c(list(last:1), factor$params))
-        samples <- samples + sample(group[1:last, column], future * count,
-                                    replace=T, prob=weights)
+        print(weights)
+        samples <- samples + sample(group[1:last, column] * factor$scalar,
+                                    future * count, replace=T, prob=weights)
     }
     for (i in 1:count) {
-        end <- sum(group[group$latest, column]) +
+        end <- sum(group[group$latest, column], na.rm=T) +
             cumsum(samples[(future * (i-1) + 1):(future * i)])
-        if (any(end < target, na.rm=T)) {
-            counts[i] <- which(end <= target)[1]
-        }
+        counts[i] <- end[future]
     }
+    print(sum(group[group$latest, column], na.rm=T))
+    print(c(mean(counts), sd(counts)))
     if (all(is.na(counts))) {
         cdf <- list()
     }
