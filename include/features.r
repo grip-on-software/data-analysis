@@ -1307,7 +1307,7 @@ simulate_monte_carlo_story <- function(group, future, item, parameters, last,
         return(list())
     }
 
-    diff <- (group[2:last, column] - group[1:(last - 1), column]) * 15
+    diff <- (group[2:last, column] - group[1:(last - 1), column])
     diff <- diff[!is.na(diff)]
     counts <- rep(NA, count)
     samples <- rep(0, future * count) + sample(diff, future * count, replace=T)
@@ -1324,7 +1324,7 @@ simulate_monte_carlo_story <- function(group, future, item, parameters, last,
         counts[i] <- end[future]
     }
     print(sum(group[group$latest, column], na.rm=T))
-    print(c(mean(counts), sd(counts)))
+    print(c(mean(counts), sd(counts), min(counts), max(counts)))
     if (all(is.na(counts))) {
         cdf <- list()
     }

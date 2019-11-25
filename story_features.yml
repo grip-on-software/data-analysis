@@ -20,6 +20,15 @@ files:
                 name: backlog
                 monte_carlo:
                     name: story
+                    factors:
+                        - type: remove
+                          prob: gamma
+                          scalar: -15
+                          params: [15.3, 0.61] # 15.3/24.9
+                        - type: add
+                          prob: norm
+                          scalar: 1
+                          params: [5.85, 4.5] # 0.39 * 15, 0.30 * 15
       descriptions:
           nl:
               - Storypoints
