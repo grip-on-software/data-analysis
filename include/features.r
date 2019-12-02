@@ -1277,33 +1277,37 @@ validate_future <- function(project, res, future, join_cols, colnames, error) {
 simulate_monte_carlo_feature <- function(group, future, item, parameters, last,
                                          target, count) {
     counts <- rep(NA, count)
+    sums <- rep(0, future)
     samples <- rep(0, future * count)
+    params <- list()
     for (factor in parameters$factors) {
-        params <- lapply(parse(text=factor$params), eval, group)
-        print(params)
+        p <- lapply(parse(text=factor$params), eval, c(group, list(mode=mode)))
+        params[[factor$column]] <- lapply(p, unbox)
         if (isTRUE(factor$sample)) {
             prob <- paste('r', factor$prob, sep='')
-            factor_samples <- do.call(prob, c(list(future * count), params))
+            factor_samples <- do.call(prob, c(list(future * count), p))
         }
         else {
             prob <- paste('d', factor$prob, sep='')
-            weights <- do.call(prob, c(list(last:1), params))
+            weights <- do.call(prob, c(list(last:1), p))
             factor_samples <- sample(group[1:last, factor$column],
                                      future * count, replace=T, prob=weights)
         }
         multipliers <- group[!group$future &
                              !is.na(group[[factor$multiplier]]),
                              factor$multiplier]
-        samples <- samples +
-            factor$scalar * multipliers[length(multipliers)] * factor_samples
+        multiplier <- multipliers[length(multipliers)]
+        samples <- samples + factor$scalar * multiplier * factor_samples
     }
     for (i in 1:count) {
         end <- group[last, item$column] +
             cumsum(samples[(future * (i-1) + 1):(future * i)])
+        sums <- sums + end
         if (any(end < target, na.rm=T)) {
             counts[i] <- which(end <= target)[1]
         }
     }
+    # TODO: Also output the "average" simulation and the parameters
     if (all(is.na(counts))) {
         cdf <- list()
     }
@@ -1311,7 +1315,7 @@ simulate_monte_carlo_feature <- function(group, future, item, parameters, last,
         P <- ecdf(counts)
         cdf <- P(seq(future))
     }
-    return(cdf)
+    return(list(density=cdf, average=sums / count, params=params))
 }
 
 simulate_monte_carlo_story <- function(group, future, item, parameters, last,
@@ -1345,7 +1349,18 @@ simulate_monte_carlo_story <- function(group, future, item, parameters, last,
         P <- ecdf(counts)
         cdf <- P(seq(future))
     }
-    return(cdf)
+    return(list(density=cdf))
+}
+
+add_prediction <- function(res, item, prediction, output) {
+    for (key in names(output)) {
+        column <- paste(item$column[1], key, sep='_')
+        if (length(res[[column]]) == 0) {
+            res[[column]] <- list()
+        }
+        res[[column]][[prediction$monte_carlo$name]] <- output[[key]]
+    }
+    return(res)
 }
 
 simulate_monte_carlo <- function(group, future, items, columns, last=NA,
@@ -1357,30 +1372,21 @@ simulate_monte_carlo <- function(group, future, items, columns, last=NA,
     }
     for (item in items) {
         if (!is.null(item$prediction)) {
-            column <- paste(item$column[1], name, sep='_')
-            res[[column]] <- list()
             for (prediction in item$prediction) {
                 if (!is.null(prediction$column)) {
-                    if (length(res[[column]]) == 0) {
-                        res[[column]] <- NULL
-                    }
-                    column <- paste(prediction$column, name, sep='_')
-                    res[[column]] <- list()
-                    cdf <- simulate_monte_carlo_story(group, future, item,
+                    out <- simulate_monte_carlo_story(group, future, item,
                                                       prediction$monte_carlo,
                                                       last, target, count,
                                                       prediction$column)
-                    res[[column]][[prediction$monte_carlo$name]] <- cdf
+                    res <- add_prediction(res, list(column=prediction$column),
+                                          prediction, out)
                 }
                 else if (!is.null(prediction$monte_carlo)) {
-                    cdf <- simulate_monte_carlo_feature(group, future, item,
+                    out <- simulate_monte_carlo_feature(group, future, item,
                                                         prediction$monte_carlo,
                                                         last, target, count)
-                    res[[column]][[prediction$monte_carlo$name]] <- cdf
+                    res <- add_prediction(res, item, prediction, out)
                 }
-            }
-            if (length(res[[column]]) == 0) {
-                res[[column]] <- NULL
             }
         }
     }
