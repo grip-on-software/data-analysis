@@ -180,7 +180,7 @@ get_combined_features <- function(items, data, colnames, details, join_cols,
         }
         if (!is.null(start)) {
             row_num <- start[1]
-            for (i in seq_len(start)) {
+            for (i in seq_along(start)) {
                 if (start[i] != end[i]) {
                     result <- update_combine_interval(items, data, new_data,
                                                       row_num, details,
