@@ -2152,18 +2152,26 @@ files:
                 - column: num_done_stories
                   multiplier: done_points_per_story_three_average
                   scalar: -1
+                  prob: gamma
+                  params: [1, 0.5]
         - monte_carlo:
             name: backlog_all_velocity_three
             factors:
                 - column: num_done_stories
                   multiplier: done_points_per_story_three_average
                   scalar: -1
+                  prob: gamma
+                  params: [1, 0.5]
                 - column: backlog_removed_stories
                   multiplier: backlog_story_points_three_average
                   scalar: -1
+                  prob: gamma
+                  params: [1, 0.5]
                 - column: backlog_added_stories
                   multiplier: backlog_story_points_three_average
                   scalar: 1
+                  prob: gamma
+                  params: [1, 0.5]
     values:
         type: fraction
         denominator: 4

@@ -5,6 +5,7 @@ library(plyr)
 library(yaml)
 library(zoo)
 library(CORElearn)
+library(triangle)
 source('include/database.r')
 source('include/log.r')
 source('include/project.r')
@@ -1191,7 +1192,10 @@ make_future_sprints <- function(group, future, join_cols, colnames,
         if (prediction$ref %in% colnames &&
             group[dates$close, prediction$ref] > 0
         ) {
-            steps <- seq(1, future) * group[dates$close, prediction$ref]
+            # Always take most complete data
+            step <- max(group[dates$close, prediction$ref],
+                        group[last, prediction$ref])
+            steps <- seq(1, future) * step
         }
         else {
             steps <- rep(0, future)
@@ -1275,14 +1279,23 @@ simulate_monte_carlo_feature <- function(group, future, item, parameters, last,
     counts <- rep(NA, count)
     samples <- rep(0, future * count)
     for (factor in parameters$factors) {
-        weights <- dgamma(last:1, 1, rate=0.5)
+        params <- lapply(parse(text=factor$params), eval, group)
+        print(params)
+        if (isTRUE(factor$sample)) {
+            prob <- paste('r', factor$prob, sep='')
+            factor_samples <- do.call(prob, c(list(future * count), params))
+        }
+        else {
+            prob <- paste('d', factor$prob, sep='')
+            weights <- do.call(prob, c(list(last:1), params))
+            factor_samples <- sample(group[1:last, factor$column],
+                                     future * count, replace=T, prob=weights)
+        }
         multipliers <- group[!group$future &
                              !is.na(group[[factor$multiplier]]),
                              factor$multiplier]
         samples <- samples +
-            factor$scalar * multipliers[length(multipliers)] *
-            sample(group[1:last, factor$column],
-                   future * count, replace=T, prob=weights)
+            factor$scalar * multipliers[length(multipliers)] * factor_samples
     }
     for (i in 1:count) {
         end <- group[last, item$column] +
