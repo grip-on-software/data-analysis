@@ -1307,15 +1307,21 @@ simulate_monte_carlo_feature <- function(group, future, item, parameters, last,
             counts[i] <- which(end <= target)[1]
         }
     }
-    # TODO: Also output the "average" simulation and the parameters
+    trend <- NULL
     if (all(is.na(counts))) {
         cdf <- list()
     }
     else {
         P <- ecdf(counts)
         cdf <- P(seq(future))
+        center <- median(counts, na.rm=T)
+        if (!is.na(center)) {
+            middle <- which(counts == center)[1]
+            trend <- group[last, item$column] +
+                cumsum(samples[(future * (middle-1) + 1):(future * middle)])
+        }
     }
-    return(list(density=cdf, average=sums / count, params=params))
+    return(list(density=cdf, average=sums / count, trend=trend, params=params))
 }
 
 simulate_monte_carlo_story <- function(group, future, item, parameters, last,
