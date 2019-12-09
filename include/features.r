@@ -51,6 +51,13 @@ mode <- function(data, na.rm=F) {
     return(unique_data[which.max(tabulate(match(data, unique_data)))])
 }
 
+binmode <- function(data, na.rm=F) {
+    intervals <- c(0, 1, 3, 8, 20, 100, Inf)
+    codes <- findInterval(data, intervals)
+    max_code <- mode(codes, na.rm=na.rm)
+    return(mode(data[codes == max_code], na.rm=na.rm))
+}
+
 end <- function(data, na.rm=F) {
     return(tail(data[!na.rm | !is.na(data)], n=1))
 }

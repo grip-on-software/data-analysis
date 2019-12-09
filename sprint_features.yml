@@ -2155,7 +2155,7 @@ files:
                   #prob: gamma
                   #params: [1, 0.5]
                   prob: triangle
-                  params: [min(num_done_stories), max(num_done_stories), mode(num_done_stories)]
+                  params: [min(num_done_stories), max(num_done_stories), binmode(num_done_stories)]
                   sample: True
         - monte_carlo:
             name: backlog_all_velocity_three
@@ -2166,7 +2166,7 @@ files:
                   #prob: gamma
                   #params: [1, 0.5]
                   prob: triangle
-                  params: [min(num_done_stories), max(num_done_stories), mode(num_done_stories)]
+                  params: [min(num_done_stories), max(num_done_stories), binmode(num_done_stories)]
                   sample: True
                 - column: backlog_removed_stories
                   multiplier: backlog_story_points_three_average
@@ -2174,7 +2174,7 @@ files:
                   #prob: gamma
                   #params: [1, 0.5]
                   prob: triangle
-                  params: [min(backlog_removed_stories), max(backlog_removed_stories), mode(backlog_removed_stories)]
+                  params: [min(backlog_removed_stories), max(backlog_removed_stories), binmode(backlog_removed_stories)]
                   sample: True
                 - column: backlog_added_stories
                   multiplier: backlog_story_points_three_average
@@ -2182,7 +2182,7 @@ files:
                   #prob: gamma
                   #params: [1, 0.5]
                   prob: triangle
-                  params: [min(backlog_added_stories), max(backlog_added_stories), mode(backlog_added_stories)]
+                  params: [min(backlog_added_stories), max(backlog_added_stories), binmode(backlog_added_stories)]
                   sample: True
     values:
         type: fraction
