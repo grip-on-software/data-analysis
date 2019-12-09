@@ -51,11 +51,10 @@ mode <- function(data, na.rm=F) {
     return(unique_data[which.max(tabulate(match(data, unique_data)))])
 }
 
-binmode <- function(data, na.rm=F) {
-    intervals <- c(0, 1, 3, 8, 20, 100, Inf)
-    codes <- findInterval(data, intervals)
+binmode <- function(data, splits=7, na.rm=F) {
+    codes <- cut(data, splits)
     max_code <- mode(codes, na.rm=na.rm)
-    return(mode(data[codes == max_code], na.rm=na.rm))
+    return(mean(data[codes == max_code], na.rm=na.rm))
 }
 
 end <- function(data, na.rm=F) {
@@ -1286,6 +1285,7 @@ simulate_monte_carlo_feature <- function(group, future, item, parameters, last,
     counts <- rep(NA, count)
     sums <- rep(0, future)
     samples <- rep(0, future * count)
+    factors <- list()
     params <- list()
     for (factor in parameters$factors) {
         p <- lapply(parse(text=factor$params), eval, c(group, list(mode=mode)))
@@ -1305,6 +1305,7 @@ simulate_monte_carlo_feature <- function(group, future, item, parameters, last,
                              factor$multiplier]
         multiplier <- multipliers[length(multipliers)]
         samples <- samples + factor$scalar * multiplier * factor_samples
+        factors[[factor$column]] <- factor$scalar * multiplier * factor_samples
     }
     for (i in 1:count) {
         end <- group[last, item$column] +
@@ -1315,6 +1316,7 @@ simulate_monte_carlo_feature <- function(group, future, item, parameters, last,
         }
     }
     trend <- NULL
+    trend_factors <- NULL
     if (all(is.na(counts))) {
         cdf <- list()
     }
@@ -1322,13 +1324,18 @@ simulate_monte_carlo_feature <- function(group, future, item, parameters, last,
         P <- ecdf(counts)
         cdf <- P(seq(future))
         center <- median(counts, na.rm=T)
-        if (!is.na(center)) {
-            middle <- which(counts == center)[1]
-            trend <- group[last, item$column] +
-                cumsum(samples[(future * (middle-1) + 1):(future * middle)])
+        middle <- which(counts == center)[1]
+        if (!is.na(middle)) {
+            s <- (future * (middle-1) + 1):(future * middle)
+            trend <- group[last, item$column] + cumsum(samples[s])
+            trend_factors <- lapply(factors,
+                                    function(factor_samples) {
+                                        return(factor_samples[s])
+                                    })
         }
     }
-    return(list(density=cdf, average=sums / count, trend=trend, params=params))
+    return(list(density=cdf, average=sums / count, trend=trend,
+                trend_factors=trend_factors, params=params))
 }
 
 simulate_monte_carlo_story <- function(group, future, item, parameters, last,
