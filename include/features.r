@@ -1096,7 +1096,7 @@ get_story_features <- function(conn, features, exclude='^$',
 get_sprint_features <- function(conn, features, exclude, variables, latest_date,
                                 core=F, sprint_days=NA, sprint_patch=NA,
                                 future=T, combine=F, details=F, time=F,
-                                teams=list()) {
+                                scores=F, teams=list()) {
     conditions <- get_sprint_conditions(latest_date, core, sprint_days,
                                         sprint_patch, future=future)
     if (length(conditions) != 0) {
@@ -1148,6 +1148,19 @@ get_sprint_features <- function(conn, features, exclude, variables, latest_date,
     result <- get_features(conn, features, exclude, items, sprint_data,
                            colnames, join_cols, details=details,
                            required=c("sprint_num"))
+
+    if (scores) {
+        result$scores <- list()
+        for (item in result$items) {
+            if (!is.null(item$prediction)) {
+                feature_scores <- calculate_feature_scores(result$data,
+                                                           item$column,
+                                                           join_cols, one=T)
+                result$scores[[item$column]] <- feature_scores
+            }
+        }
+    }
+
     expressions <- result$expressions
     if (!identical(combine, F)) {
         result <- get_combined_features(result$items, result$data,
@@ -1413,21 +1426,33 @@ simulate_monte_carlo <- function(group, future, items, columns, last=NA,
     return(res)
 }
 
-calculate_feature_scores <- function(data, column, join_cols) {
+calculate_feature_scores <- function(data, column, join_cols, one=F) {
     meta_columns <- c(join_cols, 'sprint_name', 'board_id', 'start_date',
                       'close_date', 'future', 'old')
-    selectors <- data[!data$future, !(names(data) %in% meta_columns)]
+    if ("future" %in% names(data)) {
+        filter <- !data$future
+    }
+    else {
+        filter <- T
+    }
+    selectors <- data[filter, !(names(data) %in% meta_columns)]
     selectors$target <- selectors[[column]]
     selectors[[column]] <- NULL
+    scores <- list()
     if (ncol(selectors) > 1) {
         estimators <- c("RReliefFequalK", "ReliefFexpRank", "RReliefFwithMSE",
                         "MSEofMean")
         for (estimator in estimators) {
             loginfo("%s selection for estimating %s", estimator, column)
             attr <- attrEval(target ~ ., data=selectors, estimator=estimator)
-            print(attr[order(attr, decreasing=T)])
+            scores[[estimator]] <- as.list(attr[order(attr, decreasing=T)])
+            print(scores[[estimator]])
+            if (one) {
+                break
+            }
         }
     }
+    return(scores)
 }
 
 get_project_conditions <- function(projects, join_cols, patterns, date=NA,

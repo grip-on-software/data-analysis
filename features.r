@@ -507,9 +507,9 @@ if (get_arg('--project', default=F)) {
     time <- get_arg('--time', default=F)
 
     result <- get_sprint_features(conn, features, exclude, NULL, latest_date,
-                                  core=core,
-                                  sprint_days=days, sprint_patch=patch,
-                                  combine=combine, details=details, time=time)
+                                  core=core, sprint_days=days,
+                                  sprint_patch=patch, combine=combine,
+                                  details=details, time=time, scores=scores)
     sprint_data <- result$data
 
     write.arff(sprint_data[, result$colnames],
@@ -519,5 +519,9 @@ if (get_arg('--project', default=F)) {
     if (details) {
         write(toJSON(result$details),
               file=paste(output_directory, "details.json", sep="/"))
+    }
+    if (scores) {
+        write(toJSON(result$scores, auto_unbox=T),
+              file=paste(output_directory, "scores.json", sep="/"))
     }
 }
