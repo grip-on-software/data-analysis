@@ -331,8 +331,9 @@ files:
     sources:
         quality: "${quality_url}/${quality_name}"
         metric_history: "${metric_history_url}/${metric_history_file}"
-  - metric: ProductLOC
+  - metric: [ProductLOC, Ncloc]
     column: lines_of_code
+    carry: True
     aggregate: end
     summarize: sum
     combine: sum
@@ -2179,10 +2180,10 @@ files:
                 - column: backlog_added_stories
                   multiplier: backlog_story_points_three_average
                   scalar: 1
-                  #prob: gamma
-                  #params: [1, 0.5]
-                  prob: triangle
-                  params: [min(backlog_added_stories), max(backlog_added_stories), binmode(backlog_added_stories)]
+                  prob: gamma
+                  params: [1, 0.5]
+                  #prob: triangle
+                  #params: [min(backlog_added_stories), max(backlog_added_stories), binmode(backlog_added_stories)]
                   sample: True
     values:
         type: fraction
