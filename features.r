@@ -163,6 +163,8 @@ if (get_arg('--project', default=F)) {
     closed <- get_arg('--closed', default=F)
     combine <- get_arg('--combine', default='')
     details <- get_arg('--details', default=T)
+    extra <- get_arg('--extra', default=T)
+    more_default <- get_arg('--default', default=NA)
     if (combine == '') {
         combine <- F
     }
@@ -208,6 +210,12 @@ if (get_arg('--project', default=F)) {
     default <- c(sprint_meta, 'num_story_points', 'done_story_points',
                  'velocity_three', 'lines_of_code', 'unittest_line_coverage')
     default_features <- default[default %in% c(sprint_meta, features)]
+    if (!is.na(more_default)) {
+        more_default_features <- expand_feature_names(more_default,
+                                                      specifications$files,
+                                                      specifications$categories)
+        default_features <- unique(c(default_features, more_default_features))
+    }
     extra_features <- features[!(features %in% default_features)]
     prediction <- list(data=str_interp(prediction, config$fields),
                        combine=config$fields$prediction_combine,
@@ -266,7 +274,7 @@ if (get_arg('--project', default=F)) {
     }
     sprint_data <- arrange(result$data, result$data$project_name,
                            result$data$start_date)
-    if (split) {
+    if (split || with_old) {
         default_features <- c(default_features, result$join_cols[2])
         old_features <- c(old_features, result$join_cols[2])
         sprint_meta <- c(sprint_meta, result$join_cols[2])
@@ -287,8 +295,15 @@ if (get_arg('--project', default=F)) {
         source_ids <- get_source_ids(conn, ids)
         targets <- get_metric_targets(conn, ids, result$items)
 
-        old_sprint_data <- sprint_data[sprint_data$old, ]
-        new_sprint_data <- sprint_data[!sprint_data$old & !sprint_data$future, ]
+        if (!split) {
+            old_sprint_data <- data.frame()
+            new_sprint_data <- sprint_data[!sprint_data$future, ]
+        }
+        else {
+            old_sprint_data <- sprint_data[sprint_data$old, ]
+            new_sprint_data <- sprint_data[!sprint_data$old &
+                                           !sprint_data$future, ]
+        }
         future_sprint_data <- sprint_data[sprint_data$future, ]
 
         result$projects[, c('num_sprints', 'future_sprints')] <- 0
@@ -307,18 +322,25 @@ if (get_arg('--project', default=F)) {
 
             loginfo("Writing data for project %s", project)
             new <- write_data(new_sprint_data, default_features, 'default.json')
-            old <- write_data(old_sprint_data, old_features, 'old.json')
+            if (split) {
+                old <- write_data(old_sprint_data, old_features, 'old.json')
+            }
+            else {
+                old <- data.frame()
+            }
             future <- write_data(future_sprint_data, future_features,
                                  'future.json')
 
-            for (feature in extra_features) {
-                values <- as.list(new[[feature]])
-                names(values) <- NULL
-                write(toJSON(values, auto_unbox=T,
-                             na="null", null="null"),
-                      file=paste(project_dir,
-                                   paste(feature, 'json', sep='.'),
-                                 sep='/'))
+            if (extra) {
+                for (feature in extra_features) {
+                    values <- as.list(new[[feature]])
+                    names(values) <- NULL
+                    write(toJSON(values, auto_unbox=T,
+                                 na="null", null="null"),
+                          file=paste(project_dir,
+                                       paste(feature, 'json', sep='.'),
+                                     sep='/'))
+                }
             }
 
             # There may be multiple original project IDs for team projects.
