@@ -10,13 +10,13 @@ ON ${j(join_cols, "issue", "interval_sprint", 1)}
 ${s(issue_join)}
 WHERE ${t("issue")}.epic IS NOT NULL
 AND (${f(join_cols, "sprint", mask=2, alias="alias")} = NULL
-	OR ${s(sprint_open)} >= ${s(sprint_open, sprint="interval_sprint")})
+	OR ${s(sprint_open)} >= ${s(sprint_close, sprint="interval_sprint")})
 AND ${s(issue_story)}
 AND ${s(issue_not_done)}
-AND ${t("issue")}.updated <= ${s(sprint_open, sprint="interval_sprint")}
+AND ${t("issue")}.updated <= ${s(sprint_close, sprint="interval_sprint")}
 AND (
         newer_issue.updated IS NULL OR
-        newer_issue.updated > ${s(sprint_open, sprint="interval_sprint")}
+        newer_issue.updated > ${s(sprint_close, sprint="interval_sprint")}
 )
 ${s(project_condition, project="issue")}
 ${g(join_cols, "sprint", sprint="interval_sprint")}, ${t("issue")}.epic

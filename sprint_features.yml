@@ -1730,8 +1730,8 @@ files:
         nl: Items op backlog
         en: Items on backlog
     long_descriptions:
-        nl: Het aantal items in de projecttracker dat op de gehele backlog staat bij het begin van de sprint
-        en: The number of items in the project tracker that is on the whole backlog at the start of the sprint
+        nl: Het aantal items in de projecttracker dat op de gehele backlog staat bij het einde van de sprint
+        en: The number of items in the project tracker that is on the whole backlog at the end of the sprint
     units:
         nl: "%s items op de gehele backlog"
         en: "%s items on the whole backlog"
@@ -1760,8 +1760,8 @@ files:
         nl: Storypoints op backlog
         en: Story points on backlog
     long_descriptions:
-        nl: Het totaal aantal storypoints op de gehele backlog in de projecttracker bij het begin van de sprint
-        en: The number of story points on the whole backlog in the project tracker at the start of the sprint
+        nl: Het totaal aantal storypoints op de gehele backlog in de projecttracker bij het einde van de sprint
+        en: The number of story points on the whole backlog in the project tracker at the end of the sprint
     units:
         nl: "%s storypoints op de gehele backlog"
         en: "%s story points on the whole backlog"
@@ -1794,8 +1794,8 @@ files:
         nl: Punten per story op backlog
         en: Points per story on backlog
     long_descriptions:
-        nl: Het aantal storypoints dat iedere story gemiddeld heeft op de gehele backlog in de projecttracker bij het begin van de sprint
-        en: The average number of story points for each story on the whole backlog in the project tracker at the start of the sprint
+        nl: Het aantal storypoints dat iedere story gemiddeld heeft op de gehele backlog in de projecttracker bij het einde van de sprint
+        en: The average number of story points for each story on the whole backlog in the project tracker at the end of the sprint
     units:
         nl: "%s punten per story op de gehele backlog"
         en: "%s points per story on the whole backlog"
@@ -1894,8 +1894,8 @@ files:
         nl: Ongepokerde storypoints op backlog
         en: Non-pokered story points on backlog
     long_descriptions:
-        nl: Een automatische schatting van het aantal ongepokerde storypoints op de gehele backlog in de projecttracker bij het begin van de sprint
-        en: An automated estimate of the number of story points that are not pokered on the whole backlog in the project tracker at the start of the sprint
+        nl: Een automatische schatting van het aantal ongepokerde storypoints op de gehele backlog in de projecttracker bij het einde van de sprint
+        en: An automated estimate of the number of story points that are not pokered on the whole backlog in the project tracker at the end of the sprint
     units:
         nl: "%s geschatte extra storypoints op de gehele backlog"
         en: "%s estimated additional story points on the whole backlog"
@@ -1913,7 +1913,7 @@ files:
     column: backlog_removed_story_points
     default: 0
     patterns:
-        issue_backlog: ${s(issue_story)} and newer_issue.updated IS NOT NULL and ${s(issue_closed, issue="newer_issue")} and newer_issue.sprint_id IS NULL and newer_issue.updated <= ${s(sprint_close, sprint="interval_sprint")}
+        issue_backlog: ${s(issue_story)} AND newer_issue.updated IS NOT NULL AND ${s(issue_closed, issue="newer_issue")} AND newer_issue.sprint_id IS NULL
     summarize:
         operation: sum
         field: story_points
@@ -1947,7 +1947,7 @@ files:
     column: backlog_estimated_removed_story_points
     default: 0
     patterns:
-        issue_backlog: ${s(issue_story)} and newer_issue.updated IS NOT NULL and ${s(issue_closed, issue="newer_issue")} and newer_issue.sprint_id IS NULL and newer_issue.updated <= ${s(sprint_close, sprint="interval_sprint")}
+        issue_backlog: ${s(issue_story)} AND newer_issue.updated IS NOT NULL AND ${s(issue_closed, issue="newer_issue")} AND newer_issue.sprint_id IS NULL AND newer_issue.updated <= ${s(sprint_close, sprint="interval_sprint")}
     summarize:
         operation: sum_of_na_avg
         field: story_points
@@ -2128,8 +2128,8 @@ files:
         nl: Epicpoints op backlog
         en: Epic points on backlog
     long_descriptions:
-        nl: Het totaal aantal storypoints dat bij epics hoort op de gehele backlog in de projecttracker bij het begin van de sprint
-        en: The number of story points belonging to epics on the whole backlog in the project tracker at the start of the sprint
+        nl: Het totaal aantal storypoints dat bij epics hoort op de gehele backlog in de projecttracker bij het einde van de sprint
+        en: The number of story points belonging to epics on the whole backlog in the project tracker at the end of the sprint
     units:
         nl: "%s epicpoints op de gehele backlog"
         en: "%s epic points on the whole backlog"

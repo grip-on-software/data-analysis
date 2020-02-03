@@ -45,6 +45,9 @@ sprint_metadata <- get_arg('--sprint-metadata',
 sprint_meta <- strsplit(sprint_metadata, ',')[[1]]
 
 map_details <- function(details, project_ids, component, join_cols) {
+    if (identical(details, F)) {
+        return(NULL)
+    }
     project_col <- join_cols[1]
     sprint_col <- join_cols[2]
     project <- Filter(function(detail) {
@@ -198,7 +201,7 @@ if (get_arg('--project', default=F)) {
                                          specifications$categories)
     }
 
-    if (split) {
+    if (split || with_old) {
         sprint_meta <- c(sprint_meta, 'board_id', 'close_date')
     }
 
@@ -215,6 +218,7 @@ if (get_arg('--project', default=F)) {
                                                       specifications$files,
                                                       specifications$categories)
         default_features <- unique(c(default_features, more_default_features))
+        default <- unique(c(default, more_default_features))
     }
     extra_features <- features[!(features %in% default_features)]
     prediction <- list(data=str_interp(prediction, config$fields),
@@ -244,7 +248,7 @@ if (get_arg('--project', default=F)) {
                                          project_meta=metadata,
                                          old=with_old,
                                          future=futures,
-                                         details=split && details,
+                                         details=(split || with_old) && details,
                                          combine=combine,
                                          teams=teams,
                                          project_names=projects,
