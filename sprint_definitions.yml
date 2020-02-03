@@ -87,7 +87,7 @@ fields:
         description: "The number of planned points of an issue"
         table: [issue, tfs_work_item]
         column: [story_points]
-        field: CASE WHEN ${t("issue")}.story_points IN (99, 100, 122, 999) THEN 0 ELSE ${t("issue")}.story_points END
+        field: CASE WHEN ${t("issue")}.story_points IN (-5, -1, 99, 100, 122, 999) THEN 0 ELSE ${t("issue")}.story_points END
     developer_internal:
         description: "Whether the developer has an internal email address"
         jira:
