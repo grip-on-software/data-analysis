@@ -1913,7 +1913,7 @@ files:
     column: backlog_removed_story_points
     default: 0
     patterns:
-        issue_backlog: ${s(issue_story)} AND newer_issue.updated IS NOT NULL AND ${s(issue_closed, issue="newer_issue")} AND newer_issue.sprint_id IS NULL
+        issue_backlog: ${s(issue_story)} AND ${s(issue_closed)} AND issue.sprint_id IS NULL AND issue.updated >= ${s(sprint_open, sprint="interval_sprint")}
     summarize:
         operation: sum
         field: story_points
@@ -1947,7 +1947,7 @@ files:
     column: backlog_estimated_removed_story_points
     default: 0
     patterns:
-        issue_backlog: ${s(issue_story)} AND newer_issue.updated IS NOT NULL AND ${s(issue_closed, issue="newer_issue")} AND newer_issue.sprint_id IS NULL AND newer_issue.updated <= ${s(sprint_close, sprint="interval_sprint")}
+        issue_backlog: ${s(issue_story)} AND ${s(issue_closed)} AND issue.sprint_id IS NULL AND issue.updated >= ${s(sprint_open, sprint="interval_sprint")}
     summarize:
         operation: sum_of_na_avg
         field: story_points
@@ -1983,7 +1983,7 @@ files:
     column: backlog_removed_stories
     default: 0
     patterns:
-        issue_backlog: ${s(issue_story)} and newer_issue.updated IS NOT NULL and ${s(issue_closed, issue="newer_issue")} and newer_issue.sprint_id IS NULL and newer_issue.updated <= ${s(sprint_close, sprint="interval_sprint")}
+        issue_backlog: ${s(issue_story)} AND ${s(issue_closed)} AND newer_issue.sprint_id IS NULL AND issue.updated >= ${s(sprint_open, sprint="interval_sprint")}
     summarize:
         operation: count 
         field: story_points
@@ -1995,8 +1995,8 @@ files:
         nl: Verwijderde stories van backlog
         en: Removed stories from backlog
     long_descriptions:
-        nl: Het totaal aantal storypoints dat is verwijderd van de gehele backlog in de projecttracker tijdens de sprint
-        en: The number of story points that is removed from the whole backlog in the project tracker during the sprint
+        nl: Het totaal aantal stories dat is verwijderd van de gehele backlog in de projecttracker tijdens de sprint
+        en: The number of stories that is removed from the whole backlog in the project tracker during the sprint
     units:
         nl: "%s verwijderde stories van de gehele backlog"
         en: "%s removed stories from the whole backlog"
@@ -2014,7 +2014,7 @@ files:
     column: backlog_added_story_points
     default: 0
     patterns:
-        issue_backlog: ${s(issue_story)} and ${t("issue")}.updated <= ${s(sprint_close, sprint="interval_sprint")}
+        issue_backlog: ${s(issue_story)} AND ${t("issue")}.updated <= ${s(sprint_close, sprint="interval_sprint")}
     summarize:
         operation: sum
         field: story_points
@@ -2048,7 +2048,7 @@ files:
     column: backlog_estimated_added_story_points
     default: 0
     patterns:
-        issue_backlog: ${s(issue_story)} and ${t("issue")}.updated <= ${s(sprint_close, sprint="interval_sprint")}
+        issue_backlog: ${s(issue_story)} AND ${t("issue")}.updated <= ${s(sprint_close, sprint="interval_sprint")}
     summarize:
         operation: sum_of_na_avg
         field: story_points
@@ -2084,7 +2084,7 @@ files:
     column: backlog_added_stories
     default: 0
     patterns:
-        issue_backlog: ${s(issue_story)} and ${t("issue")}.updated <= ${s(sprint_close, sprint="interval_sprint")}
+        issue_backlog: ${s(issue_story)} AND ${t("issue")}.updated <= ${s(sprint_close, sprint="interval_sprint")}
     summarize:
         operation: count
         field: story_points
@@ -2099,8 +2099,8 @@ files:
         nl: Het totaal aantal stories dat is toegevoegd aan de gehele backlog in de projecttracker tijdens de sprint
         en: The number of stories that is added to the whole backlog in the project tracker during the sprint
     units:
-        nl: "%s toegevoegde storypoints aan de gehele backlog"
-        en: "%s aaded story points on the whole backlog"
+        nl: "%s toegevoegde stories aan de gehele backlog"
+        en: "%s aaded stories on the whole backlog"
     short_units:
         nl: "%s toegevoegde stories"
         en: "%s added stories"
