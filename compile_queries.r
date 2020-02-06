@@ -1,12 +1,20 @@
 source('include/database.r')
 source('include/log.r')
 
-export <- function(items, prefix, field) {
+export <- function(items, prefix, fields) {
+    seen <- c()
     for (item in items) {
-        name <- item[[field]]
-        write(item$query,
-              file=paste('output', paste(paste(prefix, name, sep='_'),
-                           'sql', sep='.'), sep='/'))
+        for (field in fields) {
+            name <- item[[field]]
+            if (is.null(name) || length(name) > 1 || (name %in% seen)) {
+                next
+            }
+
+            seen <- c(seen, name)
+            write(paste(item$query, ';', sep=''),
+                  file=paste('output', paste(paste(prefix, name, sep='_'),
+                             'sql', sep='.'), sep='/'))
+        }
     }
 }
 
@@ -30,7 +38,7 @@ export(load_queries('sprint_features.yml', 'sprint_definitions.yml',
                     list(sprint_conditions='',
                          join_cols=join_cols),
                     current_time=latest_date),
-       'feature', 'table')
+       'feature', c('column', 'table'))
 export(load_queries('sprint_events.yml', 'sprint_definitions.yml',
                     list(project_ids=project_ids,
                          join_cols=join_cols),
