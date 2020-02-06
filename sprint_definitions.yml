@@ -226,6 +226,10 @@ conditions:
             table: issue
             column: [status, resolution]
             condition: ${t("issue")}.status IN (5, 6) AND ${t("issue")}.resolution IN (2, 3, 4, 5, 7, 17, 18, 19, 20)
+        jira_version:
+            table: issue
+            column: [status, resolution]
+            condition: ${t("issue")}.status = 10707 AND ${t("issue")}.resolution = 10001
         tfs:
             table: tfs_work_item
             column: [status]
