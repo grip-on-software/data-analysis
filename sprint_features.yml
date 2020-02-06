@@ -2110,6 +2110,40 @@ files:
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
     category: backlog
+  - filename: 11-backlog-modified.sql
+    table: backlog_stories
+    column: backlog_modified_story_points
+    default: 0
+    patterns:
+        issue_backlog: ${s(issue_story)}
+    summarize:
+        operation: sum
+        field: story_points
+        details: [key, story_points]
+    combine:
+        project: sum
+        sprint: max
+    values:
+        type: fraction
+        denominator: 4
+    descriptions:
+        nl: Aangepaste storypoints aan backlog
+        en: Modified story points on backlog
+    long_descriptions:
+        nl: Het verschil in storypoints dat is aangepast op de gehele backlog in de projecttracker tijdens de sprint
+        en: The difference in story points that is modified on the whole backlog in the project tracker during the sprint
+    units:
+        nl: "%s aangepaste storypoints aan de gehele backlog"
+        en: "%s modified story points on the whole backlog"
+    short_units:
+        nl: "%s storypoints verschil"
+        en: "%s story points difference"
+    measurement:
+        unit: point
+    preferred: false
+    source:
+        jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
+    category: backlog
   - filename: 11-backlog-epic.sql
     table: backlog_epics
     column: backlog_epic_points
