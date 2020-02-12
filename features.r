@@ -248,7 +248,7 @@ if (get_arg('--project', default=F)) {
                                          project_meta=metadata,
                                          old=with_old,
                                          future=futures,
-                                         details=(split || with_old) && details,
+                                         details=details && (split || with_old),
                                          combine=combine,
                                          teams=teams,
                                          project_names=projects,
@@ -407,13 +407,13 @@ if (get_arg('--project', default=F)) {
                 old_details <- lapply(all_details[default_details],
                                       filter_sprint_details, old_sprint_ids)
 
-                write(toJSON(new_details),
+                write(toJSON(new_details, na="null"),
                       file=paste(project_dir, "details.json", sep="/"))
-                write(toJSON(old_details),
+                write(toJSON(old_details, na="null"),
                       file=paste(project_dir, "details.old.json", sep="/"))
                 for (detail in names(all_details)) {
                     if (!(detail %in% default_details)) {
-                        write(toJSON(all_details[[detail]]),
+                        write(toJSON(all_details[[detail]], na="null"),
                               file=paste(project_dir, paste("details", detail,
                                                             "json", sep="."),
                                          sep="/"))
@@ -504,7 +504,8 @@ if (get_arg('--project', default=F)) {
         write_projects_metadata(conn, result$project_fields, metadata,
                                 projects=result$projects,
                                 project_ids=project_ids,
-                                output_directory=output_dir)
+                                output_directory=output_dir,
+                                fixversions=config$db$primary_source == "jira")
     }
     else {
         columns <- c("project_name", "quality_display_name", sprint_meta)

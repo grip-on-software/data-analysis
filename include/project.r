@@ -188,6 +188,20 @@ if (!exists('INC_PROJECT_R')) {
         return(intervals)
     }
 
+    get_project_fixversions <- function(conn, project_col) {
+        query <- paste('SELECT project.', project_col, ',
+                        fixversion.id AS fixversion, fixversion.name
+                        FROM gros.fixversion
+                        JOIN gros.project
+                        ON fixversion.project_id = project.project_id
+                        ORDER BY fixversion.project_id, fixversion.start_date',
+                        sep='')
+        versions <- dbGetQuery(conn, query)
+        projects <- versions[[project_col]]
+        versions[[project_col]] <- NULL
+        return(split(versions, projects))
+    }
+
     write_projects_sources <- function(conn, projects, sources=NA,
                                        output_directory='output') {
         urls <- get_source_urls(conn, projects$project_id,
@@ -208,7 +222,8 @@ if (!exists('INC_PROJECT_R')) {
     write_projects_metadata <- function(conn, fields, metadata, projects=NA,
                                         project_ids='0', project_sources=c(),
                                         output_directory='output',
-                                        patterns=list(), join_cols=NULL) {
+                                        patterns=list(), join_cols=NULL,
+                                        fixversions=F) {
         if (is.atomic(projects) && is.na(projects)) {
             projects <- get_projects_meta(conn, fields=fields,
                                           metadata=metadata, patterns=patterns,
@@ -232,6 +247,20 @@ if (!exists('INC_PROJECT_R')) {
         else {
             project_col <- join_cols[1]
         }
+
+        if (fixversions) {
+            versions <- get_project_fixversions(conn,
+                                                ifelse(project_ids != '0',
+                                                       project_col, 'name'))
+            alter_versions <- function(project_versions) {
+                return(setNames(as.list(project_versions$name),
+                                project_versions$fixversion))
+            }
+            write(toJSON(lapply(versions, alter_versions), auto_unbox=T),
+                  file=paste(output_directory, 'projects_versions.json',
+                             sep='/'))
+        }
+
         if (project_ids != '0' && nrow(projects) > 0) {
             projects$name <- paste('Proj', projects[[project_col]], sep='')
             projects$quality_display_name <- NULL

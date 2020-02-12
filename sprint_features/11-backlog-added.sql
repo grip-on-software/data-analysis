@@ -1,5 +1,6 @@
 SELECT ${f(join_cols, "sprint", alias=T, sprint="interval_sprint")}, ${s(issue_key)} AS key,
-	MAX(${s(story_points)}) AS story_points
+    MAX(${s(story_points)}) AS story_points,
+    MAX(issue.fixversion) AS fixversion
 FROM gros.${t("issue")}
 LEFT JOIN gros.${t("issue")} AS older_issue
 ON ${j(issue_next_changelog, "issue", "older_issue")}
@@ -9,7 +10,7 @@ JOIN gros.${t("sprint")} AS interval_sprint
 ON ${j(join_cols, "issue", "interval_sprint", 1)}
 ${s(issue_join)}
 WHERE (${f(join_cols, "sprint", mask=2, alias="alias")} IS NULL
-	OR ${s(sprint_open)} >= ${s(sprint_open, sprint="interval_sprint")})
+    OR ${s(sprint_open)} >= ${s(sprint_open, sprint="interval_sprint")})
 AND ${s(issue_not_done)}
 AND ${s(issue_backlog)}
 AND ${t("issue")}.updated > ${s(sprint_open, sprint="interval_sprint")}

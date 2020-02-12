@@ -620,7 +620,7 @@ files:
     summarize:
         operation: sum
         field: story_points
-        details: [key, story_points]
+        details: [key, story_points, fixversion]
     combine: sum
     prediction:
         - url: '${prediction_url}'
@@ -1749,7 +1749,7 @@ files:
     summarize:
         operation: sum
         field: story_points
-        details: [key, story_points]
+        details: [key, story_points, fixversion]
     combine:
         project: sum
         sprint: max
@@ -1917,7 +1917,7 @@ files:
     summarize:
         operation: sum
         field: story_points
-        details: [key, story_points]
+        details: [key, story_points, fixversion]
     combine:
         project: sum
         sprint: max
@@ -2018,7 +2018,7 @@ files:
     summarize:
         operation: sum
         field: story_points
-        details: [key, story_points]
+        details: [key, story_points, fixversion]
     combine:
         project: sum
         sprint: max
@@ -2119,7 +2119,7 @@ files:
     summarize:
         operation: sum
         field: story_points
-        details: [key, story_points]
+        details: [key, story_points, fixversion]
     combine:
         project: sum
         sprint: max

@@ -1,5 +1,6 @@
 SELECT ${f(join_cols, "sprint", alias=T, sprint="interval_sprint")}, ${s(issue_key)} AS key,
-	MAX(${s(story_points)}) AS story_points
+    MAX(${s(story_points)}) AS story_points,
+    MAX(issue.fixversion) AS fixversion
 FROM gros.${t("issue")}
 LEFT JOIN gros.${t("issue")} AS newer_issue
 ON ${j(issue_next_changelog, "newer_issue", "issue")}
