@@ -199,7 +199,10 @@ if (!exists('INC_PROJECT_R')) {
         versions <- dbGetQuery(conn, query)
         projects <- versions[[project_col]]
         versions[[project_col]] <- NULL
-        return(split(versions, projects))
+        return(lapply(split(versions, projects), function(project_versions) {
+            return(setNames(as.list(project_versions$name),
+                            project_versions$fixversion))
+        }))
     }
 
     write_projects_sources <- function(conn, projects, sources=NA,
@@ -247,28 +250,21 @@ if (!exists('INC_PROJECT_R')) {
         else {
             project_col <- join_cols[1]
         }
+        join_col <- ifelse(project_ids != '0', project_col, 'name')
 
         if (fixversions) {
-            versions <- get_project_fixversions(conn,
-                                                ifelse(project_ids != '0',
-                                                       project_col, 'name'))
-            alter_versions <- function(project_versions) {
-                return(setNames(as.list(project_versions$name),
-                                project_versions$fixversion))
-            }
-            write(toJSON(lapply(versions, alter_versions), auto_unbox=T),
-                  file=paste(output_directory, 'projects_versions.json',
-                             sep='/'))
+            projects$fixversions <- list(setNames(list(), character(0)))
+            versions <- get_project_fixversions(conn, join_col)
+            with_versions <- projects[[join_col]] %in% names(versions)
+            names <- projects[with_versions, join_col]
+            projects[with_versions, 'fixversions'] <- list(versions[names])
         }
 
         if (project_ids != '0' && nrow(projects) > 0) {
             projects$name <- paste('Proj', projects[[project_col]], sep='')
             projects$quality_display_name <- NULL
-            projects <- projects[order(projects[[project_col]]), ]
         }
-        else {
-            projects <- projects[order(projects$name), ]
-        }
+        projects <- projects[order(projects[[join_col]]), ]
         projects[[project_col]] <- NULL
         write(toJSON(projects, auto_unbox=T),
               file=paste(output_directory, 'projects_meta.json', sep='/'))
