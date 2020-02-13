@@ -331,7 +331,7 @@ files:
     sources:
         quality: "${quality_url}/${quality_name}"
         metric_history: "${metric_history_url}/${metric_history_file}"
-  - metric: [ProductLOC, Ncloc]
+  - metric: [ProductLOC, Ncloc, loc]
     column: lines_of_code
     carry: True
     aggregate: end
@@ -439,7 +439,7 @@ files:
         dividend: number_of_covered_branches
         divisor: number_of_branches
     backends: [sonar]
-  - metric: Vulnerabilities
+  - metric: [Vulnerabilities]
     column: vulnerabilities
     carry: true
     aggregate: end
@@ -519,7 +519,7 @@ files:
     measurement:
         unit: time
     backends: [sonar]
-  - metric: DocumentAge
+  - metric: [DocumentAge, source_up_to_dateness]
     column: document_age
     aggregate: end
     summarize: [min, max]
