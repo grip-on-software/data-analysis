@@ -1,7 +1,7 @@
 -- Number of done story points
 SELECT DISTINCT ${f(join_cols, "issue")}, ${s(issue_key)} AS key,
     ${s(story_points, issue="resolve_issue")} AS story_points,
-    resolve_issue.fixversion AS fixversion
+    ${s(fix_version, issue="resolve_issue")} AS fixversion
 FROM gros.${t("issue")}
 JOIN gros.${t("sprint")} ON ${j(join_cols, "issue", "sprint")}
 JOIN (SELECT issue_id, ${f("issue_done")}, MAX(changelog_id) AS changelog_id

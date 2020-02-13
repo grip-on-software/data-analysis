@@ -83,6 +83,16 @@ fields:
             table: tfs_sprint
             column: []
             field: 'NULL'
+    fix_version:
+        description: "The identifier of the version in which the resolution of issue should be released"
+        jira:
+            table: issue
+            column: [fixversion]
+            field: ${t("issue")}.fixversion
+        tfs:
+            table: tfs_work_item
+            column: []
+            field: 'NULL'
     story_points:
         description: "The number of planned points of an issue"
         table: [issue, tfs_work_item]
