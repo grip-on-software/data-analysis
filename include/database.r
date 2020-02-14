@@ -274,7 +274,8 @@ if (!exists('INC_DATABASE_R')) {
             columns <- c('${f(join_cols, "metric_value")}')
             if (is.null(item$source)) {
                 metric_history <- '${metric_history_url}/${metric_history_file}'
-                item$source <- list(quality='${quality_url}/${quality_name}',
+                item$source <- list(quality_time='${quality_time_url}',
+                                    quality='${quality_url}/${quality_name}',
                                     metric_history=metric_history)
                 item$source[item$backends] <- list(NULL)
             }

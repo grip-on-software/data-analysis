@@ -10,6 +10,10 @@ metric_options:
     nl: Metriekopties
     en: Metric options
     icon: [fas, fa-ruler-vertical]
+quality_time:
+    nl: Quality Time
+    en: Quality Time
+    icon: [fas, fa-dot-circle]
 quality:
     nl: Kwaliteitsrapportage
     en: Quality report
