@@ -7,7 +7,7 @@ dateFormat <- function(date) {
 }
 
 url_names <- function(sources) {
-    paste(sources, 'url', sep='_')
+    paste(str_replace(sources, '-', '_'), 'url', sep='_')
 }
 
 vcs_sources <- c('svn', 'git', 'github', 'gitlab', 'tfs')
