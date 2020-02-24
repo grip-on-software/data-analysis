@@ -17,6 +17,6 @@ WHERE (
 AND ${s(issue_backlog)}
 AND ${t("issue")}.updated <= ${s(sprint_close, sprint="interval_sprint")}
 AND ${t("issue")}.updated >= ${s(sprint_open, sprint="interval_sprint")}
-AND ${t("issue")}.story_points <> older_issue.story_points
+AND ${t("issue")}.story_points <> COALESCE(older_issue.story_points, 0)
 ${s(project_condition, project="issue")}
 ${g(join_cols, "sprint", f("issue_key"), sprint="interval_sprint")}

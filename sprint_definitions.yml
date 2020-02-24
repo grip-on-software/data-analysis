@@ -64,7 +64,7 @@ fields:
         jira:
             table: sprint
             column: [end_date, complete_date]
-            field: CASE WHEN ${t("sprint")}.complete_date IS NOT NULL AND CAST(${t("sprint")}.complete_date AS DATE) <= CAST(${t("sprint")}.end_date AS date) THEN ${t("sprint")}.complete_date ELSE ${t("sprint")}.end_date END
+            field: CASE WHEN ${t("sprint")}.complete_date IS NOT NULL AND CAST(${t("sprint")}.complete_date AS DATE) < CAST(${t("sprint")}.end_date AS DATE) THEN ${t("sprint")}.complete_date ELSE ${t("sprint")}.end_date END
         jira_version:
             table: fixversion
             column: [release_date]
