@@ -1,5 +1,5 @@
 SELECT ${f(join_cols, "sprint", alias=T, sprint="interval_sprint")}, ${s(issue_key)} AS key,
-    MAX(${s(story_points)} - COALESCE(${s(story_points, issue="older_issue")}, 0)) AS story_points,
+    SUM(${s(story_points)} - COALESCE(${s(story_points, issue="older_issue")}, 0)) AS story_points,
     MAX(${s(fix_version)}) AS fixversion
 FROM gros.${t("issue")}
 JOIN gros.${t("issue")} AS older_issue
