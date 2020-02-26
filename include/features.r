@@ -1295,7 +1295,8 @@ validate_future <- function(project, res, future, join_cols, colnames, error) {
 
 simulate_monte_carlo_feature <- function(group, future, item, parameters, last,
                                          target, count) {
-    counts <- rep(NA, count)
+    reached <- rep(NA, count)
+    ends <- rep(NA, count)
     sums <- rep(0, future)
     samples <- rep(0, future * count)
     factors <- list()
@@ -1330,28 +1331,31 @@ simulate_monte_carlo_feature <- function(group, future, item, parameters, last,
         end <- group[last, item$column] +
             cumsum(samples[(future * (i-1) + 1):(future * i)])
         sums <- sums + end
+        ends[i] <- round(end[length(end)])
         if (any(end < target, na.rm=T)) {
-            counts[i] <- which(end <= target)[1]
+            reached[i] <- which(end <= target)[1]
         }
     }
     trend <- NULL
     trend_factors <- NULL
-    if (all(is.na(counts))) {
+    if (all(is.na(reached))) {
         cdf <- list()
+        center <- median(ends, na.rm=T)
+        middle <- which(ends == center)[1]
     }
     else {
-        P <- ecdf(counts)
+        P <- ecdf(reached)
         cdf <- P(seq(future))
-        center <- median(counts, na.rm=T)
-        middle <- which(counts == center)[1]
-        if (!is.na(middle)) {
-            s <- (future * (middle-1) + 1):(future * middle)
-            trend <- group[last, item$column] + cumsum(samples[s])
-            trend_factors <- lapply(factors,
-                                    function(factor_samples) {
-                                        return(factor_samples[s])
-                                    })
-        }
+        center <- median(reached, na.rm=T)
+        middle <- which(reached == center)[1]
+    }
+    if (!is.na(middle)) {
+        s <- (future * (middle-1) + 1):(future * middle)
+        trend <- group[last, item$column] + cumsum(samples[s])
+        trend_factors <- lapply(factors,
+                                function(factor_samples) {
+                                    return(factor_samples[s])
+                                })
     }
     return(list(density=cdf, average=sums / count, trend=trend,
                 trend_factors=trend_factors, params=params))
