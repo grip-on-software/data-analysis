@@ -1753,6 +1753,34 @@ files:
     combine:
         project: sum
         sprint: max
+    prediction:
+        - monte_carlo:
+            name: backlog_burndown
+            factors:
+                - column: done_story_points
+                  scalar: -1
+                  prob: triangle
+                  params: [min(done_story_points), max(done_story_points), binmode(done_story_points)]
+                  sample: True
+                - column: backlog_removed_stories
+                  name: backlog_removed_story_points
+                  multiplier: backlog_story_points_three_average
+                  scalar: -1
+                  prob: triangle
+                  params: [min(backlog_removed_stories), max(backlog_removed_stories), binmode(backlog_removed_stories)]
+                  sample: True
+                - column: backlog_added_stories
+                  name: backlog_added_story_points
+                  multiplier: backlog_story_points_three_average
+                  scalar: 0.1
+                  prob: triangle
+                  params: [min(backlog_added_stories), max(backlog_added_stories), binmode(backlog_added_stories)]
+                  sample: True
+                - column: backlog_modified_story_points
+                  scalar: 0.05
+                  prob: triangle
+                  params: [min(backlog_modified_story_points), max(backlog_modified_story_points), binmode(backlog_modified_story_points)]
+                  sample: True
     values:
         type: fraction
         denominator: 4

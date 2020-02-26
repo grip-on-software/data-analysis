@@ -1313,12 +1313,18 @@ simulate_monte_carlo_feature <- function(group, future, item, parameters, last,
             factor_samples <- sample(group[1:last, factor$column],
                                      future * count, replace=T, prob=weights)
         }
-        multipliers <- group[!group$future &
-                             !is.na(group[[factor$multiplier]]),
-                             factor$multiplier]
-        multiplier <- multipliers[length(multipliers)]
+        if (is.null(factor$multiplier)) {
+            multiplier <- 1
+        }
+        else {
+            multipliers <- group[!group$future &
+                                 !is.na(group[[factor$multiplier]]),
+                                 factor$multiplier]
+            multiplier <- multipliers[length(multipliers)]
+        }
         samples <- samples + factor$scalar * multiplier * factor_samples
-        factors[[factor$column]] <- factor$scalar * multiplier * factor_samples
+        column <- ifelse(is.null(factor$name), factor$column, factor$name)
+        factors[[column]] <- factor$scalar * multiplier * factor_samples
     }
     for (i in 1:count) {
         end <- group[last, item$column] +
