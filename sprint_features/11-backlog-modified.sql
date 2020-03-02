@@ -1,5 +1,5 @@
 SELECT ${f(join_cols, "sprint", alias=T, sprint="interval_sprint")}, ${s(issue_key)} AS key,
-    SUM(${s(story_points)} - COALESCE(${s(story_points, issue="older_issue")}, 0)) AS story_points,
+    SUM(COALESCE(${s(story_points)}, 0) - COALESCE(${s(story_points, issue="older_issue")}, 0)) AS story_points,
     MAX(${s(fix_version)}) AS fixversion
 FROM gros.${t("issue")}
 JOIN gros.${t("issue")} AS older_issue
@@ -17,6 +17,6 @@ WHERE (
 AND ${s(issue_backlog)}
 AND ${t("issue")}.updated <= ${s(sprint_close, sprint="interval_sprint")}
 AND ${t("issue")}.updated >= ${s(sprint_open, sprint="interval_sprint")}
-AND ${t("issue")}.story_points <> COALESCE(older_issue.story_points, 0)
+AND COALESCE(${t("issue")}.story_points, 0) <> COALESCE(older_issue.story_points, 0)
 ${s(project_condition, project="issue")}
 ${g(join_cols, "sprint", f("issue_key"), sprint="interval_sprint")}
