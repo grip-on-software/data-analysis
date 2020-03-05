@@ -10,8 +10,7 @@ JOIN gros.${t("sprint")} AS interval_sprint
 ON ${j(join_cols, "issue", "interval_sprint", 1)}
 ${s(issue_join)}
 WHERE (
-    ${f(join_cols, "sprint", mask=2, alias="alias")} IS NULL
-    OR ${s(issue_open)}
+    ${s(issue_open)}
     OR ${s(sprint_close)} >= ${s(sprint_close, sprint="interval_sprint")}
 )
 AND ${s(issue_backlog)}
