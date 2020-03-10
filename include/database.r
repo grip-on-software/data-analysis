@@ -335,8 +335,12 @@ if (!exists('INC_DATABASE_R')) {
                                  WHERE metric.base_name IN (',
                                  paste('\'', item$metric, '\'',
                                        sep="", collapse=","),
+                                ') AND metric.domain_name NOT IN (',
+                                 paste('\'', c('', config$exclude_domain), '\'',
+                                       sep="", collapse=","),
                                 ') AND metric_value.sprint_id <> 0
                                  AND metric_value.value > -1
+                                 ${s(project_condition, project="metric_value")}
                                  GROUP BY', paste(columns, collapse=","))
 
             if (item$aggregate == "end") {
