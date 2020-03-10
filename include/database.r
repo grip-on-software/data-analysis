@@ -268,7 +268,11 @@ if (!exists('INC_DATABASE_R')) {
                                 'FROM', paste('gros.${t("', item$table, '")}',
                                               sep=''),
                                 paste('${s(component_join, project=t("',
-                                      item$table, '"))}', sep=''))
+                                      item$table, '"))}', sep=''),
+                                'WHERE 1=1',
+                                paste('${s(project_condition, project=t("',
+                                      item$table, '"))}', sep='')
+            )
         }
         else if (!is.null(item$metric)) {
             columns <- c('${f(join_cols, "metric_value")}')
