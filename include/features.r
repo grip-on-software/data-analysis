@@ -689,7 +689,7 @@ get_features <- function(conn, features, exclude, items, data, colnames,
                 groups <- split(result, as.list(group_cols), drop=T)
                 if (nrow(result) == 0) {
                     result <- result[, group_names]
-                    result[, columns] <- numeric()
+                    result[, columns] <- rep(list(numeric()), length(columns))
                 }
                 else {
                     result <- do.call("rbind", lapply(groups, function(group) {
