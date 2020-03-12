@@ -19,4 +19,5 @@ AND ${t("issue")}.updated <= ${s(sprint_close, sprint="interval_sprint")}
 AND ${t("issue")}.updated >= ${s(sprint_open, sprint="interval_sprint")}
 AND COALESCE(${t("issue")}.story_points, 0) <> COALESCE(older_issue.story_points, 0)
 ${s(project_condition, project="issue")}
+${s(filter_condition)}
 ${g(join_cols, "sprint", f("issue_key"), sprint="interval_sprint")}

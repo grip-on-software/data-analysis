@@ -232,6 +232,7 @@ if (get_arg('--project', default=F)) {
     core <- get_arg('--core', default=F)
     sprint_days <- get_arg('--days', default=NA)
     sprint_patch <- ifelse(get_arg('--patch', default=F), NA, F)
+    fixversions <- strsplit(get_arg('--fixversions', default=''), ',')[[1]]
     # Latest date condition is handled by recent sprint features itself
     sprint_conditions <- get_sprint_conditions(latest_date='', core=core,
                                                sprint_days=sprint_days,
@@ -256,7 +257,8 @@ if (get_arg('--project', default=F)) {
                                          prediction=prediction,
                                          scores=scores,
                                          latest_date=latest_date,
-                                         variables=variables)
+                                         variables=variables,
+                                         filters=list(fixversion=fixversions))
     default_features <- default_features[default_features %in% result$colnames]
     old_features <- old_features[old_features %in% result$colnames]
     future_features <- future_features[future_features %in% result$colnames]

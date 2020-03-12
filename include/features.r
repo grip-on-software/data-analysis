@@ -778,12 +778,15 @@ get_summarize_group <- function(group, group_names, data, columns, details,
         total <- do.call(operation, c(args, list(na.rm=!with_missing)))
         # Overlap only works with a "key" details field and only for sum.
         if (!is.null(summarize$overlap)) {
+            keys <- c()
             for (overlap in summarize$overlap) {
                 if (!is.null(details[[overlap]])) {
-                    mask <- details[[overlap]][[name]]$key %in% group$key
-                    adjust <- details[[overlap]][[name]][[field]][mask]
+                    mask <- details[[overlap]][[name]]$key[[1]] %in% group$key &
+                        !(details[[overlap]][[name]]$key[[1]] %in% keys)
+                    adjust <- details[[overlap]][[name]][[field]][[1]][mask]
                     if (length(adjust) > 0) {
-                        key <- details[[overlap]][[name]]$key[mask]
+                        key <- details[[overlap]][[name]]$key[[1]][mask]
+                        keys <- c(keys, key)
                         loginfo('Overlapping %s for sprint %s: %s %s', overlap,
                                 name, as.character(key), as.numeric(adjust))
                     }
@@ -1511,6 +1514,22 @@ get_project_conditions <- function(join_cols, patterns, date=NA,
                 project_condition=project_condition))
 }
 
+get_filter_conditions <- function(filters) {
+    conditions <- mapply(function(name, filter) {
+                             if (length(filter) == 0) {
+                                 return("TRUE")
+                             }
+                             return(paste('COALESCE(${t("issue")}.', name,
+                                          ', 0) IN (',
+                                          paste(filter, sep="", collapse=","),
+                                          ')', sep=""))
+                         }, names(filters), filters)
+    filter_condition <- paste(conditions, collapse=' AND ')
+    return(list(filter_condition=paste('${cond_op} (', filter_condition, ')'),
+                filter_inverse=paste('${cond_op} NOT (', filter_condition,
+                                     ')')))
+}
+
 get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
                                        limit=5, closed=T, sprint_conditions=c(),
                                        project_fields=list('project_id'),
@@ -1519,7 +1538,7 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
                                        project_names=NULL, components=NULL,
                                        prediction=list(), scores=F,
                                        latest_date=Sys.time(),
-                                       variables=list()) {
+                                       variables=list(), filters=list()) {
     fields <- list(project_name='${t("project")}.name',
                    sprint_name='${t("sprint")}.name',
                    start_date='${s(sprint_open)}',
@@ -1561,6 +1580,7 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
     sprint_conditions <- paste(sprint_conditions, collapse=' AND ')
 
     variables <- c(variables,
+                   get_filter_conditions(filters),
                    list(sprint_conditions=sprint_conditions,
                         join_cols=list(default=join_cols),
                         jira_join='',

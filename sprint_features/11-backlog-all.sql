@@ -17,4 +17,5 @@ AND ${s(issue_backlog)}
 AND ${t("issue")}.updated <= ${s(sprint_close, sprint="interval_sprint")}
 AND COALESCE(newer_issue.updated, ${s(sprint_close, sprint="interval_sprint")}) >= ${s(sprint_close, sprint="interval_sprint")}
 ${s(project_condition, project="issue")}
+${s(filter_condition)}
 ${g(join_cols, "sprint", f("issue_key"), sprint="interval_sprint")}

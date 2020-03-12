@@ -25,3 +25,4 @@ AND ${t("issue")}.story_points IS NOT NULL
 AND ${s(sprint_id, sprint="issue")} <> 0
 AND subtask.id_parent IS NULL
 ${s(project_condition, project="issue")}
+${s(filter_condition)}
