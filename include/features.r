@@ -755,11 +755,11 @@ get_summarize_group <- function(group, group_names, data, columns, details,
                                 summarize) {
     group_result <- data.frame(group[1, group_names])
     n <- group_names[group_names != "original_component"]
+    name <- paste(group_result[n], collapse=".")
     summarizer <- function(operation, field, reference, with_missing) {
         args <- list(group[, field])
         if (!is.na(reference) && is.list(details) &&
             !is.null(details[[reference]])) {
-            name <- paste(group_result[n], collapse=".")
             args <- c(args, details[[reference]][[name]][[field]])
         }
         else if (!is.na(reference) && isTRUE(summarize$expression)) {
@@ -775,7 +775,26 @@ get_summarize_group <- function(group, group_names, data, columns, details,
             ref <- data[r == length(n), reference]
             args <- c(args, list(reference=ref))
         }
-        do.call(operation, c(args, list(na.rm=!with_missing)))
+        total <- do.call(operation, c(args, list(na.rm=!with_missing)))
+        # Overlap only works with a "key" details field and only for sum.
+        if (!is.null(summarize$overlap)) {
+            for (overlap in summarize$overlap) {
+                if (!is.null(details[[overlap]])) {
+                    mask <- details[[overlap]][[name]]$key %in% group$key
+                    adjust <- details[[overlap]][[name]][[field]][mask]
+                    if (length(adjust) > 0) {
+                        key <- details[[overlap]][[name]]$key[mask]
+                        loginfo('Overlapping %s for sprint %s: %s %s', overlap,
+                                name, as.character(key), as.numeric(adjust))
+                    }
+                    total <- total - sum(as.numeric(adjust), na.rm=T)
+                }
+                else {
+                    loginfo('Missing feature for overlap: %s', overlap)
+                }
+            }
+        }
+        return(total)
     }
     group_result[, columns] <- mapply(summarizer, summarize$operation,
                                       summarize$field, summarize$reference,

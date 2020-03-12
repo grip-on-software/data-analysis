@@ -1742,6 +1742,244 @@ files:
     category: backlog
   - filename: 11-backlog-all.sql
     table: backlog_stories
+    column: backlog_removed_story_points
+    default: 0
+    patterns:
+        issue_backlog: ${s(issue_story)} AND ${s(issue_excluded)} AND issue.sprint_id IS NULL AND issue.updated >= ${s(sprint_open, sprint="interval_sprint")}
+    summarize:
+        operation: sum
+        field: story_points
+        details: [key, story_points, fixversion]
+    combine:
+        project: sum
+        sprint: max
+    values:
+        type: fraction
+        denominator: 4
+    descriptions:
+        nl: Verwijderde storypoints van backlog
+        en: Removed story points from backlog
+    long_descriptions:
+        nl: Het totaal aantal storypoints dat is verwijderd van de gehele backlog in de projecttracker tijdens de sprint
+        en: The number of story points that is removed from the whole backlog in the project tracker during the sprint
+    units:
+        nl: "%s verwijderde storypoints van de gehele backlog"
+        en: "%s removed story points from the whole backlog"
+    short_units:
+        nl: "%s verwijderde storypoints"
+        en: "%s removed story points"
+    measurement:
+        unit: point
+    preferred: false
+    source:
+        jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
+    category: backlog
+  - filename: 11-backlog-all.sql
+    table: backlog_stories
+    column: backlog_estimated_removed_story_points
+    default: 0
+    patterns:
+        issue_backlog: ${s(issue_story)} AND ${s(issue_excluded)} AND issue.sprint_id IS NULL AND issue.updated >= ${s(sprint_open, sprint="interval_sprint")}
+    summarize:
+        operation: sum_of_na_avg
+        field: story_points
+        reference: backlog_story_points
+        details: [key]
+        filter: 'is.na(story_points)'
+    combine:
+        project: sum
+        sprint: max
+    values:
+        type: fraction
+        denominator: 4
+    descriptions:
+        nl: Verwijderde ongepokerde storypoints van backlog
+        en: Removed non-pokered story points from backlog
+    long_descriptions:
+        nl: Een automatische schatting van het aantal ongepokerde storypoints dat is verwijderd van de gehele backlog in de projecttracker tijdens de sprint
+        en: An automated estimate of the number of story points that are not pokered and are removed from the whole backlog in the project tracker at the start of the sprint
+    units:
+        nl: "%s geschatte verwijderde storypoints van de gehele backlog"
+        en: "%s estimated removed story points from the whole backlog"
+    short_units:
+        nl: "%s geschatte verwijderde points"
+        en: "%s estimated removed points"
+    measurement:
+        unit: point
+    preferred: false
+    source:
+        jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
+    category: backlog
+  - filename: 11-backlog-all.sql
+    table: backlog_stories
+    column: backlog_removed_stories
+    default: 0
+    patterns:
+        issue_backlog: ${s(issue_story)} AND ${s(issue_excluded)} AND newer_issue.sprint_id IS NULL AND issue.updated >= ${s(sprint_open, sprint="interval_sprint")}
+    summarize:
+        operation: count 
+        field: story_points
+        details: [key, story_points]
+    combine:
+        project: sum
+        sprint: max
+    descriptions:
+        nl: Verwijderde stories van backlog
+        en: Removed stories from backlog
+    long_descriptions:
+        nl: Het totaal aantal stories dat is verwijderd van de gehele backlog in de projecttracker tijdens de sprint
+        en: The number of stories that is removed from the whole backlog in the project tracker during the sprint
+    units:
+        nl: "%s verwijderde stories van de gehele backlog"
+        en: "%s removed stories from the whole backlog"
+    short_units:
+        nl: "%s verwijderde stories"
+        en: "%s removed stories"
+    measurement:
+        unit: issue
+    preferred: false
+    source:
+        jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
+    category: backlog
+  - filename: 11-backlog-added.sql
+    table: backlog_stories
+    column: backlog_added_story_points
+    default: 0
+    patterns:
+        issue_backlog: ${s(issue_story)} AND ${t("issue")}.updated <= ${s(sprint_close, sprint="interval_sprint")}
+    summarize:
+        operation: sum
+        field: story_points
+        details: [key, story_points, fixversion]
+        overlap: [backlog_removed_story_points, done_story_points]
+    combine:
+        project: sum
+        sprint: max
+    values:
+        type: fraction
+        denominator: 4
+    descriptions:
+        nl: Toegevoegde storypoints aan backlog
+        en: Added story points on backlog
+    long_descriptions:
+        nl: Het totaal aantal storypoints dat is toegevoegd aan de gehele backlog in de projecttracker tijdens de sprint
+        en: The number of story points that is added to the whole backlog in the project tracker during the sprint
+    units:
+        nl: "%s toegevoegde storypoints aan de gehele backlog"
+        en: "%s aaded story points on the whole backlog"
+    short_units:
+        nl: "%s toegevoegde storypoints"
+        en: "%s added story points"
+    measurement:
+        unit: point
+    preferred: false
+    source:
+        jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
+    category: backlog
+  - filename: 11-backlog-added.sql
+    table: backlog_stories
+    column: backlog_estimated_added_story_points
+    default: 0
+    patterns:
+        issue_backlog: ${s(issue_story)} AND ${t("issue")}.updated <= ${s(sprint_close, sprint="interval_sprint")}
+    summarize:
+        operation: sum_of_na_avg
+        field: story_points
+        reference: backlog_story_points
+        details: [key]
+        filter: 'is.na(story_points)'
+    combine:
+        project: sum
+        sprint: max
+    values:
+        type: fraction
+        denominator: 4
+    descriptions:
+        nl: Toegevoegde ongepokerde storypoints aan backlog
+        en: Added non-pokered story points on backlog
+    long_descriptions:
+        nl: Een automatische schatting van het aantal ongepokerde storypoints dat is toegevoegd aan de gehele backlog in de projecttracker tijdens de sprint
+        en: An automated estimate of the number of story points that are not pokered and are added to the whole backlog in the project tracker at the start of the sprint
+    units:
+        nl: "%s geschatte toegevoegde storypoints aan de gehele backlog"
+        en: "%s estimated added story points on the whole backlog"
+    short_units:
+        nl: "%s geschatte toegevoegde points"
+        en: "%s estimated added points"
+    measurement:
+        unit: point
+    preferred: false
+    source:
+        jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
+    category: backlog
+  - filename: 11-backlog-added.sql
+    table: backlog_stories
+    column: backlog_added_stories
+    default: 0
+    patterns:
+        issue_backlog: ${s(issue_story)} AND ${t("issue")}.updated <= ${s(sprint_close, sprint="interval_sprint")}
+    summarize:
+        operation: count
+        field: story_points
+        details: [key, story_points]
+    combine:
+        project: sum
+        sprint: max
+    descriptions:
+        nl: Toegevoegde stories aan backlog
+        en: Added stories on backlog
+    long_descriptions:
+        nl: Het totaal aantal stories dat is toegevoegd aan de gehele backlog in de projecttracker tijdens de sprint
+        en: The number of stories that is added to the whole backlog in the project tracker during the sprint
+    units:
+        nl: "%s toegevoegde stories aan de gehele backlog"
+        en: "%s aaded stories on the whole backlog"
+    short_units:
+        nl: "%s toegevoegde stories"
+        en: "%s added stories"
+    measurement:
+        unit: point
+    preferred: false
+    source:
+        jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
+    category: backlog
+  - filename: 11-backlog-modified.sql
+    table: backlog_stories
+    column: backlog_modified_story_points
+    default: 0
+    patterns:
+        issue_backlog: ${s(issue_story)}
+    summarize:
+        operation: sum
+        field: story_points
+        details: [key, story_points, fixversion]
+        overlap: [backlog_removed_story_points, done_story_points]
+    combine:
+        project: sum
+        sprint: max
+    values:
+        type: fraction
+        denominator: 4
+    descriptions:
+        nl: Aangepaste storypoints aan backlog
+        en: Modified story points on backlog
+    long_descriptions:
+        nl: Het verschil in storypoints dat is aangepast op de gehele backlog in de projecttracker tijdens de sprint
+        en: The difference in story points that is modified on the whole backlog in the project tracker during the sprint
+    units:
+        nl: "%s aangepaste storypoints aan de gehele backlog"
+        en: "%s modified story points on the whole backlog"
+    short_units:
+        nl: "%s storypoints verschil"
+        en: "%s story points difference"
+    measurement:
+        unit: point
+    preferred: false
+    source:
+        jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
+    category: backlog
+  - filename: 11-backlog-all.sql
+    table: backlog_stories
     column: backlog_story_points
     default: 0
     patterns:
@@ -1750,6 +1988,7 @@ files:
         operation: sum
         field: story_points
         details: [key, story_points, fixversion]
+        overlap: [backlog_removed_story_points, done_story_points, backlog_added_story_points, backlog_modified_story_points]
     combine:
         project: sum
         sprint: max
@@ -1933,242 +2172,6 @@ files:
     measurement:
         unit: point
         superset: backlog_points
-    source:
-        jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
-    category: backlog
-  - filename: 11-backlog-all.sql
-    table: backlog_stories
-    column: backlog_removed_story_points
-    default: 0
-    patterns:
-        issue_backlog: ${s(issue_story)} AND ${s(issue_excluded)} AND issue.sprint_id IS NULL AND issue.updated >= ${s(sprint_open, sprint="interval_sprint")}
-    summarize:
-        operation: sum
-        field: story_points
-        details: [key, story_points, fixversion]
-    combine:
-        project: sum
-        sprint: max
-    values:
-        type: fraction
-        denominator: 4
-    descriptions:
-        nl: Verwijderde storypoints van backlog
-        en: Removed story points from backlog
-    long_descriptions:
-        nl: Het totaal aantal storypoints dat is verwijderd van de gehele backlog in de projecttracker tijdens de sprint
-        en: The number of story points that is removed from the whole backlog in the project tracker during the sprint
-    units:
-        nl: "%s verwijderde storypoints van de gehele backlog"
-        en: "%s removed story points from the whole backlog"
-    short_units:
-        nl: "%s verwijderde storypoints"
-        en: "%s removed story points"
-    measurement:
-        unit: point
-    preferred: false
-    source:
-        jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
-    category: backlog
-  - filename: 11-backlog-all.sql
-    table: backlog_stories
-    column: backlog_estimated_removed_story_points
-    default: 0
-    patterns:
-        issue_backlog: ${s(issue_story)} AND ${s(issue_excluded)} AND issue.sprint_id IS NULL AND issue.updated >= ${s(sprint_open, sprint="interval_sprint")}
-    summarize:
-        operation: sum_of_na_avg
-        field: story_points
-        reference: backlog_story_points
-        details: [key]
-        filter: 'is.na(story_points)'
-    combine:
-        project: sum
-        sprint: max
-    values:
-        type: fraction
-        denominator: 4
-    descriptions:
-        nl: Verwijderde ongepokerde storypoints van backlog
-        en: Removed non-pokered story points from backlog
-    long_descriptions:
-        nl: Een automatische schatting van het aantal ongepokerde storypoints dat is verwijderd van de gehele backlog in de projecttracker tijdens de sprint
-        en: An automated estimate of the number of story points that are not pokered and are removed from the whole backlog in the project tracker at the start of the sprint
-    units:
-        nl: "%s geschatte verwijderde storypoints van de gehele backlog"
-        en: "%s estimated removed story points from the whole backlog"
-    short_units:
-        nl: "%s geschatte verwijderde points"
-        en: "%s estimated removed points"
-    measurement:
-        unit: point
-    preferred: false
-    source:
-        jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
-    category: backlog
-  - filename: 11-backlog-all.sql
-    table: backlog_stories
-    column: backlog_removed_stories
-    default: 0
-    patterns:
-        issue_backlog: ${s(issue_story)} AND ${s(issue_excluded)} AND newer_issue.sprint_id IS NULL AND issue.updated >= ${s(sprint_open, sprint="interval_sprint")}
-    summarize:
-        operation: count 
-        field: story_points
-        details: [key, story_points]
-    combine:
-        project: sum
-        sprint: max
-    descriptions:
-        nl: Verwijderde stories van backlog
-        en: Removed stories from backlog
-    long_descriptions:
-        nl: Het totaal aantal stories dat is verwijderd van de gehele backlog in de projecttracker tijdens de sprint
-        en: The number of stories that is removed from the whole backlog in the project tracker during the sprint
-    units:
-        nl: "%s verwijderde stories van de gehele backlog"
-        en: "%s removed stories from the whole backlog"
-    short_units:
-        nl: "%s verwijderde stories"
-        en: "%s removed stories"
-    measurement:
-        unit: issue
-    preferred: false
-    source:
-        jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
-    category: backlog
-  - filename: 11-backlog-added.sql
-    table: backlog_stories
-    column: backlog_added_story_points
-    default: 0
-    patterns:
-        issue_backlog: ${s(issue_story)} AND ${t("issue")}.updated <= ${s(sprint_close, sprint="interval_sprint")}
-    summarize:
-        operation: sum
-        field: story_points
-        details: [key, story_points, fixversion]
-    combine:
-        project: sum
-        sprint: max
-    values:
-        type: fraction
-        denominator: 4
-    descriptions:
-        nl: Toegevoegde storypoints aan backlog
-        en: Added story points on backlog
-    long_descriptions:
-        nl: Het totaal aantal storypoints dat is toegevoegd aan de gehele backlog in de projecttracker tijdens de sprint
-        en: The number of story points that is added to the whole backlog in the project tracker during the sprint
-    units:
-        nl: "%s toegevoegde storypoints aan de gehele backlog"
-        en: "%s aaded story points on the whole backlog"
-    short_units:
-        nl: "%s toegevoegde storypoints"
-        en: "%s added story points"
-    measurement:
-        unit: point
-    preferred: false
-    source:
-        jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
-    category: backlog
-  - filename: 11-backlog-added.sql
-    table: backlog_stories
-    column: backlog_estimated_added_story_points
-    default: 0
-    patterns:
-        issue_backlog: ${s(issue_story)} AND ${t("issue")}.updated <= ${s(sprint_close, sprint="interval_sprint")}
-    summarize:
-        operation: sum_of_na_avg
-        field: story_points
-        reference: backlog_story_points
-        details: [key]
-        filter: 'is.na(story_points)'
-    combine:
-        project: sum
-        sprint: max
-    values:
-        type: fraction
-        denominator: 4
-    descriptions:
-        nl: Toegevoegde ongepokerde storypoints aan backlog
-        en: Added non-pokered story points on backlog
-    long_descriptions:
-        nl: Een automatische schatting van het aantal ongepokerde storypoints dat is toegevoegd aan de gehele backlog in de projecttracker tijdens de sprint
-        en: An automated estimate of the number of story points that are not pokered and are added to the whole backlog in the project tracker at the start of the sprint
-    units:
-        nl: "%s geschatte toegevoegde storypoints aan de gehele backlog"
-        en: "%s estimated added story points on the whole backlog"
-    short_units:
-        nl: "%s geschatte toegevoegde points"
-        en: "%s estimated added points"
-    measurement:
-        unit: point
-    preferred: false
-    source:
-        jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
-    category: backlog
-  - filename: 11-backlog-added.sql
-    table: backlog_stories
-    column: backlog_added_stories
-    default: 0
-    patterns:
-        issue_backlog: ${s(issue_story)} AND ${t("issue")}.updated <= ${s(sprint_close, sprint="interval_sprint")}
-    summarize:
-        operation: count
-        field: story_points
-        details: [key, story_points]
-    combine:
-        project: sum
-        sprint: max
-    descriptions:
-        nl: Toegevoegde stories aan backlog
-        en: Added stories on backlog
-    long_descriptions:
-        nl: Het totaal aantal stories dat is toegevoegd aan de gehele backlog in de projecttracker tijdens de sprint
-        en: The number of stories that is added to the whole backlog in the project tracker during the sprint
-    units:
-        nl: "%s toegevoegde stories aan de gehele backlog"
-        en: "%s aaded stories on the whole backlog"
-    short_units:
-        nl: "%s toegevoegde stories"
-        en: "%s added stories"
-    measurement:
-        unit: point
-    preferred: false
-    source:
-        jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
-    category: backlog
-  - filename: 11-backlog-modified.sql
-    table: backlog_stories
-    column: backlog_modified_story_points
-    default: 0
-    patterns:
-        issue_backlog: ${s(issue_story)}
-    summarize:
-        operation: sum
-        field: story_points
-        details: [key, story_points, fixversion]
-    combine:
-        project: sum
-        sprint: max
-    values:
-        type: fraction
-        denominator: 4
-    descriptions:
-        nl: Aangepaste storypoints aan backlog
-        en: Modified story points on backlog
-    long_descriptions:
-        nl: Het verschil in storypoints dat is aangepast op de gehele backlog in de projecttracker tijdens de sprint
-        en: The difference in story points that is modified on the whole backlog in the project tracker during the sprint
-    units:
-        nl: "%s aangepaste storypoints aan de gehele backlog"
-        en: "%s modified story points on the whole backlog"
-    short_units:
-        nl: "%s storypoints verschil"
-        en: "%s story points difference"
-    measurement:
-        unit: point
-    preferred: false
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
     category: backlog
