@@ -777,7 +777,7 @@ get_summarize_group <- function(group, group_names, data, columns, details,
         }
         total <- do.call(operation, c(args, list(na.rm=!with_missing)))
         # Overlap only works with a "key" details field and only for sum.
-        if (!is.null(summarize$overlap)) {
+        if (is.list(details) && !is.null(summarize$overlap)) {
             keys <- c()
             for (overlap in summarize$overlap) {
                 if (!is.null(details[[overlap]])) {
