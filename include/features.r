@@ -1061,7 +1061,7 @@ get_story_features <- function(conn, features, exclude='^$',
     patterns <- load_definitions('sprint_definitions.yml', variables,
                                  current_time=latest_date)
 
-    cond <- get_project_conditions(join_cols, patterns,
+    cond <- get_project_conditions(conn, join_cols, patterns,
                                    project_fields=project_fields,
                                    project_meta=project_meta,
                                    project_names=project_names)
@@ -1487,7 +1487,7 @@ calculate_feature_scores <- function(data, column, join_cols, one=F) {
     return(scores)
 }
 
-get_project_conditions <- function(join_cols, patterns, date=NA,
+get_project_conditions <- function(conn, join_cols, patterns, date=NA,
                                    project_fields=list('project_id'),
                                    project_meta=list(), project_names=NULL) {
     if (!is.na(date)) {
@@ -1634,7 +1634,7 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
     patterns <- load_definitions('sprint_definitions.yml', variables,
                                  current_time=latest_date)
 
-    cond <- get_project_conditions(join_cols, patterns, date=date,
+    cond <- get_project_conditions(conn, join_cols, patterns, date=date,
                                    project_fields=project_fields,
                                    project_meta=project_meta,
                                    project_names=project_names)
