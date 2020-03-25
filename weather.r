@@ -14,7 +14,7 @@ knmi_file <- paste(output_directory, "knmi.nc", sep="/")
 if (!file.exists(knmi_file)) {
     tryCatch(download.file(config$url, knmi_file, mode="wb"),
              error=function(e) {
-                  logwarn(paste("Download problems: ", e))
+                 logwarn(paste("Download problems: ", e))
                  quit("no", status=0, runLast=F)
              })
 }
@@ -23,7 +23,7 @@ if (!file.exists(knmi_file)) {
 knmi <- list()
 tryCatch(knmi$nc <- nc_open(knmi_file),
          error=function(e) {
-              logwarn(paste("Could not open NetCDF file: ", e))
+             logwarn(paste("Could not open NetCDF file: ", e))
              quit("no", status=0, runLast=F)
          })
 
@@ -45,7 +45,8 @@ get_temperatures <- function(end_index) {
     }
 
     if (length(active_stations) == 0) {
-        stop("Could not find any active weather stations")
+        logwarn("Could not find any active weather stations")
+        quit("no", status=0, runLast=F)
     }
 
     # Select closest active weather station.
