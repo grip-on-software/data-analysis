@@ -540,6 +540,9 @@ if (get_arg('--project', default=F)) {
                                   sprint_patch=patch, combine=combine,
                                   details=details, time=time, scores=scores)
     sprint_data <- result$data
+    if ('num_story_points' %in% result$colnames) {
+        sprint_data <- result$data[result$data$num_story_points > 0, ]
+    }
 
     write.arff(sprint_data[, result$colnames],
                file=paste(output_directory, "sprint_features.arff", sep="/"),
