@@ -534,19 +534,23 @@ if (get_arg('--project', default=F)) {
     combine <- get_arg('--combine', default=F)
     details <- get_arg('--details', default=F)
     time <- get_arg('--time', default=F)
+    append <- get_arg('--append', default=F)
 
     result <- get_sprint_features(conn, features, exclude, NULL, latest_date,
                                   core=core, sprint_days=days,
                                   sprint_patch=patch, combine=combine,
                                   details=details, time=time, scores=scores)
-    sprint_data <- result$data
+    sprint_data <- result$data[, result$colnames]
     if ('num_story_points' %in% result$colnames) {
         sprint_data <- result$data[result$data$num_story_points > 0, ]
     }
 
-    write.arff(sprint_data[, result$colnames],
-               file=paste(output_directory, "sprint_features.arff", sep="/"),
-               relation="sprint_data")
+    path <- paste(output_directory, "sprint_features.arff", sep="/")
+    if (append && file.exists(path)) {
+        old_data <- read.arff(path)
+        sprint_data <- rbind.fill(old_data, sprint_data)
+    }
+    write.arff(sprint_data, file=path, relation="sprint_data")
 
     if (details) {
         write(toJSON(result$details),

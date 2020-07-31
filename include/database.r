@@ -11,14 +11,18 @@ if (!exists('INC_DATABASE_R')) {
     source('include/args.r')
 
     config <- NULL
+    organization <- NULL
     get_config <- function() {
         if (is.null(config)) {
             config_file <- get_arg('--config', default='config.yml')
-            organization <- get_arg('--org',
-                                    default=Sys.getenv("ANALYSIS_ORGANIZATION"))
+            organization <<- get_arg('--org',
+                                     default=Sys.getenv("ANALYSIS_ORGANIZATION"))
             config <<- yaml.load_file(config_file)
             if (!is.null(config[[organization]])) {
                 config <<- config[[organization]]
+                if (!is.null(config$arguments)) {
+                    add_args(config$arguments)
+                }
             }
         }
         return(config)

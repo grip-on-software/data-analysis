@@ -5,6 +5,9 @@ if (!exists('INC_ARGS_R')) {
 
     args <- commandArgs(FALSE)
 
+    add_args <- function(new_args) {
+        args <<- paste(args, new_args)
+    }
     has_arg <- function(name) {
         return(name %in% args)
     }
