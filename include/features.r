@@ -908,7 +908,7 @@ get_sprint_conditions <- function(latest_date='', core=F, sprint_days=NA,
                         '${t("sprint")}.start_date <= ${current_timestamp}')
     }
     if (core) {
-        conditions <- c(conditions, '${project_core}', '${project_main}')
+        conditions <- c(conditions, '${s(project_core)}', '${s(project_main)}')
     }
     if (!is.na(sprint_days)) {
         conditions <- c(conditions,
