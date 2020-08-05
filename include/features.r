@@ -658,7 +658,7 @@ get_features <- function(conn, features, exclude, items, data, colnames,
                 stop(paste('No query or result available for', columns))
             }
             else {
-                loginfo('Executing query for table %s', item$table)
+                loginfo('Executing query for table %s: %s', item$table, columns)
                 logdebug(item$query)
                 time <- system.time(result <- dbGetQuery(conn, item$query))
                 loginfo('Query for table %s took %f seconds', item$table,
