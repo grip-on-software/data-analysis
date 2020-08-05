@@ -20,7 +20,7 @@ if (!exists('INC_LOG_R')) {
         }
         else {
             stop(paste('--log must be one of',
-                       paste(names(loglevels), collapse=", ")))
+                       paste(names(loglevels), collapse=", "), 'not', level))
         }
     }
     log_setup()
