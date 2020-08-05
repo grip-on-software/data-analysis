@@ -160,6 +160,11 @@ sprint_data <- get_sprint_projects(conn, patterns=patterns,
                                    join_cols=join_cols)
 project_col <- join_cols[1]
 for (idx in 1:length(results$projects)) {
+    if (!is.null(results$organizations) &&
+        results$organizations[idx] != organization) {
+        next
+    }
+
     project_id <- results$projects[idx]
     sprint_id <- results$sprints[idx]
     sprint <- get_sprint_by_id(project_id, sprint_id)
@@ -167,7 +172,7 @@ for (idx in 1:length(results$projects)) {
 
     feature_sets <- intersect(results$configuration$features, names(features))
     tag_names <- get_tags(setNames(rep(T, length(features)), names(features)))
-    feature_excludes <- c("project_id", "sprint_num", tag_names)
+    feature_excludes <- c("project_id", "sprint_num", "organization", tag_names)
     feature_mask <- !(names(features) %in% feature_excludes)
     feature_names <- as.character(results$configuration$features)
     if (!is.null(results$analogy_indexes) &&
@@ -185,7 +190,8 @@ for (idx in 1:length(results$projects)) {
                                     'name']
     }
     else {
-        project_name <- paste("Proj", project_id, sep="")
+        project_name <- paste(results$organizations[idx], "Proj", project_id,
+                              sep="")
     }
     projects <- c(projects, project_name)
 
