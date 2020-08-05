@@ -542,7 +542,7 @@ include_feature <- function(item, features, exclude, required=c()) {
         if (length(grep(exclude, item$column)) != 0) {
             return(F)
         }
-        if (!is.null(item$expression)) {
+        if (is.null(item$expression)) {
             return(length(grep(exclude, item$table)) == 0)
         }
         return(T)
