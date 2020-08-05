@@ -1745,7 +1745,7 @@ files:
     column: backlog_removed_story_points
     default: 0
     patterns:
-        issue_backlog: ${s(issue_story)} AND ${s(issue_excluded)} AND issue.sprint_id IS NULL AND issue.updated >= ${s(sprint_open, sprint="interval_sprint")}
+        issue_backlog: ${s(issue_story)} AND ${s(issue_excluded)} AND ${t("issue")}.sprint_id IS NULL AND ${t("issue")}.updated >= ${s(sprint_open, sprint="interval_sprint")}
     summarize:
         operation: sum
         field: story_points
@@ -1779,7 +1779,7 @@ files:
     column: backlog_estimated_removed_story_points
     default: 0
     patterns:
-        issue_backlog: ${s(issue_story)} AND ${s(issue_excluded)} AND issue.sprint_id IS NULL AND issue.updated >= ${s(sprint_open, sprint="interval_sprint")}
+        issue_backlog: ${s(issue_story)} AND ${s(issue_excluded)} AND ${t("issue")}.sprint_id IS NULL AND ${t("issue")}.updated >= ${s(sprint_open, sprint="interval_sprint")}
     summarize:
         operation: sum_of_na_avg
         field: story_points
@@ -1815,7 +1815,7 @@ files:
     column: backlog_removed_stories
     default: 0
     patterns:
-        issue_backlog: ${s(issue_story)} AND ${s(issue_excluded)} AND newer_issue.sprint_id IS NULL AND issue.updated >= ${s(sprint_open, sprint="interval_sprint")}
+        issue_backlog: ${s(issue_story)} AND ${s(issue_excluded)} AND newer_issue.sprint_id IS NULL AND ${t("issue")}.updated >= ${s(sprint_open, sprint="interval_sprint")}
     summarize:
         operation: count 
         field: story_points

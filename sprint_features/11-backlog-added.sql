@@ -16,5 +16,5 @@ AND ${s(issue_backlog)}
 AND ${t("issue")}.updated > ${s(sprint_open, sprint="interval_sprint")}
 ${s(project_condition, project="issue")}
 ${s(filter_condition)}
-AND (issue.changelog_id IS NULL ${s(filter_inverse, issue="older_issue", cond_op="OR")})
+AND (${t("issue")}.changelog_id IS NULL ${s(filter_inverse, issue="older_issue", cond_op="OR")})
 ${g(join_cols, "sprint", f("issue_key"), sprint="interval_sprint")}
