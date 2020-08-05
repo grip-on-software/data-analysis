@@ -544,11 +544,17 @@ if (get_arg('--project', default=F)) {
     if ('num_story_points' %in% result$colnames) {
         sprint_data <- result$data[result$data$num_story_points > 0, ]
     }
+    if ('team_id' %in% result$colnames) {
+        colnames(sprint_data)[1] <- "project_id"
+    }
 
     path <- paste(output_directory, "sprint_features.arff", sep="/")
-    if (append && file.exists(path)) {
-        old_data <- read.arff(path)
-        sprint_data <- rbind.fill(old_data, sprint_data)
+    if (append) {
+        sprint_data$organization <- organization
+        if (file.exists(path)) {
+            old_data <- read.arff(path)
+            sprint_data <- rbind.fill(old_data, sprint_data)
+        }
     }
     write.arff(sprint_data, file=path, relation="sprint_data")
 
