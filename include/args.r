@@ -6,7 +6,7 @@ if (!exists('INC_ARGS_R')) {
     args <- rev(commandArgs(FALSE))
 
     add_args <- function(new_args) {
-        args <<- c(rev(strsplit(new_args, " ")), "--", args)
+        args <<- c(rev(new_args), "--", args)
     }
     has_arg <- function(name) {
         return(name %in% args)

@@ -539,10 +539,13 @@ include_feature <- function(item, features, exclude, required=c()) {
         return(T)
     }
     if (all(item$column %in% features)) {
-        if (!is.null(item$expression)) {
-            return(length(grep(exclude, item$column)) == 0)
+        if (length(grep(exclude, item$column)) != 0) {
+            return(F)
         }
-        return(length(grep(exclude, item$table)) == 0)
+        if (is.null(item$expression)) {
+            return(length(grep(exclude, item$table)) == 0)
+        }
+        return(T)
     }
     return(F)
 }
