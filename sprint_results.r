@@ -36,7 +36,7 @@ if (project_ids != '0') {
 
 project_metadata <- get_arg('--project-metadata', default='recent,core,main')
 metadata <- get_meta_keys(project_metadata)
-fields <- list('project_id', 'name')
+fields <- list(join_cols, 'name')
 if (config$db$primary_source != "tfs") {
     fields <- c(fields, 'quality_display_name')
 }
@@ -159,6 +159,16 @@ if (!is.null(results$configuration$assignments)) {
 sprint_data <- get_sprint_projects(conn, patterns=patterns,
                                    join_cols=join_cols)
 project_col <- join_cols[1]
+
+if (!is.null(organization)) {
+    organization_path <- paste(output_directory, organization, sep="/")
+    if (!dir.exists(organization_path)) {
+        dir.create(organization_path)
+    }
+} else {
+    organization_path <- output_directory
+}
+
 for (idx in 1:length(results$projects)) {
     if (!is.null(results$organizations) &&
         results$organizations[idx] != organization) {
@@ -190,8 +200,7 @@ for (idx in 1:length(results$projects)) {
                                     'name']
     }
     else {
-        project_name <- paste(results$organizations[idx], "Proj", project_id,
-                              sep="")
+        project_name <- paste("Proj", project_id, sep="")
     }
     projects <- c(projects, project_name)
 
@@ -221,7 +230,7 @@ for (idx in 1:length(results$projects)) {
                    sources=get_tracker_dates(conn, project_id, aggregate=max))
     project_data <- anonymize_result(result, project_id)
 
-    path <- paste(output_directory, project_name, sep="/")
+    path <- paste(organization_path, project_name, sep="/")
     if (!dir.exists(path)) {
         dir.create(path)
     }
@@ -263,10 +272,10 @@ for (idx in 1:length(results$projects)) {
 
 write_projects_metadata(conn, fields, metadata, projects=NA,
                         project_ids=project_ids,
-                        output_directory=output_directory,
+                        output_directory=organization_path,
                         patterns=patterns, join_cols=join_cols)
-write_feature_metadata(unique(projects), specifications, output_directory)
+write_feature_metadata(unique(projects), specifications, organization_path)
 write(toJSON(results$configuration, auto_unbox=T),
-      file=paste(output_directory, "configuration.json", sep="/"))
+      file=paste(organization_path, "configuration.json", sep="/"))
 
 loginfo('Output all project predictions')
