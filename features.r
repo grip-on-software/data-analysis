@@ -550,7 +550,7 @@ if (get_arg('--project', default=F)) {
 
     path <- paste(output_directory, "sprint_features.arff", sep="/")
     if (append) {
-        sprint_data$organization <- organization
+        sprint_data$organization <- as.factor(organization)
         if (file.exists(path)) {
             old_data <- read.arff(path)
             sprint_data <- rbind.fill(old_data, sprint_data)
