@@ -268,6 +268,9 @@ files:
     measurement:
         unit: sprint
     category: team
+    source:
+        vcs: "${vcs_url}"
+    cache: true
   - expression: "dev_sprint_experience / number_of_devs"
     column: weighted_sprint_experience
     default: 0
@@ -307,6 +310,9 @@ files:
         unit: person
         superset: number_of_devs
     category: team
+    source:
+        vcs: "${vcs_url}"
+    cache: true
   - metric: TeamSpirit
     column: team_spirit
     aggregate: end
@@ -328,7 +334,7 @@ files:
         en: "Spirit %s"
     measurement:
         unit: meta
-    sources:
+    source:
         quality: "${quality_url}/${quality_name}"
         metric_history: "${metric_history_url}/${metric_history_file}"
   - metric: [ProductLOC, Ncloc, loc]
@@ -582,6 +588,7 @@ files:
     category: tracking
     source:
         jira: "${jira_url}/secure/IssueNavigator.jspa?jqlQuery=${jira_project} and ${jira_sprint} and reporter !%3D currentUser()&runQuery=true"
+    cache: true
   - filename: 04-expected-story-points.sql
     table: expected_story_points
     column: num_story_points
@@ -610,6 +617,7 @@ files:
     preferred: true
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=burndownChart&sprint=${jira_sprint_id}"
+    cache: true
     category: velocity
   - filename: 04-done-story-points.sql
     table: done_story_points
@@ -642,6 +650,7 @@ files:
     preferred: true
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
+    cache: true
     category: velocity
   - filename: 04-expected-story-points.sql
     table: expected_bug_points
@@ -1548,6 +1557,7 @@ files:
     source:
         quality: "${quality_url}/${quality_name}"
         metric_history: "${metric_history_url}/${metric_history_file}"
+    cache: true
     category: metrics
   - filename: 09-red-metric-count.sql
     table: red_metric_count
@@ -1568,6 +1578,7 @@ files:
     source:
         quality: "${quality_url}/${quality_name}"
         metric_history: "${metric_history_url}/${metric_history_file}"
+    cache: true
     category: metrics
   - filename: 09-missing-metric-count.sql
     table: missing_metric_count
@@ -1589,6 +1600,7 @@ files:
     source:
         quality: "${quality_url}/${quality_name}"
         metric_history: "${metric_history_url}/${metric_history_file}"
+    cache: true
     category: metrics
   - filename: 10-metric-target-change.sql
     table: metric_target_change
@@ -1610,6 +1622,7 @@ files:
     source:
         metric_options: "${metric_options_url}/blob/master/${metric_options_file}"
         quality: "${quality_url}/${quality_name}"
+    cache: true
     category: metrics
   - filename: 11-early-rank-changes.sql
     table: early_rank_changes
@@ -1739,6 +1752,7 @@ files:
         unit: item
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
+    cache: true
     category: backlog
   - filename: 11-backlog-all.sql
     table: backlog_stories
@@ -1977,6 +1991,7 @@ files:
     preferred: false
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
+    cache: true
     category: backlog
   - filename: 11-backlog-all.sql
     table: backlog_stories
@@ -2040,6 +2055,7 @@ files:
         superset: backlog_points
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
+    cache: true
     category: backlog
   - filename: 11-backlog-all.sql
     table: backlog_stories
@@ -2076,6 +2092,7 @@ files:
     preferred: false
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
+    cache: true
     category: backlog
   - expression: "cumsum(backlog_points_per_story) / sprint_num"
     column: backlog_story_points_all_average
@@ -2174,6 +2191,7 @@ files:
         superset: backlog_points
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
+    cache: true
     category: backlog
   - filename: 11-backlog-epic.sql
     table: backlog_epics
@@ -2205,6 +2223,7 @@ files:
         unit: point
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
+    cache: true
     category: backlog
   - expression: 'backlog_story_points + backlog_expected_story_points'
     column: backlog_points

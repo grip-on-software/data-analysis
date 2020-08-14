@@ -9,6 +9,7 @@ library(triangle)
 source('include/database.r')
 source('include/log.r')
 source('include/project.r')
+source('include/tracker.r')
 
 safe_unbox <- function(x) {
     if (is.vector(x) && length(x) > 1) {
@@ -626,7 +627,8 @@ get_summarize_columns <- function(item) {
 }
 
 get_features <- function(conn, features, exclude, items, data, colnames,
-                         join_cols, details=F, required=c(), components=NULL) {
+                         join_cols, details=F, required=c(), components=NULL,
+                         table=NULL) {
     if (length(features) == 1) {
         if (is.na(features)) {
             features <- unlist(sapply(items, function(item) { item$column }))
@@ -641,6 +643,34 @@ get_features <- function(conn, features, exclude, items, data, colnames,
     }
     selected_items <- c()
     expressions <- c()
+    query_columns <- c()
+    main_ids <- unique(data[[join_cols[1]]])
+    trackers <- list()
+    table_data <- data.frame()
+    if (!is.null(table)) {
+        trackers <- get_tracker_dates(conn, main_ids, aggregate=min)
+        table_cols <- c(join_cols, 'value')
+        table_conditions <- paste(join_cols[1], 'IN (',
+                                  paste(main_ids, collapse=","), ')')
+        if (!is.null(components)) {
+            table_cols <- c(table_cols, 'component')
+        } else {
+            table_conditions <- c(table_conditions, 'component IS NULL')
+        }
+        if (is.list(details)) {
+            table_cols <- c(table_cols, 'details')
+        }
+
+        table_where <- paste(table_conditions, collapse=' AND ')
+        query <- paste('SELECT', paste(table_cols, collapse=", "),
+                       ', name, update_date
+                        FROM gros.${table} WHERE ${table_where}')
+        table_select_item <- load_query(list(query=query),
+                                        list(table=table,
+                                             table_where=table_where))
+        logdebug(table_select_item$query)
+        table_data <- dbGetQuery(conn, table_select_item$query)
+    }
     for (item in items) {
         if (include_feature(item, features, exclude, required)) {
             selected_items <- c(selected_items, list(item))
@@ -649,11 +679,13 @@ get_features <- function(conn, features, exclude, items, data, colnames,
                 result <- item$result
             }
             else if (!is.null(item$expression)) {
-                expressions <- c(expressions, columns)
                 if (isTRUE(item$precompute) || all(columns %in% required)) {
                     data <- get_expression(item, data, join_cols,
                                            components=components, merge=T)
+                    # Don't store expressions in the table
                     colnames <- c(colnames, columns)
+                } else {
+                    expressions <- c(expressions, columns)
                 }
                 next
             }
@@ -661,11 +693,58 @@ get_features <- function(conn, features, exclude, items, data, colnames,
                 stop(paste('No query or result available for', columns))
             }
             else {
-                loginfo('Executing query for table %s: %s', item$table, columns)
-                logdebug(item$query)
-                time <- system.time(result <- dbGetQuery(conn, item$query))
-                loginfo('Query for table %s took %f seconds', item$table,
-                        time['elapsed'])
+                use_table <- F
+                cache_data <- table_data[table_data$name %in% columns, ]
+                for (source_type in names(item$source)) {
+                    if (is.null(trackers[[source_type]])) {
+                        next
+                    }
+                    if (is.na(trackers[[source_type]]) ||
+                        nrow(cache_data) == 0 ||
+                        trackers[[source_type]] > min(cache_data$update_date) ||
+                        (is.list(details) && !is.null(item$summarize) &&
+                         all(is.na(cache_data$details)))) {
+                        use_table <- F
+                        break
+                    }
+                    use_table <- T
+                }
+                if (use_table) {
+                    loginfo('Using cached results for table %s column(s) %s',
+                            item$table, columns)
+                    result <- table_data[, join_cols]
+                    for (column in columns) {
+                        cache <- table_data[table_data$name == column,
+                                            table_cols]
+                        if (is.list(details) && !is.null(item$summarize)) {
+                            pieces <- lapply(cache$details,
+                                             function(detail) {
+                                                 det <- fromJSON(gsub("\\\\(.)",
+                                                                      "\\1",
+                                                                      detail))
+                                                 if (length(det[[1]]) == 0) {
+                                                     return(NULL)
+                                                 }
+                                                 return(det)
+                                              })
+                            details[[column]] <- unlist(pieces, recursive=F)
+                            cache$details <- NULL
+                        }
+
+                        colnames(cache)[colnames(cache) == 'value'] <- column
+                        result <- merge_features(result, cache, join_cols, NULL)
+                    }
+                } else {
+                    loginfo('Executing query for table %s: column(s) %s',
+                            item$table, columns)
+                    logdebug(item$query)
+                    time <- system.time(result <- dbGetQuery(conn, item$query))
+                    loginfo('Query for table %s column(s) %s took %f seconds',
+                            item$table, columns, time['elapsed'])
+                    if (isTRUE(item$cache)) {
+                        query_columns <- c(query_columns, columns)
+                    }
+                }
             }
             if (!is.null(components) && (!is.null(result$component) ||
                                          !is.null(item$summarize$component))) {
@@ -676,7 +755,8 @@ get_features <- function(conn, features, exclude, items, data, colnames,
                                          component_field,
                                          summarize=item$summarize)
             }
-            if (!is.null(item$summarize)) {
+            if (!is.null(item$summarize) &&
+                item$summarize$field %in% colnames(result)) {
                 summarize <- item$summarize
                 group_names <- join_cols
                 group_cols <- lapply(result[, group_names], factor)
@@ -737,10 +817,10 @@ get_features <- function(conn, features, exclude, items, data, colnames,
             if (!is.null(item$default)) {
                 for (column in columns) {
                     if (!(column %in% names(data))) {
-                        logwarn(paste('Column', column, 'could not be found'))
+                        logwarn('Column %s could not be found', column)
                     }
                     else if (length(data[[column]]) == 0) {
-                        logwarn(paste('Column', column, 'is empty'))
+                        logwarn('Column %s is empty', column)
                     }
                     else {
                         data[is.na(data[[column]]), column] <- item$default
@@ -748,6 +828,65 @@ get_features <- function(conn, features, exclude, items, data, colnames,
                 }
             }
             colnames <- c(colnames, columns)
+        }
+    }
+    if (!is.null(table) && length(query_columns) > 0) {
+        delete_query <- paste('DELETE FROM gros.${table}
+                               WHERE', join_cols[1], 'IN (',
+                              paste(main_ids, collapse=","),
+                              ') AND name IN (',
+                              paste(dbQuoteString(conn, query_columns),
+                                    collapse=","),
+                              ')',
+                              ifelse(!is.null(components), '',
+                                     'AND component IS NULL'))
+        table_delete_item <- load_query(list(query=delete_query),
+                                        list(table=table))
+        logdebug(table_delete_item$query)
+        dbSendUpdate(conn, table_delete_item$query)
+
+        logdebug('Inserting %d values for %d features in cache table',
+                 nrow(data), length(query_columns))
+        group_cols <- join_cols
+        if (!is.null(components)) {
+            group_cols <- c(group_cols, 'component')
+        }
+        query_time <- dbQuoteString(conn, as.character(Sys.time()))
+        for (column in query_columns) {
+            value <- data[, c(group_cols, column)]
+            value$name <- dbQuoteString(conn, column)
+            value$update_date <- query_time
+            if (is.list(details)) {
+                detail <- details[[column]]
+                value$details <-
+                    apply(value, 1,
+                          function(row) {
+                              dbQuoteString(conn,
+                                            toJSON(detail[paste(row[group_cols],
+                                                                collapse=".")]))
+                          })
+            }
+
+            # Handle escaping and NULLs
+            if (!is.null(components)) {
+                value$component <- dbQuoteString(conn, value$component)
+            }
+            value[[column]] <- dbQuoteLiteral(conn, value[[column]])
+
+            insert_query <- paste('INSERT INTO gros.', table, '(',
+                                  paste(join_cols, collapse=", "),
+                                  ifelse(!is.null(components), ', component', ''),
+                                  ', "value", "name", update_date',
+                                  ifelse(is.list(details), ', details', ''),
+                                  ') VALUES', sep="")
+            for (batch in split(value, as.numeric(rownames(value))-1 %/% 500)) {
+                dbSendUpdate(conn,
+                             paste(insert_query,
+                                   paste("(",
+                                         apply(batch, 1, paste, collapse=","),
+                                         ")", sep="", collapse=","),
+                                   sep=""))
+            }
         }
     }
     list(data=data, details=details, colnames=unique(colnames),
@@ -1171,7 +1310,7 @@ get_sprint_features <- function(conn, features, exclude, variables, latest_date,
 
     result <- get_features(conn, features, exclude, items, sprint_data,
                            colnames, join_cols, details=details,
-                           required=c("sprint_num"))
+                           required=c("sprint_num"), table="sprint_features")
 
     if (scores) {
         result$scores <- list()
@@ -1693,7 +1832,8 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
 
     result <- get_features(conn, features, exclude, items, sprint_data,
                            colnames, join_cols, details=details,
-                           required=required, components=components)
+                           required=required, components=components,
+                           table="sprint_features")
     expressions <- result$expressions
 
     result$projects <- projects
