@@ -288,6 +288,7 @@ if (!exists('INC_DATABASE_R')) {
                                     metric_history=metric_history)
                 item$source[item$backends] <- list(NULL)
             }
+            item$cache <- TRUE
             if (!is.null(item$summarize)) {
                 columns <- c(columns, 'metric.domain_name')
                 field <- paste(item$aggregate, 'value', sep="_")
