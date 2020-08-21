@@ -885,7 +885,7 @@ get_features <- function(conn, features, exclude, items, data, colnames,
                                   ifelse(is.list(details), ', details', ''),
                                   ') VALUES', sep="")
             for (batch in split(value,
-                                (as.numeric(rownames(value))-1) %/% 500)) {
+                                (as.numeric(rownames(value))-1) %/% 100)) {
                 dbSendUpdate(conn,
                              paste(insert_query,
                                    paste("(",
