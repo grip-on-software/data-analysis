@@ -653,7 +653,7 @@ get_features <- function(conn, features, exclude, items, data, colnames,
         table_cols <- c(paste(c('project_id', 'sprint_id'), 'AS', join_cols),
                         'value')
         field_cols <- c(join_cols, 'value')
-        table_conditions <- paste(join_cols[1], 'IN (',
+        table_conditions <- paste('project_id IN (',
                                   paste(main_ids, collapse=","), ')')
         if (!is.null(components)) {
             table_cols <- c(table_cols, 'component')
