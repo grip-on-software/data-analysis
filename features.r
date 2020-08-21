@@ -535,13 +535,14 @@ if (get_arg('--project', default=F)) {
     details <- get_arg('--details', default=F)
     time <- get_arg('--time', default=F)
     append <- get_arg('--append', default=F)
+    points <- get_arg('--points', default=T)
 
     result <- get_sprint_features(conn, features, exclude, NULL, latest_date,
                                   core=core, sprint_days=days,
                                   sprint_patch=patch, combine=combine,
                                   details=details, time=time, scores=scores)
     sprint_data <- result$data[, result$colnames]
-    if ('num_story_points' %in% result$colnames) {
+    if (points && 'num_story_points' %in% result$colnames) {
         sprint_data <- result$data[result$data$num_story_points > 0, ]
     }
     if ('team_id' %in% result$colnames) {
@@ -550,7 +551,11 @@ if (get_arg('--project', default=F)) {
 
     path <- paste(output_directory, "sprint_features.arff", sep="/")
     if (append) {
-        sprint_data$organization <- as.factor(organization)
+        if (nrow(sprint_data) == 0) {
+            loginfo('No sprints found for organization %s!', organization)
+        } else {
+            sprint_data$organization <- as.factor(organization)
+        }
         if (file.exists(path)) {
             old_data <- read.arff(path)
             sprint_data <- rbind.fill(old_data, sprint_data)
