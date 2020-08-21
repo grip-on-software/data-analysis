@@ -1,6 +1,6 @@
 SELECT ${f(join_cols, "startdata")}, startdata.key, enddata.story_points,
 	EXTRACT(day FROM enddata.end_date - startdata.start_date) AS num
-FROM (
+FROM gros.${t("sprint")}, (
 	SELECT ${f(join_cols, "issue")}, ${t("issue")}.issue_id,
 		${s(issue_key)} AS key, MIN(${t("issue")}.updated) AS start_date
 	FROM gros.${t("issue")}
@@ -16,7 +16,7 @@ FROM (
 	${s(issue_join)}
 	WHERE ${s(issue_story_subtask)} AND ${s(issue_done)}
 	${g(join_cols, "issue")}, ${t("issue")}.issue_id, ${f("issue_key")}
-) AS enddata, gros.${t("sprint")}
+) AS enddata
 WHERE startdata.issue_id = enddata.issue_id
 AND ${j(join_cols, "startdata", "enddata", source="jira")}
 AND ${j(join_cols, "startdata", "sprint")}
