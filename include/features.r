@@ -652,15 +652,18 @@ get_features <- function(conn, features, exclude, items, data, colnames,
         # Team IDs are considered the same as project IDs in this table
         table_cols <- c(paste(c('project_id', 'sprint_id'), 'AS', join_cols),
                         'value')
+        field_cols <- c(join_cols, 'value')
         table_conditions <- paste(join_cols[1], 'IN (',
                                   paste(main_ids, collapse=","), ')')
         if (!is.null(components)) {
             table_cols <- c(table_cols, 'component')
+            field_cols <- c(field_cols, 'component')
         } else {
             table_conditions <- c(table_conditions, 'component IS NULL')
         }
         if (is.list(details)) {
             table_cols <- c(table_cols, 'details')
+            field_cols <- c(field_cols, 'details')
         }
 
         table_where <- paste(table_conditions, collapse=' AND ')
@@ -717,7 +720,7 @@ get_features <- function(conn, features, exclude, items, data, colnames,
                     result <- table_data[, join_cols]
                     for (column in columns) {
                         cache <- table_data[table_data$name == column,
-                                            table_cols]
+                                            field_cols]
                         if (is.list(details) && !is.null(item$summarize)) {
                             pieces <- lapply(cache$details,
                                              function(detail) {
