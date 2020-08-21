@@ -845,8 +845,8 @@ get_features <- function(conn, features, exclude, items, data, colnames,
         logdebug(table_delete_item$query)
         dbSendUpdate(conn, table_delete_item$query)
 
-        logdebug('Inserting %d values for %d features in cache table',
-                 nrow(data), length(query_columns))
+        loginfo('Inserting %d values for %d features in cache table',
+                nrow(data), length(query_columns))
         group_cols <- join_cols
         if (!is.null(components)) {
             group_cols <- c(group_cols, 'component')
@@ -879,7 +879,8 @@ get_features <- function(conn, features, exclude, items, data, colnames,
                                   ', "value", "name", update_date',
                                   ifelse(is.list(details), ', details', ''),
                                   ') VALUES', sep="")
-            for (batch in split(value, as.numeric(rownames(value))-1 %/% 500)) {
+            for (batch in split(value,
+                                (as.numeric(rownames(value))-1) %/% 500)) {
                 dbSendUpdate(conn,
                              paste(insert_query,
                                    paste("(",
