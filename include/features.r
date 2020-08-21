@@ -649,7 +649,9 @@ get_features <- function(conn, features, exclude, items, data, colnames,
     table_data <- data.frame()
     if (!is.null(table)) {
         trackers <- get_tracker_dates(conn, main_ids, aggregate=min)
-        table_cols <- c(join_cols, 'value')
+        # Team IDs are considered the same as project IDs in this table
+        table_cols <- c(paste(c('project_id', 'sprint_id'), 'AS', join_cols),
+                        'value')
         table_conditions <- paste(join_cols[1], 'IN (',
                                   paste(main_ids, collapse=","), ')')
         if (!is.null(components)) {
@@ -832,7 +834,7 @@ get_features <- function(conn, features, exclude, items, data, colnames,
     }
     if (!is.null(table) && length(query_columns) > 0) {
         delete_query <- paste('DELETE FROM gros.${table}
-                               WHERE', join_cols[1], 'IN (',
+                               WHERE project_id IN (',
                               paste(main_ids, collapse=","),
                               ') AND name IN (',
                               paste(dbQuoteString(conn, query_columns),
@@ -873,8 +875,8 @@ get_features <- function(conn, features, exclude, items, data, colnames,
             }
             value[[column]] <- dbQuoteLiteral(conn, value[[column]])
 
-            insert_query <- paste('INSERT INTO gros.', table, '(',
-                                  paste(join_cols, collapse=", "),
+            insert_query <- paste('INSERT INTO gros.', table,
+                                  '(project_id, sprint_id',
                                   ifelse(!is.null(components), ', component', ''),
                                   ', "value", "name", update_date',
                                   ifelse(is.list(details), ', details', ''),
