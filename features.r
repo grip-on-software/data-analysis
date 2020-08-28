@@ -518,6 +518,8 @@ if (get_arg('--project', default=F)) {
     }
 } else if (story) {
     changelog <- !get_arg('--latest', default=F)
+    filename <- get_arg('--filename', default='story_features.arff')
+
     result <- get_story_features(conn, features, exclude, latest_date,
                                  changelog=changelog, project_fields=fields,
                                  project_meta=metadata, project_names=projects,
@@ -526,7 +528,7 @@ if (get_arg('--project', default=F)) {
     colnames <- unique(c(story_metadata, result$colnames))
 
     write.arff(story_data[, colnames],
-               file=paste(output_directory, "story_features.arff", sep="/"),
+               file=paste(output_directory, filename, sep="/"),
                relation="story_data")
 } else {
     days <- get_arg('--days', default=NA)
@@ -536,6 +538,7 @@ if (get_arg('--project', default=F)) {
     time <- get_arg('--time', default=F)
     append <- get_arg('--append', default=F)
     points <- get_arg('--points', default=T)
+    filename <- get_arg('--filename', default='sprint_features.arff')
 
     result <- get_sprint_features(conn, features, exclude, NULL, latest_date,
                                   core=core, sprint_days=days,
@@ -549,7 +552,7 @@ if (get_arg('--project', default=F)) {
         colnames(sprint_data)[1] <- "project_id"
     }
 
-    path <- paste(output_directory, "sprint_features.arff", sep="/")
+    path <- paste(output_directory, filename, sep="/")
     if (append) {
         if (nrow(sprint_data) == 0) {
             loginfo('No sprints found for organization %s!', organization)
