@@ -280,7 +280,7 @@ results$configuration$organizations <- as.list(unique(results$organizations))
 write(toJSON(results$configuration, auto_unbox=T),
       file=paste(organization_path, "configuration.json", sep="/"))
 
-if (!is.null(organization)) {
+if (length(results$configuration$organizations) > 1) {
     write(toJSON(results$configuration, auto_unbox=T),
           file=paste(output_directory, "configuration.json", sep="/"))
 }
