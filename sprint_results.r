@@ -275,7 +275,14 @@ write_projects_metadata(conn, fields, metadata, projects=NA,
                         output_directory=organization_path,
                         patterns=patterns, join_cols=join_cols)
 write_feature_metadata(unique(projects), specifications, organization_path)
+
+results$configuration$organizations <- as.list(unique(results$organizations))
 write(toJSON(results$configuration, auto_unbox=T),
       file=paste(organization_path, "configuration.json", sep="/"))
+
+if (!is.null(organization)) {
+    write(toJSON(results$configuration, auto_unbox=T),
+          file=paste(output_directory, "configuration.json", sep="/"))
+}
 
 loginfo('Output all project predictions')
