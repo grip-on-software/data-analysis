@@ -170,15 +170,15 @@ if (!is.null(organization)) {
 }
 
 for (idx in 1:length(results$projects)) {
-    if (!is.null(results$organizations) &&
-        results$organizations[idx] != organization) {
+    if (results$organizations[idx] != organization) {
         next
     }
 
     project_id <- results$projects[idx]
     sprint_id <- results$sprints[idx]
     sprint <- get_sprint_by_id(project_id, sprint_id)
-    sprint_ids <- sort(results$sprints[results$projects == project_id])
+    sprint_ids <- sort(results$sprints[results$organizations == organization &
+                                       results$projects == project_id])
 
     feature_sets <- intersect(results$configuration$features, names(features))
     tag_names <- get_tags(setNames(rep(T, length(features)), names(features)))
