@@ -155,6 +155,7 @@ if (!is.null(results$configuration$assignments)) {
                                                        features))
     results$configuration$assignments <- assignments
 }
+results$configuration$organizations <- as.list(unique(results$organizations))
 
 sprint_data <- get_sprint_projects(conn, patterns=patterns,
                                    join_cols=join_cols)
@@ -276,7 +277,6 @@ write_projects_metadata(conn, fields, metadata, projects=NA,
                         patterns=patterns, join_cols=join_cols)
 write_feature_metadata(unique(projects), specifications, organization_path)
 
-results$configuration$organizations <- as.list(unique(results$organizations))
 write(toJSON(results$configuration, auto_unbox=T),
       file=paste(organization_path, "configuration.json", sep="/"))
 
