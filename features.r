@@ -27,6 +27,7 @@ story <- get_arg('--story', default=F)
 scores <- get_arg('--scores', default=F)
 futures <- get_arg('--future', default=0)
 latest_date <- as.POSIXct(get_arg('--latest-date', default=Sys.time()))
+cache_update <- get_arg('--cache-update', default=T)
 
 config <- get_config()
 patterns <- load_definitions('sprint_definitions.yml', config$fields,
@@ -258,7 +259,8 @@ if (get_arg('--project', default=F)) {
                                          scores=scores,
                                          latest_date=latest_date,
                                          variables=variables,
-                                         filters=list(fixversion=fixversions))
+                                         filters=list(fixversion=fixversions),
+                                         cache_update=cache_update)
     default_features <- default_features[default_features %in% result$colnames]
     old_features <- old_features[old_features %in% result$colnames]
     future_features <- future_features[future_features %in% result$colnames]
@@ -543,7 +545,8 @@ if (get_arg('--project', default=F)) {
     result <- get_sprint_features(conn, features, exclude, NULL, latest_date,
                                   core=core, sprint_days=days,
                                   sprint_patch=patch, combine=combine,
-                                  details=details, time=time, scores=scores)
+                                  details=details, time=time, scores=scores,
+                                  cache_update=cache_update)
     sprint_data <- result$data[, result$colnames]
     if (points && 'num_story_points' %in% result$colnames) {
         sprint_data <- result$data[result$data$num_story_points > 0, ]

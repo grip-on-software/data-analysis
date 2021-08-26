@@ -628,7 +628,7 @@ get_summarize_columns <- function(item) {
 
 get_features <- function(conn, features, exclude, items, data, colnames,
                          join_cols, details=F, required=c(), components=NULL,
-                         table=NULL) {
+                         table=NULL, cache_update=T) {
     if (length(features) == 1) {
         if (is.na(features)) {
             features <- unlist(sapply(items, function(item) { item$column }))
@@ -835,7 +835,7 @@ get_features <- function(conn, features, exclude, items, data, colnames,
             colnames <- c(colnames, columns)
         }
     }
-    if (!is.null(table) && length(query_columns) > 0) {
+    if (cache_update && !is.null(table) && length(query_columns) > 0) {
         delete_query <- paste('DELETE FROM gros.${table}
                                WHERE project_id IN (',
                               paste(main_ids, collapse=","),
@@ -1265,7 +1265,7 @@ get_story_features <- function(conn, features, exclude='^$',
 get_sprint_features <- function(conn, features, exclude, variables, latest_date,
                                 core=F, sprint_days=NA, sprint_patch=NA,
                                 future=T, combine=F, details=F, time=F,
-                                scores=F, teams=list()) {
+                                scores=F, teams=list(), cache_update=T) {
     conditions <- get_sprint_conditions(latest_date, core, sprint_days,
                                         sprint_patch, future=future)
     if (length(conditions) != 0) {
@@ -1316,7 +1316,8 @@ get_sprint_features <- function(conn, features, exclude, variables, latest_date,
 
     result <- get_features(conn, features, exclude, items, sprint_data,
                            colnames, join_cols, details=details,
-                           required=c("sprint_num"), table="sprint_features")
+                           required=c("sprint_num"), table="sprint_features",
+                           cache_update=cache_update)
 
     if (scores) {
         result$scores <- list()
@@ -1685,7 +1686,8 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
                                        project_names=NULL, components=NULL,
                                        prediction=list(), scores=F,
                                        latest_date=Sys.time(),
-                                       variables=list(), filters=list()) {
+                                       variables=list(), filters=list(),
+                                       cache_update=T) {
     fields <- list(project_name='${t("project")}.name',
                    sprint_name='${t("sprint")}.name',
                    start_date='${s(sprint_open)}',
@@ -1839,7 +1841,7 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
     result <- get_features(conn, features, exclude, items, sprint_data,
                            colnames, join_cols, details=details,
                            required=required, components=components,
-                           table="sprint_features")
+                           table="sprint_features", cache_update=cache_update)
     expressions <- result$expressions
 
     result$projects <- projects
