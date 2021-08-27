@@ -371,7 +371,7 @@ if (get_arg('--project', default=F)) {
                 team_projects <- meta$project_names[[1]]
                 components <- meta$component[[1]]
 
-                future_dates <- result$errors[[as.character(project_id)]]$date
+                future_dates <- result$errors[[as.character(team_id)]]$date
                 num_future_sprints <- max(c(nrow(future), length(future_dates)))
                 result$projects[result$projects$project_id == team_id,
                                 'future_sprints'] <- num_future_sprints
