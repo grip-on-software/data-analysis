@@ -358,6 +358,7 @@ if (get_arg('--project', default=F)) {
                 sprint <- list()
                 component <- NA
                 project_id <- result$projects[names == project, 'project_id']
+                team_id <- project_id
                 team_projects <- c()
                 components <- c()
             }
@@ -366,13 +367,15 @@ if (get_arg('--project', default=F)) {
                 meta <- result$projects[result$projects$project_id == team_id, ]
                 result$projects[result$projects$project_id == team_id,
                                 'num_sprints'] <- nrow(old) + nrow(new)
-                future_dates <- result$errors[[project]]$date
-                num_future_sprints <- max(c(nrow(future), length(future_dates)))
-                result$projects[result$projects$project_id == team_id,
-                                'future_sprints'] <- num_future_sprints
                 project_id <- meta$project_ids[[1]]
                 team_projects <- meta$project_names[[1]]
                 components <- meta$component[[1]]
+
+                future_dates <- result$errors[[as.character(project_id)]]$date
+                num_future_sprints <- max(c(nrow(future), length(future_dates)))
+                result$projects[result$projects$project_id == team_id,
+                                'future_sprints'] <- num_future_sprints
+
                 if (length(team_projects) == 1 ||
                     (length(components) > 0 && !identical(components, F))) {
                     team_ids <- unlist(c(new$team_id[[1]], project_id))
@@ -380,6 +383,7 @@ if (get_arg('--project', default=F)) {
                 else {
                     team_ids <- new$team_id[[1]]
                 }
+
                 # Get latest sprint properties
                 quality_name <- new$quality_name[[1]]
                 if (is.null(quality_name)) {
@@ -425,7 +429,7 @@ if (get_arg('--project', default=F)) {
                 }
             }
 
-            write(toJSON(result$errors[[project]]),
+            write(toJSON(result$errors[[as.character(team_id)]]),
                   file=paste(project_dir, "errors.json", sep="/"))
 
             project_urls <- source_urls[as.character(project_id)]

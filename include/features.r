@@ -1871,7 +1871,10 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
             res <- update_non_recent_features(project, future, limit, join_cols,
                                               result$items, result$colnames)
             if (future > 0 && nrow(res$group) > 1) {
-                project_name <- project[1, 'project_name']
+                project_id <- project[1, ifelse(identical(combine, F),
+                                                'project_id', 'team_id')]
+                loginfo('Performing Monte Carlo predictions for project #%d',
+                        project_id)
                 num_sprints <- as.integer(nrow(project) / 3) + 1
                 second_sprints <- (num_sprints - 1) * 2 + 1
                 first <- validate_future(project[1:num_sprints, ],
@@ -1903,7 +1906,7 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
                                                          dates$close))
                 errors$date <- dates$start_date
 
-                result$errors[[project_name]] <- as.list(errors)
+                result$errors[[as.character(project_id)]] <- as.list(errors)
             }
             result$data <- rbind(result$data, res$group)
         }
