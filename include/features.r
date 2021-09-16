@@ -1437,10 +1437,16 @@ update_non_recent_features <- function(group, future, limit, join_cols, items,
 
 validate_future <- function(project, res, future, join_cols, colnames, error) {
     group <- make_future_sprints(project, future, join_cols, colnames,
-                                 res$prediction_columns, 0, nrow(project))
+                                 res$prediction_columns,
+                                 length(which(project$future)),
+                                 length(which(!project$future)))
     error_columns <- list()
     for (col in names(res$columns)) {
         sprints <- group[group$future, res$columns[[col]]]
+        if (nrow(sprints) == 0) {
+            loginfo('Skipping, no future features for %s', col)
+            next
+        }
         bias <- colMeans(sprints - error[seq_along(sprints), col])
         error_columns[[col]] <- bias / nrow(sprints)
         alt <- "two.sided"
