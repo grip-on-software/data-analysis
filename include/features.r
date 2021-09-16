@@ -2,7 +2,6 @@
 
 library(jsonlite)
 library(ggplot2)
-library(qqplotr)
 library(plyr)
 library(yaml)
 library(zoo)
@@ -1255,7 +1254,7 @@ get_story_features <- function(conn, features, exclude='^$',
                 errors <- simulate_monte_carlo(project, future, result$items,
                                                result$columns,
                                                last=nrow(project),
-                                               name='backlog')
+                                               name='backlog')$res
                 result$errors[[project_name]] <- as.list(errors)
             }
         }
@@ -1547,7 +1546,8 @@ simulate_monte_carlo_feature <- function(group, future, item, parameters, last,
         stats <- c(mean(diffs), sd(diffs))
     }
     return(list(density=cdf, average=sums / count, trend=trend,
-                trend_factors=trend_factors, params=params, stats=stats))
+                trend_factors=trend_factors, params=params, counts=reached,
+                stats=stats))
 }
 
 simulate_monte_carlo_story <- function(group, future, item, parameters, last,
@@ -1581,7 +1581,7 @@ simulate_monte_carlo_story <- function(group, future, item, parameters, last,
         P <- ecdf(counts)
         cdf <- P(seq(future))
     }
-    return(list(density=cdf))
+    return(list(density=cdf, counts=counts))
 }
 
 add_prediction <- function(res, item, prediction, output) {
@@ -1610,32 +1610,21 @@ simulate_monte_carlo <- function(group, future, items, columns, last=NA,
                     out <- simulate_monte_carlo_story(group, future, item,
                                                       prediction$monte_carlo,
                                                       last, target, count,
-                                                      prediction$column,
-                                                      validate)
+                                                      prediction$column)
                     res <- add_prediction(res, list(column=prediction$column),
                                           prediction, out)
                 }
                 else if (!is.null(prediction$monte_carlo)) {
                     out <- simulate_monte_carlo_feature(group, future, item,
                                                         prediction$monte_carlo,
-                                                        last, target, count)
+                                                        last, target, count,
+                                                        validate)
                     res <- add_prediction(res, item, prediction, out)
                 }
             }
         }
     }
-    return(list(res=res, counts=counts))
-}
-
-qqplot_monte_carlo <- function(counts) {
-    df <- data.frame(sample=colMeans(counts, na.rm=T),
-                     ymin=sapply(counts, min, na.rm=T),
-                     ymax=sapply(counts, max, na.rm=T))
-    ggplot(data=df, aes(sample=df$sample)) +
-        stat_qq_line() +
-        stat_qq_point() +
-        labs(x="Theoretical Quantiles", y="Sample Quantiles")
-    ggsave("qqplot_monte_carlo.pdf")
+    return(res)
 }
 
 calculate_feature_scores <- function(data, column, join_cols, one=F) {
@@ -1939,25 +1928,23 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
                 monte_carlo <- simulate_monte_carlo(res$group, more,
                                                     result$items, res$columns,
                                                     dates$close, count=count)
-                counts[i, ] <- monte_carlo$counts
-                errors <- c(errors, monte_carlo$res)
+                errors <- c(errors, monte_carlo)
                 errors <- c(errors,
                             simulate_monte_carlo(first$group, 5, result$items,
                                                  res$columns,
                                                  name='validate', count=1000,
-                                                 validate=validate_first)$res)
+                                                 validate=validate_first))
                 errors <- c(errors,
                             simulate_monte_carlo(second$group, 5, result$items,
                                                  res$columns,
                                                  name='validate', count=1000,
-                                                 validate=validate_second)$res)
+                                                 validate=validate_second))
                 errors$date <- dates$start_date
 
                 result$errors[[as.character(project_id)]] <- as.list(errors)
             }
             result$data <- rbind(result$data, res$group)
         }
-        qqplot_monte_carlo(as.data.frame(counts))
     }
 
     if (scores) {
