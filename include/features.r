@@ -1,6 +1,8 @@
 # Utilities for retrieving sprint features.
 
 library(jsonlite)
+library(ggplot2)
+library(qqplotr)
 library(plyr)
 library(yaml)
 library(zoo)
@@ -1465,18 +1467,22 @@ validate_future <- function(project, res, future, join_cols, colnames, error) {
         probabilities <- as.data.frame(t_tests)
         colnames(probabilities) <- res$columns[[col]]
         error_columns[[paste(col, 'probability', sep='_')]] <- probabilities
+        weighted_bias <- sum(bias) / nrow(sprints)
+        error_columns[[paste(col, 'weighted_bias', sep='_')]] <- weighted_bias
     }
-    return(error_columns)
+    return(list(error=error_columns, group=group))
 }
 
 simulate_monte_carlo_feature <- function(group, future, item, parameters, last,
-                                         target, count) {
+                                         target, count, validate) {
     reached <- rep(NA, count)
+    diffs <- rep(NA, count)
     ends <- rep(NA, count)
     sums <- rep(0, future)
     samples <- rep(0, future * count)
     factors <- list()
     params <- list()
+    stats <- NULL
     for (factor in parameters$factors) {
         p <- lapply(parse(text=factor$params), eval, c(group, list(mode=mode)))
         params[[factor$column]] <- lapply(p, unbox)
@@ -1511,6 +1517,10 @@ simulate_monte_carlo_feature <- function(group, future, item, parameters, last,
         if (any(end < target, na.rm=T)) {
             reached[i] <- which(end <= target)[1]
         }
+        if (!is.null(validate)) {
+            diff <- end - validate[1:future, item$column]
+            diffs[i] <- sum(diff) / future
+        }
     }
     trend <- NULL
     trend_factors <- NULL
@@ -1533,8 +1543,11 @@ simulate_monte_carlo_feature <- function(group, future, item, parameters, last,
                                     return(factor_samples[s])
                                 })
     }
+    if (!is.null(validate)) {
+        stats <- c(mean(diffs), sd(diffs))
+    }
     return(list(density=cdf, average=sums / count, trend=trend,
-                trend_factors=trend_factors, params=params))
+                trend_factors=trend_factors, params=params, stats=stats))
 }
 
 simulate_monte_carlo_story <- function(group, future, item, parameters, last,
@@ -1583,7 +1596,8 @@ add_prediction <- function(res, item, prediction, output) {
 }
 
 simulate_monte_carlo <- function(group, future, items, columns, last=NA,
-                                 name='density', target=0, count=10000) {
+                                 name='density', target=0, count=10000,
+                                 validate=NULL) {
     # Calculate the cumulative density at each sprint
     res <- list()
     if (is.na(last)) {
@@ -1596,7 +1610,8 @@ simulate_monte_carlo <- function(group, future, items, columns, last=NA,
                     out <- simulate_monte_carlo_story(group, future, item,
                                                       prediction$monte_carlo,
                                                       last, target, count,
-                                                      prediction$column)
+                                                      prediction$column,
+                                                      validate)
                     res <- add_prediction(res, list(column=prediction$column),
                                           prediction, out)
                 }
@@ -1609,7 +1624,18 @@ simulate_monte_carlo <- function(group, future, items, columns, last=NA,
             }
         }
     }
-    return(res)
+    return(list(res=res, counts=counts))
+}
+
+qqplot_monte_carlo <- function(counts) {
+    df <- data.frame(sample=colMeans(counts, na.rm=T),
+                     ymin=sapply(counts, min, na.rm=T),
+                     ymax=sapply(counts, max, na.rm=T))
+    ggplot(data=df, aes(sample=df$sample)) +
+        stat_qq_line() +
+        stat_qq_point() +
+        labs(x="Theoretical Quantiles", y="Sample Quantiles")
+    ggsave("qqplot_monte_carlo.pdf")
 }
 
 calculate_feature_scores <- function(data, column, join_cols, one=F) {
@@ -1873,7 +1899,11 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
         project_data <- split(result$data, result$data[, 'project_name'])
         result$data <- data.frame()
         result$errors <- list()
+        count <- 10000
+        counts <- matrix(NA, length(project_data), count)
+        i <- 0
         for (project in project_data) {
+            i <- i + 1
             res <- update_non_recent_features(project, future, limit, join_cols,
                                               result$items, result$colnames)
             if (future > 0 && nrow(res$group) > 1) {
@@ -1883,18 +1913,18 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
                         project_id)
                 num_sprints <- as.integer(nrow(project) / 3) + 1
                 second_sprints <- (num_sprints - 1) * 2 + 1
+                validate_first <- project[-1:-num_sprints, ]
+                validate_second <- project[-1:-second_sprints, ]
                 first <- validate_future(project[1:num_sprints, ],
                                          res, num_sprints, join_cols,
-                                         result$colnames,
-                                         project[-1:-num_sprints, ])
+                                         result$colnames, validate_first)
                 second <- validate_future(project[num_sprints:second_sprints, ],
                                           res, num_sprints, join_cols,
-                                          result$colnames,
-                                          project[-1:-second_sprints, ])
+                                          result$colnames, validate_second)
                 errors <- mapply(function(one, two) {
                                      as.list(as.data.frame(rbind(one, two)))
                                  },
-                                 first, second, SIMPLIFY=F)
+                                 first$error, second$error, SIMPLIFY=F)
 
                 predictions <- res$group[nrow(res$group),
                                          names(res$prediction_columns)]
@@ -1906,16 +1936,28 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
                                future * 2, future)
 
                 dates <- get_future_date(res$group, res$last, more)
-                errors <- c(errors, simulate_monte_carlo(res$group, more,
-                                                         result$items,
-                                                         res$columns,
-                                                         dates$close))
+                monte_carlo <- simulate_monte_carlo(res$group, more,
+                                                    result$items, res$columns,
+                                                    dates$close, count=count)
+                counts[i, ] <- monte_carlo$counts
+                errors <- c(errors, monte_carlo$res)
+                errors <- c(errors,
+                            simulate_monte_carlo(first$group, 5, result$items,
+                                                 res$columns,
+                                                 name='validate', count=1000,
+                                                 validate=validate_first)$res)
+                errors <- c(errors,
+                            simulate_monte_carlo(second$group, 5, result$items,
+                                                 res$columns,
+                                                 name='validate', count=1000,
+                                                 validate=validate_second)$res)
                 errors$date <- dates$start_date
 
                 result$errors[[as.character(project_id)]] <- as.list(errors)
             }
             result$data <- rbind(result$data, res$group)
         }
+        qqplot_monte_carlo(as.data.frame(counts))
     }
 
     if (scores) {
