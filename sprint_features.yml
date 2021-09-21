@@ -623,7 +623,7 @@ files:
     table: done_story_points
     column: done_story_points
     patterns:
-        story_point_types: NOT (${s(issue_bug)})
+        story_point_types: ${s(issue_bug)}
     default: 0
     summarize:
         operation: sum
@@ -1131,9 +1131,11 @@ files:
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
     category: tracking
-  - filename: 04-done-stories.sql
-    table: done_stories
+  - filename: 04-done-story-points.sql
+    table: done_story_points
     column: num_done_stories
+    patterns:
+        story_point_types: ${s(issue_story)}
     default: 0
     summarize:
         operation: count_unique
@@ -1832,6 +1834,7 @@ files:
         issue_backlog: ${s(issue_story)} AND ${s(issue_excluded)} AND newer_issue.sprint_id IS NULL AND ${t("issue")}.updated >= ${s(sprint_open, sprint="interval_sprint")}
     summarize:
         operation: count 
+        with_missing: true
         field: story_points
         details: [key, story_points]
     combine:
@@ -1860,7 +1863,7 @@ files:
     column: backlog_added_story_points
     default: 0
     patterns:
-        issue_backlog: ${s(issue_story)} AND ${t("issue")}.updated <= ${s(sprint_close, sprint="interval_sprint")}
+        issue_backlog: ${s(issue_story)}
     summarize:
         operation: sum
         field: story_points
@@ -1895,7 +1898,7 @@ files:
     column: backlog_estimated_added_story_points
     default: 0
     patterns:
-        issue_backlog: ${s(issue_story)} AND ${t("issue")}.updated <= ${s(sprint_close, sprint="interval_sprint")}
+        issue_backlog: ${s(issue_story)}
     summarize:
         operation: sum_of_na_avg
         field: story_points
@@ -1931,9 +1934,10 @@ files:
     column: backlog_added_stories
     default: 0
     patterns:
-        issue_backlog: ${s(issue_story)} AND ${t("issue")}.updated <= ${s(sprint_close, sprint="interval_sprint")}
+        issue_backlog: ${s(issue_story)}
     summarize:
         operation: count
+        with_missing: true
         field: story_points
         details: [key, story_points]
     combine:

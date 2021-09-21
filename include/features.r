@@ -885,6 +885,8 @@ get_features <- function(conn, features, exclude, items, data, colnames,
                                   ', "value", "name", update_date',
                                   ifelse(is.list(details), ', details', ''),
                                   ') VALUES', sep="")
+            loginfo('Inserting %d values for %s in cache table', nrow(value),
+                    column)
             for (batch in split(value,
                                 (as.numeric(rownames(value))-1) %/% 100)) {
                 dbSendUpdate(conn,
@@ -1062,7 +1064,7 @@ get_sprint_conditions <- function(latest_date='', core=F, sprint_days=NA,
     if (!is.na(sprint_days)) {
         conditions <- c(conditions,
                         paste('${s(sprint_close)} - ${t("sprint")}.start_date',
-                              "> interval '${s(sprint_days)}' day"))
+                              "> 86400 * interval '${s(sprint_days)}' second"))
     }
     if (!is.na(sprint_patch)) {
         conditions <- c(conditions, ifelse(sprint_patch, '${s(sprint_patch)}',
@@ -1511,11 +1513,12 @@ simulate_monte_carlo_feature <- function(group, future, item, parameters, last,
     for (i in 1:count) {
         end <- group[last, item$column] +
             cumsum(samples[(future * (i-1) + 1):(future * i)])
-        sums <- sums + end
-        ends[i] <- round(end[length(end)])
         if (any(end < target, na.rm=T)) {
             reached[i] <- which(end <= target)[1]
+            end[end < target] <- target
         }
+        sums <- sums + end
+        ends[i] <- round(end[length(end)])
         if (!is.null(validate)) {
             diff <- end - validate[1:future, item$column]
             diffs[i] <- sum(diff) / future
@@ -1889,7 +1892,6 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
         result$data <- data.frame()
         result$errors <- list()
         count <- 10000
-        counts <- matrix(NA, length(project_data), count)
         i <- 0
         for (project in project_data) {
             i <- i + 1
@@ -1930,14 +1932,14 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
                                                     dates$close, count=count)
                 errors <- c(errors, monte_carlo)
                 errors <- c(errors,
-                            simulate_monte_carlo(first$group, 5, result$items,
-                                                 res$columns,
-                                                 name='validate', count=1000,
+                            simulate_monte_carlo(first$group, num_sprints,
+                                                 result$items, res$columns,
+                                                 name='validate', count=count,
                                                  validate=validate_first))
                 errors <- c(errors,
-                            simulate_monte_carlo(second$group, 5, result$items,
-                                                 res$columns,
-                                                 name='validate', count=1000,
+                            simulate_monte_carlo(second$group, num_sprints,
+                                                 result$items, res$columns,
+                                                 name='validate', count=count,
                                                  validate=validate_second))
                 errors$date <- dates$start_date
 
