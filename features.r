@@ -505,8 +505,9 @@ if (get_arg('--project', default=F)) {
               file=paste(output_dir, "expressions.json", sep="/"))
         default_targets <- get_metric_targets(conn, NA, result$items)
         write_metric_targets(default_targets, output_dir, result$items)
-        if (isTRUE(metadata$team) && project_ids != '1') {
-            metadata$project_names <- T
+        if (isTRUE(metadata$team)) {
+            field <- ifelse(project_ids != '1', 'project_names', 'project_ids')
+            metadata[[field]] <- T
         }
         metadata[c('num_sprints', 'future_sprints')] <- T
         write_projects_metadata(conn, result$project_fields, metadata,

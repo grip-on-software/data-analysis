@@ -294,12 +294,12 @@ get_combined_team <- function(team, team_id, data, projects, team_projects,
             if (!is.null(project$exclude)) {
                 team_conditions <- team_conditions &
                     (data$project_name != project$key |
-                     !str_detect(data$name, project$exclude))
+                     !str_detect(data$sprint_name, project$exclude))
             }
             if (!is.null(project$include)) {
                 team_conditions <- team_conditions &
                     (data$project_name != project$key |
-                     str_detect(data$name, project$include))
+                     str_detect(data$sprint_name, project$include))
             }
             if (isTRUE(project$replace)) {
                 replace <- c(replace, project$key)
@@ -309,6 +309,7 @@ get_combined_team <- function(team, team_id, data, projects, team_projects,
 
     t <- length(which(team_conditions))
     if (t == 0) {
+        logwarn("Team %s has no sprints, skipping merging", team$name)
         return(list(data=data, projects=projects, team_id=team_id,
                     team_projects=team_projects))
     }
