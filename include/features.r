@@ -1382,10 +1382,12 @@ make_future_sprints <- function(group, future, join_cols, colnames,
     extra$future <- T
     extra[[join_cols[2]]] <- 0
     extra$sprint_name <- 'Future Sprint'
-    multi <- extra[rep(1, each=max(0, future - late)), ]
-    multi$sprint_num <- seq(extra$sprint_num + 1, length.out=future - late)
+    new <- max(0, future - late)
+    multi <- extra[rep(1, each=new), ]
+    multi$sprint_num <- seq(extra$sprint_num + 1, length.out=new)
     group <- rbind(group, multi)
 
+    future <- nrow(group[group$future, ])
     dates <- get_future_date(group, last, future)
     group[group$future, 'start_date'] <- dates$start_date
     group[group$future, 'close_date'] <- dates$close_date
@@ -1616,6 +1618,9 @@ simulate_monte_carlo <- function(group, future, items, columns, last=NA,
     res <- list()
     if (is.na(last)) {
         last <- length(which(!group$future))
+    }
+    if (!is.null(validate)) {
+        group <- group[!group$future, ]
     }
     for (item in items) {
         if (!is.null(item$prediction)) {
@@ -1906,23 +1911,38 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
         i <- 0
         for (project in project_data) {
             i <- i + 1
+            project_id <- project[1, ifelse(identical(combine, F),
+                                            'project_id', 'team_id')]
+            loginfo('Creating future sprints for project #%d', project_id)
             res <- update_non_recent_features(project, future, limit, join_cols,
                                               result$items, result$colnames)
-            if (future > 0 && nrow(res$group) > 1) {
-                project_id <- project[1, ifelse(identical(combine, F),
-                                                'project_id', 'team_id')]
-                loginfo('Performing Monte Carlo predictions for project #%d',
-                        project_id)
-                num_sprints <- as.integer(nrow(project) / 3) + 1
-                second_sprints <- (num_sprints - 1) * 2 + 1
+            current <- project[!project$future, ]
+            loginfo('Known sprints: %d, current: %d, with future: %d',
+                    nrow(project), nrow(current), nrow(res$group))
+            if (future > 0 &&
+                (identical(combine, F) ||
+                 result$projects[result$projects$project_id == project_id,
+                                 'team'] != 0) &&
+                nrow(current) > 2 && nrow(project[!project$future, ]) > 1) {
+                num_sprints <- ceiling(nrow(current) / 3)
+                second_sprints <- nrow(current) - num_sprints
                 validate_first <- project[-1:-num_sprints, ]
                 validate_second <- project[-1:-second_sprints, ]
+                loginfo('Linear: One third: %d+%d, two thirds: %d+%d',
+                        num_sprints, nrow(validate_first),
+                        second_sprints, nrow(validate_second))
+
                 first <- validate_future(project[1:num_sprints, ],
                                          res, num_sprints, join_cols,
                                          result$colnames, validate_first)
-                second <- validate_future(project[num_sprints:second_sprints, ],
+                second <- validate_future(project[1:second_sprints, ],
                                           res, num_sprints, join_cols,
                                           result$colnames, validate_second)
+                if (length(first$error) == 0 || length(second$error) == 0) {
+                    loginfo('No results from linear validation, skipping MC')
+                    next
+                }
+
                 errors <- mapply(function(one, two) {
                                      as.list(as.data.frame(rbind(one, two)))
                                  },
@@ -1936,6 +1956,13 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
                 more <- ifelse(length(predictions) > 0 && length(initial) > 0 &&
                                any(predictions != initial & predictions > 0),
                                future * 2, future)
+
+                loginfo('MC: one third: %d+%d, two thirds: %d+%d, future: %d',
+                        nrow(first$group[!first$group$future, ]),
+                        nrow(validate_first),
+                        nrow(second$group[!second$group$future, ]),
+                        nrow(validate_second), more)
+
 
                 dates <- get_future_date(res$group, res$last, more)
                 monte_carlo <- simulate_monte_carlo(res$group, more,
@@ -1955,6 +1982,8 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
                 errors$date <- dates$start_date
 
                 result$errors[[as.character(project_id)]] <- as.list(errors)
+            } else {
+                loginfo('Skipped prediction/validation due project/length')
             }
             result$data <- rbind(result$data, res$group)
         }
