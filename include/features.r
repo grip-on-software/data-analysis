@@ -1300,8 +1300,8 @@ get_sprint_features <- function(conn, features, exclude, variables, latest_date,
     colnames <- c(join_cols, "sprint_num")
     if (time) {
         fields <- c(fields,
-                    paste('CAST(${s(sprint_open)} AS DATE) -',
-                          'date \'1970-01-01\' AS time'))
+                    paste('${s(sprint_open)} -',
+                          'CAST(\'1970-01-01 00:00:00\' AS TIMESTAMP) AS time'))
         colnames <- c(colnames, 'time')
     }
     order_by <- c('${f(join_cols, "sprint", mask=1)}', '${s(sprint_open)}',
@@ -1322,6 +1322,9 @@ get_sprint_features <- function(conn, features, exclude, variables, latest_date,
     logdebug(sprint_query$query)
 
     sprint_data <- dbGetQuery(conn, sprint_query$query)
+    if (time) {
+        sprint_data$time <- as.integer(sprint_data$time / 86400)
+    }
 
     items <- load_queries('sprint_features.yml', 'sprint_definitions.yml',
                           c(variables,
