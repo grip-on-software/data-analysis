@@ -623,7 +623,7 @@ files:
     table: done_story_points
     column: done_story_points
     patterns:
-        story_point_types: ${s(issue_bug)}
+        story_point_types: NOT (${s(issue_bug)})
     default: 0
     summarize:
         operation: sum
