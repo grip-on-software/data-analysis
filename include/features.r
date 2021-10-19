@@ -1794,11 +1794,14 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
                                      CAST(${t("sprint")}.start_date AS DATE)')
         }
         else {
-            jira_join <- 'LEFT JOIN gros.${t("issue_component")}
-                          ON ${j("issue_id", "issue", "issue_component")}
-                          AND ${t("issue_component")}.end_date IS NULL
-                          ${s(component_join, project="issue")} AND
-                          ${j("component_id", "issue_component", "component")}'
+            jira_join <- 'LEFT JOIN (
+                          gros.${t("issue_component")}
+                          JOIN gros.${t("component")}
+                          ON ${j("component_id", "issue_component", "component")}
+                          )
+                          ON ${j(join_cols, "issue", "component", mask=1)}
+                          AND ${t("component")}.name IN (${components})
+                          AND ${t("issue_component")}.end_date IS NULL'
         }
 
         component_names <- get_component_names(components, "jira")
