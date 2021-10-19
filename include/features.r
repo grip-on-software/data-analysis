@@ -48,6 +48,21 @@ sum_of_na_avg <- function(data, reference=NULL, na.rm=F) {
     return(sub / length(which(!is.na(reference))) * length(which(is.na(data))))
 }
 
+sum_of_na_diff <- function(data, reference=NULL, na.rm=F) {
+    if (is.null(reference)) {
+        reference <- 0
+    }
+    if (length(data) != 3) {
+        return(ifelse(na.rm, 0, NA))
+    }
+    key <- names(data)[1]
+    old <- paste('old', key, sep='_')
+    new <- paste('new', key, sep='_')
+    data[[old]][is.na(data[[old]])] <- reference
+    data[[new]][is.na(data[[new]])] <- 0
+    return(sum(data[[new]] - data[[old]], na.rm=na.rm))
+}
+
 mode <- function(data, na.rm=F) {
     unique_data <- unique(data[!is.na(data)])
     return(unique_data[which.max(tabulate(match(data, unique_data)))])
@@ -475,18 +490,19 @@ update_combine_interval <- function(items, old_data, data, row_num, details,
                 project_ids <- old_data[range, 'original_project_id']
                 sprint_ids <- old_data[range, sprint_col]
                 components <- old_data[range, 'component']
+                detail_names <- unique(c(paste(project_ids,
+                                               sprint_ids,
+                                               sep=".")))
                 if (!is.null(components)) {
                     detail_name <- paste(team_id, sprint_id, NA, sep=".")
-                    detail_names <- unique(c(paste(project_ids,
+                    detail_names <- unique(c(detail_names,
+                                             paste(project_ids,
                                                    sprint_ids,
                                                    components,
                                                    sep=".")))
                 }
                 else {
                     detail_name <- paste(team_id, sprint_id, sep=".")
-                    detail_names <- unique(c(paste(project_ids,
-                                                   sprint_ids,
-                                                   sep=".")))
                 }
 
                 if (is.null(feature[[detail_name]])) {
@@ -520,11 +536,11 @@ update_combine_interval <- function(items, old_data, data, row_num, details,
                 details[[item$column[1]]][[detail_name]] <- current
 
                 if (!isTRUE(item$carry) && is.na(item$summarize$reference[1]) &&
-                    item$summarize$field %in% colnames(current) &&
+                    item$summarize$field[1] %in% colnames(current) &&
                     item$column[1] %in% result$columns) {
                     with_missing <- item$summarize$with_missing[1]
                     summarized <- do.call(item$summarize$operation[1],
-                                          c(current[[item$summarize$field]],
+                                          c(current[[item$summarize$field[1]]],
                                             list(na.rm=!with_missing)))
                     result$row[, item$column[1]] <- summarized
                 }
@@ -773,7 +789,7 @@ get_features <- function(conn, features, exclude, items, data, colnames,
                                          summarize=item$summarize)
             }
             if (!is.null(item$summarize) &&
-                item$summarize$field %in% colnames(result)) {
+                all(item$summarize$field %in% colnames(result))) {
                 summarize <- item$summarize
                 group_names <- join_cols
                 group_cols <- lapply(result[, group_names], factor)
@@ -921,16 +937,16 @@ get_summarize_group <- function(group, group_names, data, columns, details,
     summarizer <- function(operation, field, reference, with_missing) {
         args <- list(group[, field])
         if (!is.na(reference) && is.list(details) &&
-            !is.null(details[[reference]])) {
+            !is.null(details[[reference]]) && length(field) == 1) {
             args <- c(args, details[[reference]][[name]][[field]])
         }
         else if (!is.na(reference) && isTRUE(summarize$expression)) {
             # Find the current sprint data and use it
-            f <- mapply(function(value, name) {
+            f <- mapply(function(value, key) {
                             if (is.na(value)) {
-                                return(is.na(data[[name]]))
+                                return(is.na(data[[key]]))
                             }
-                            return(data[[name]] == value)
+                            return(data[[key]] == value)
                         },
                         group_result[, n], n)
             r <- rowSums(f, na.rm=T)
@@ -945,7 +961,7 @@ get_summarize_group <- function(group, group_names, data, columns, details,
                 if (!is.null(details[[overlap]])) {
                     mask <- details[[overlap]][[name]]$key[[1]] %in% group$key &
                         !(details[[overlap]][[name]]$key[[1]] %in% keys)
-                    adjust <- details[[overlap]][[name]][[field]][[1]][mask]
+                    adjust <- details[[overlap]][[name]][[field[1]]][[1]][mask]
                     if (length(adjust) > 0) {
                         key <- details[[overlap]][[name]]$key[[1]][mask]
                         keys <- c(keys, key)
@@ -961,9 +977,11 @@ get_summarize_group <- function(group, group_names, data, columns, details,
         }
         return(total)
     }
+    MoreArgs <- list(field=summarize$field,
+                     reference=summarize$reference,
+                     with_missing=summarize$with_missing)
     group_result[, columns] <- mapply(summarizer, summarize$operation,
-                                      summarize$field, summarize$reference,
-                                      summarize$with_missing)
+                                      MoreArgs=MoreArgs)
     return(group_result)
 }
 
