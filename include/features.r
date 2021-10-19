@@ -1467,7 +1467,7 @@ validate_future <- function(project, res, future, join_cols, colnames, error) {
             next
         }
         bias <- colMeans(sprints - error[seq_along(sprints), col])
-        error_columns[[col]] <- bias / nrow(sprints)
+        error_columns[[col]] <- bias
         alt <- "two.sided"
         if (all(bias < 0, na.rm=T)) {
             alt <- "greater"
