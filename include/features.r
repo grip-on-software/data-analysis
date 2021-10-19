@@ -1326,9 +1326,11 @@ get_sprint_features <- function(conn, features, exclude, variables, latest_date,
         sprint_data$time <- as.integer(sprint_data$time / 86400)
     }
 
+    sprint_ids <- paste(sprint_data[[join_cols[2]]], collapse=',')
     items <- load_queries('sprint_features.yml', 'sprint_definitions.yml',
                           c(variables,
-                            list(sprint_conditions=sprint_conditions,
+                            list(sprint_ids=sprint_ids,
+                                 sprint_conditions=sprint_conditions,
                                  join_cols=join_cols)))
 
     result <- get_features(conn, features, exclude, items, sprint_data,
@@ -1874,6 +1876,7 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
         as.Date(sprint_data$start_date) >= as.Date(latest_date)
     sprint_data <- arrange(sprint_data, sprint_data$project_name,
                            sprint_data$start_date, sprint_data$sprint_name)
+    patterns$sprint_ids <- paste(sprint_data[[join_cols[2]]], collapse=',')
 
     data <- yaml.load_file('sprint_features.yml')
     items <- list()
