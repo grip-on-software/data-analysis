@@ -1869,9 +1869,7 @@ files:
         field: story_points
         details: [key, story_points, fixversion]
         overlap: [backlog_removed_story_points, done_story_points]
-    combine:
-        project: sum
-        sprint: max
+    combine: sum
     values:
         type: fraction
         denominator: 4
@@ -1905,9 +1903,7 @@ files:
         reference: backlog_story_points
         details: [key]
         filter: 'is.na(story_points)'
-    combine:
-        project: sum
-        sprint: max
+    combine: sum
     values:
         type: fraction
         denominator: 4
@@ -1940,9 +1936,7 @@ files:
         with_missing: true
         field: story_points
         details: [key, story_points]
-    combine:
-        project: sum
-        sprint: max
+    combine: sum
     descriptions:
         nl: Toegevoegde stories aan backlog
         en: Added stories on backlog
@@ -1972,9 +1966,7 @@ files:
         field: story_points
         details: [key, story_points, fixversion]
         overlap: [backlog_removed_story_points, done_story_points]
-    combine:
-        project: sum
-        sprint: max
+    combine: sum
     values:
         type: fraction
         denominator: 4
