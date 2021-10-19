@@ -6,7 +6,6 @@ jsonlite
 logging
 yaml
 plyr
-ggplot2
 openssl
 ncdf4
 stringr

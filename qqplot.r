@@ -1,7 +1,12 @@
-library(qqplotr)
+if ("qqplotr" %in% rownames(installed.packages())) {
+    library(qqplotr)
+    QQPLOTR <- T
+} else {
+    QQPLOTR <- F
+}
 
 qqplot_monte_carlo <- function(counts) {
-    if (!qqplot) {
+    if (!QQPLOTR) {
         loginfo("No qqplotr library installed, skipping qqplot generation")
         return
     }

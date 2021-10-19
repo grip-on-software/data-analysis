@@ -2,7 +2,12 @@
 
 library(yaml)
 library(jsonlite)
-library(ggplot2)
+if ("ggplot2" %in% rownames(installed.packages())) {
+    library(ggplot2)
+    GGPLOT2 <- T
+} else {
+    GGPLOT2 <- F
+}
 library(openssl)
 library(padr)
 library(stringr)
@@ -13,6 +18,10 @@ source('include/log.r')
 source('include/project.r')
 
 not_done_ratio <- function(item, result, output_dir) {
+    if (!GGPLOT2) {
+        stop("This analysis requires ggplot")
+    }
+
     bins <- c(0.0, 0.5, 1, 2, 3, 5, 8, 13, 20, 40, 100, Inf)
     codes <- .bincode(result$story_points, bins, right=F,
                       include.lowest=T)
@@ -150,6 +159,9 @@ sprint_burndown <- function(item, result, output_dir) {
                     line_points[high_indexes]
                 # Output plot
                 if (format == 'pdf') {
+                    if (!GGPLOT2) {
+                        stop("This output format requires ggplot")
+                    }
                     plot <- ggplot(data, aes(x=date, y=points, group=1)) +
                     geom_point(aes(colour=factor(type))) +
                     geom_line() +
@@ -453,6 +465,9 @@ project_backlog_burndown <- function(item, result, output_dir) {
         paste(output_dir, paste(name, format, sep="."), sep="/")
     }
     if (format == 'pdf') {
+        if (!GGPLOT2) {
+            stop("This output format requires ggplot")
+        }
         for (project in levels(factor(result$project_id))) {
             project_data <- result[result$project_id == project, ]
             date <- as.Date(project_data$start_date, '%Y-%m-%d')

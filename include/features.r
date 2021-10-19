@@ -1,7 +1,6 @@
 # Utilities for retrieving sprint features.
 
 library(jsonlite)
-library(ggplot2)
 library(plyr)
 library(yaml)
 library(zoo)
