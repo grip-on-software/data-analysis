@@ -1951,7 +1951,7 @@ files:
         en: The number of stories that is added to the whole backlog in the project tracker during the sprint
     units:
         nl: "%s toegevoegde stories aan de gehele backlog"
-        en: "%s aaded stories on the whole backlog"
+        en: "%s added stories on the whole backlog"
     short_units:
         nl: "%s toegevoegde stories"
         en: "%s added stories"
