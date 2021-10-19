@@ -716,7 +716,7 @@ get_features <- function(conn, features, exclude, items, data, colnames,
                     if (is.null(trackers[[source_type]])) {
                         next
                     }
-                    if (is.na(trackers[[source_type]]) ||
+                    if (!isTRUE(item$cache) || is.na(trackers[[source_type]]) ||
                         nrow(cache_data) == 0 ||
                         trackers[[source_type]] > min(cache_data$update_date) ||
                         (is.list(details) && !is.null(item$summarize) &&
@@ -726,7 +726,7 @@ get_features <- function(conn, features, exclude, items, data, colnames,
                     }
                     use_table <- T
                 }
-                if (use_table) {
+                if (use_table && isTRUE(item$cache)) {
                     loginfo('Using cached results for table %s column(s) %s',
                             item$table, columns)
                     result <- table_data[, join_cols]
