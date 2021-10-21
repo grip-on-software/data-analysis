@@ -1,6 +1,7 @@
 .RData
 .Rhistory
 Rplots.pdf
+*third*.pdf
 config.yml
 config.*.yml
 profile*
