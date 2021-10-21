@@ -1548,15 +1548,19 @@ simulate_monte_carlo_feature <- function(group, future, item, parameters, last,
     for (i in 1:count) {
         end <- group[last, item$column] +
             cumsum(samples[(future * (i-1) + 1):(future * i)])
+        down <- future
         if (any(end < target, na.rm=T)) {
+            # Set to target when below target and do not consider future
+            # sprints after that (like linear)
             reached[i] <- which(end <= target)[1]
             end[end < target] <- target
+            down <- reached[i]
         }
         sums <- sums + end
         ends[i] <- round(end[length(end)])
         if (!is.null(validate)) {
-            diff <- end - validate[1:future, item$column]
-            diffs[i] <- sum(diff) / future
+            diff <- end[1:down] - validate[1:down, item$column]
+            diffs[i] <- sum(diff) / down
         }
     }
     trend <- NULL
