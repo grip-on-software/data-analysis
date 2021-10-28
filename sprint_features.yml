@@ -208,6 +208,7 @@ files:
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?projectKey=${jira_key}&rapidView=${jira_board_id}&view=planning"
     category: team
+    cache: true
   - filename: 01-number-of-seats.sql
     table: sprint_seat_count
     column: number_of_seats
