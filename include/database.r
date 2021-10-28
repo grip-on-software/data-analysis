@@ -393,7 +393,8 @@ if (!exists('INC_DATABASE_R')) {
     }
 
     load_queries <- function(specification_file, definition_file=NULL,
-                             variables=NULL, current_time=Sys.time()) {
+                             variables=NULL, current_time=Sys.time(),
+                             static=F) {
         data <- yaml.load_file(specification_file)
         if (is.null(definition_file)) {
             patterns <- variables
@@ -401,6 +402,10 @@ if (!exists('INC_DATABASE_R')) {
         else {
             patterns <- load_definitions(definition_file, variables,
                                          current_time=current_time)
+        }
+
+        if (static) {
+            return(data$files)
         }
 
         lapply(data$files, load_query, patterns, data$path)
