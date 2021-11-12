@@ -48,7 +48,7 @@ sum_of_na_avg <- function(data, reference=NULL, na.rm=F) {
 }
 
 sum_of_na_diff <- function(data, reference=NULL, na.rm=F) {
-    if (is.null(reference) || is.na(reference)) {
+    if (is.null(reference) || length(reference) == 0 || is.na(reference)) {
         reference <- 0
     }
     if (length(data) != 3) {
