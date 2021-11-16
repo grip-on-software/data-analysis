@@ -145,8 +145,7 @@ plot_scenario <- function(data, x, y, title, file) {
         plot <- plot + geom_smooth(method="lm", se=F)
     }
     plot <- plot + x$scale +
-        scale_y_continuous("Error") +
-        labs(title=title)
+        scale_y_continuous("Error")
     ggsave(file)
 }
 
