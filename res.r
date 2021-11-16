@@ -1,5 +1,12 @@
 library(jsonlite)
 library(ggplot2)
+if ("qqplotr" %in% rownames(installed.packages())) {
+    library(qqplotr)
+    QQPLOTR <- T
+} else {
+    QQPLOTR <- F
+}
+
 source('include/args.r')
 source('include/database.r')
 source('include/log.r')
@@ -9,6 +16,7 @@ predictor <- get_arg('--predictor', default="backlog_points")
 
 ones <- list()
 twos <- list()
+counts <- list()
 stat_projects <- list()
 sort_by <- list()
 default_features <- paste(c("backlog_points", "velocity_three",
@@ -103,6 +111,11 @@ for (dir in Sys.glob(glob)) {
             sc2 <- paste(scenario, 'mc', sep='_')
             twos[[sc2]] <- c(twos[[sc2]], stats[[mcp2]][[scenario]][1])
         }
+        mcc <- paste(predictor, 'counts', sep='_')
+        for (scenario in names(stats[[mcc]])) {
+            counts[[scenario]] <- c(counts[[scenario]],
+                                    list(stats[[mcc]][[scenario]]))
+        }
 
         for (scenario in names(ones)) {
             loginfo('Scenario: %s', scenario)
@@ -113,7 +126,23 @@ for (dir in Sys.glob(glob)) {
     }
 }
 
-plot <- function(data, x, y, title, file) {
+qqplot_monte_carlo <- function(counts, file) {
+    if (!QQPLOTR) {
+        loginfo("No qqplotr library installed, skipping qqplot generation")
+        write.table(counts, paste(file, "txt", sep="."))
+        return
+    }
+    df <- data.frame(sample=colMeans(counts, na.rm=T),
+                     ymin=sapply(counts, min, na.rm=T),
+                     ymax=sapply(counts, max, na.rm=T))
+    ggplot(data=df, aes(sample=df$sample)) +
+        stat_qq_line() +
+        stat_qq_point() +
+        labs(x="Theoretical Quantiles", y="Sample Quantiles")
+    ggsave(paste(file, "pdf", sep="."))
+}
+
+plot_scenario <- function(data, x, y, title, file) {
     plot <- ggplot(data, aes(x=data[[x$column]], y=data[[y$column]])) +
         geom_point()
     if (!x$discrete) {
@@ -122,7 +151,7 @@ plot <- function(data, x, y, title, file) {
     plot <- plot + x$scale +
         scale_y_continuous("Error") +
         labs(title=title)
-    ggsave(file)
+    ggsave(paste(file, "pdf", sep="."))
 }
 
 for (scenario in names(ones)) {
@@ -155,11 +184,16 @@ for (scenario in names(ones)) {
                        sort_by=sort)
     print(data)
 
-    plot(data, x=x, y=list(column="ones"),
-         title=paste("One third (", scenario, ")", sep=""),
-         file=paste(scenario, "one_third", "pdf", sep="."))
+    plot_scenario(data, x=x, y=list(column="ones"),
+                  title=paste("One third (", scenario, ")", sep=""),
+                  file=paste(scenario, "one_third", sep="."))
 
-    plot(data, x=x, y=list(column="twos"),
-         title=paste("Two thirds (", scenario, ")", sep=""),
-         file=paste(scenario, "two_thirds", "pdf", sep="."))
+    plot_scenario(data, x=x, y=list(column="twos"),
+                  title=paste("Two thirds (", scenario, ")", sep=""),
+                  file=paste(scenario, "two_thirds", sep="."))
+}
+
+for (scenario in names(counts)) {
+    qqplot_monte_carlo(as.matrix(as.data.frame(counts[[scenario]])),
+                       paste("qqplot", scenario, sep="."))
 }
