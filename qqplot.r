@@ -1,3 +1,4 @@
+library(ggplot2)
 if ("qqplotr" %in% rownames(installed.packages())) {
     library(qqplotr)
     QQPLOTR <- T
@@ -5,9 +6,8 @@ if ("qqplotr" %in% rownames(installed.packages())) {
     QQPLOTR <- F
 }
 
-qqplot_monte_carlo <- function(counts) {
+qqplot_monte_carlo <- function(counts, file) {
     if (!QQPLOTR) {
-        loginfo("No qqplotr library installed, skipping qqplot generation")
         return
     }
     df <- data.frame(sample=colMeans(counts, na.rm=T),
@@ -17,7 +17,12 @@ qqplot_monte_carlo <- function(counts) {
         stat_qq_line() +
         stat_qq_point() +
         labs(x="Theoretical Quantiles", y="Sample Quantiles")
-    ggsave("qqplot_monte_carlo.pdf")
+    ggsave(file)
 }
 
-# TODO: Read json
+count <- 10000
+for (file in Sys.glob("qqplot.*.txt")) {
+    counts <- matrix(as.numeric(unlist(read.table(file))), ncol=count, byrow=T)
+    qqplot_monte_carlo(counts, sub("\\.txt", ".pdf", file))
+}
+

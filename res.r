@@ -17,6 +17,7 @@ predictor <- get_arg('--predictor', default="backlog_points")
 ones <- list()
 twos <- list()
 counts <- list()
+count <- 10000
 stat_projects <- list()
 sort_by <- list()
 default_features <- paste(c("backlog_points", "velocity_three",
@@ -114,7 +115,7 @@ for (dir in Sys.glob(glob)) {
         mcc <- paste(predictor, 'counts', sep='_')
         for (scenario in names(stats[[mcc]])) {
             counts[[scenario]] <- c(counts[[scenario]],
-                                    list(stats[[mcc]][[scenario]]))
+                                    as.numeric(unlist(stats[[mcc]][[scenario]])))
         }
 
         for (scenario in names(ones)) {
@@ -127,11 +128,6 @@ for (dir in Sys.glob(glob)) {
 }
 
 qqplot_monte_carlo <- function(counts, file) {
-    if (!QQPLOTR) {
-        loginfo("No qqplotr library installed, skipping qqplot generation")
-        write.table(counts, paste(file, "txt", sep="."))
-        return
-    }
     df <- data.frame(sample=colMeans(counts, na.rm=T),
                      ymin=sapply(counts, min, na.rm=T),
                      ymax=sapply(counts, max, na.rm=T))
@@ -139,7 +135,7 @@ qqplot_monte_carlo <- function(counts, file) {
         stat_qq_line() +
         stat_qq_point() +
         labs(x="Theoretical Quantiles", y="Sample Quantiles")
-    ggsave(paste(file, "pdf", sep="."))
+    ggsave(file)
 }
 
 plot_scenario <- function(data, x, y, title, file) {
@@ -151,7 +147,7 @@ plot_scenario <- function(data, x, y, title, file) {
     plot <- plot + x$scale +
         scale_y_continuous("Error") +
         labs(title=title)
-    ggsave(paste(file, "pdf", sep="."))
+    ggsave(file)
 }
 
 for (scenario in names(ones)) {
@@ -186,14 +182,20 @@ for (scenario in names(ones)) {
 
     plot_scenario(data, x=x, y=list(column="ones"),
                   title=paste("One third (", scenario, ")", sep=""),
-                  file=paste(scenario, "one_third", sep="."))
+                  file=paste(scenario, "one_third", "pdf", sep="."))
 
     plot_scenario(data, x=x, y=list(column="twos"),
                   title=paste("Two thirds (", scenario, ")", sep=""),
-                  file=paste(scenario, "two_thirds", sep="."))
+                  file=paste(scenario, "two_thirds", "pdf", sep="."))
 }
 
 for (scenario in names(counts)) {
-    qqplot_monte_carlo(as.matrix(as.data.frame(counts[[scenario]])),
-                       paste("qqplot", scenario, sep="."))
+    if (QQPLOTR) {
+        qqplot_monte_carlo(matrix(counts[[scenario]], ncol=count, byrow=T),
+                           paste("qqplot", scenario, "pdf", sep="."))
+    } else {
+        write.table(counts[[scenario]],
+                    paste("qqplot", scenario, "txt", sep="."),
+                    row.names=F, col.names=F)
+    }
 }
