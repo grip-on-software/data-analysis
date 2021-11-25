@@ -138,16 +138,24 @@ qqplot_monte_carlo <- function(counts, file) {
     ggsave(file)
 }
 
-plot_scenario <- function(data, x, y, title, file) {
+plot_scenario <- function(data, x, y, title, file, limits) {
     plot <- ggplot(data, aes(x=data[[x$column]], y=data[[y$column]])) +
         geom_point()
     if (!x$discrete) {
         plot <- plot + geom_smooth(method="lm", se=F)
     }
     plot <- plot + x$scale +
-        scale_y_continuous("Error")
+        scale_y_continuous("Error", limits=limits)
     ggsave(file)
 }
+
+limits <- list(
+    velocity_three=c(-2000, 0),
+    backlog_all_velocity_three=c(-2000, 0),
+    velocity_three_mc=c(-1200, 600),
+    backlog_all_velocity_three_mc=c(-1200, 600),
+    backlog_all_velocity_three_sep_mc=c(-1200, 600)
+)
 
 for (scenario in names(ones)) {
     print(scenario)
@@ -181,11 +189,13 @@ for (scenario in names(ones)) {
 
     plot_scenario(data, x=x, y=list(column="ones"),
                   title=paste("One third (", scenario, ")", sep=""),
-                  file=paste(scenario, "one_third", "pdf", sep="."))
+                  file=paste(scenario, "one_third", "pdf", sep="."),
+                  limits=limits[[scenario]])
 
     plot_scenario(data, x=x, y=list(column="twos"),
                   title=paste("Two thirds (", scenario, ")", sep=""),
-                  file=paste(scenario, "two_thirds", "pdf", sep="."))
+                  file=paste(scenario, "two_thirds", "pdf", sep="."),
+                  limits=limits[[scenario]])
 }
 
 for (scenario in names(counts)) {
