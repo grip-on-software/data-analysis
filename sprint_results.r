@@ -252,22 +252,29 @@ for (idx in 1:length(results$projects)) {
     }
     write(data, file=paste(path, paste(sprint_id, "json", sep="."), sep="/"))
 
-    source_urls <- get_source_urls(conn, project_id)
-    source_patterns <- list(quality_name=sprint$quality_name)
-    write(toJSON(build_project_source_urls(source_urls, project_id,
-                                           project_name, source_patterns),
-                 auto_unbox=T), file=paste(path, "sources.json", sep="/"))
+    sprint_links <- paste("links", sprint_id, "json", sep=".")
+    if (project_ids != '1') {
+        source_urls <- get_source_urls(conn, project_id)
+        source_patterns <- list(quality_name=sprint$quality_name)
+        write(toJSON(build_project_source_urls(source_urls, project_id,
+                                               project_name, source_patterns),
+                     auto_unbox=T), file=paste(path, "sources.json", sep="/"))
 
-    source_data <- toJSON(build_sprint_source_urls(source_urls, project_id,
-                                                   project_name,
-                                                   sprint$quality_name, sprint,
-                                                   specifications$files,
-                                                   patterns))
-    write(source_data, file=paste(path,
-                                  paste("links", sprint_id, "json", sep="."),
-                                  sep="/"))
-    if (all(sprint_id <= sprint_ids)) {
-        write(source_data, file=paste(path, "links.json", sep="/"))
+        source_data <- toJSON(build_sprint_source_urls(source_urls, project_id,
+                                                       project_name,
+                                                       sprint$quality_name,
+                                                       sprint,
+                                                       specifications$files,
+                                                       patterns))
+        write(source_data, file=paste(path, sprint_links, sep="/"))
+        if (all(sprint_id <= sprint_ids)) {
+            write(source_data, file=paste(path, "links.json", sep="/"))
+        }
+    }
+    else {
+        write("{}", file=paste(path, "sources.json", sep="/"))
+        write("{}", file=paste(path, sprint_links, sep="/"))
+        write("{}", file=paste(path, "links.json", sep="/"))
     }
 }
 
