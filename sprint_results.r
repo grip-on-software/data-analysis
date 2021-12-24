@@ -156,6 +156,9 @@ if (!is.null(results$configuration$assignments)) {
                                                        features))
     results$configuration$assignments <- assignments
 }
+results$configuration$label <- list(expression=results$configuration$label,
+                                    attributes=results$configuration$labels)
+results$configuration$labels <- NULL
 results$configuration$organizations <- as.list(unique(results$organizations))
 
 sprint_data <- get_sprint_projects(conn, patterns=patterns,
