@@ -174,6 +174,11 @@ if (!is.null(organization)) {
     organization_path <- output_directory
 }
 
+tag_names <- get_tags(setNames(rep(T, length(features)), names(features)))
+feature_excludes <- c("project_id", "sprint_num", "organization", tag_names)
+feature_mask <- !(names(features) %in% feature_excludes)
+feature_names <- as.character(results$configuration$features)
+
 for (idx in 1:length(results$projects)) {
     if (results$organizations[idx] != organization) {
         next
@@ -185,10 +190,6 @@ for (idx in 1:length(results$projects)) {
     sprint_ids <- sort(results$sprints[results$organizations == organization &
                                        results$projects == project_id])
 
-    tag_names <- get_tags(setNames(rep(T, length(features)), names(features)))
-    feature_excludes <- c("project_id", "sprint_num", "organization", tag_names)
-    feature_mask <- !(names(features) %in% feature_excludes)
-    feature_names <- as.character(results$configuration$features)
     if (!is.null(results$analogy_indexes) &&
         nrow(results$analogy_indexes) >= idx) {
         analogies <- mapply(get_analogy_results,
@@ -286,7 +287,7 @@ write_projects_metadata(conn, fields, metadata, projects=NA,
                         output_directory=organization_path,
                         patterns=patterns, join_cols=join_cols)
 write_feature_metadata(unique(projects), specifications, organization_path,
-                       features=results$configuration$features,
+                       features=c(feature_names, tag_names),
                        categories=c(), metadata=c('values', 'measurement'))
 
 write(toJSON(results$configuration, auto_unbox=T),
