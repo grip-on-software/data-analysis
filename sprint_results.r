@@ -19,6 +19,7 @@ core <- get_arg('--core', default=F)
 
 projects <- list()
 specifications <- yaml.load_file('sprint_features.yml')
+specifications$files <- c(specifications$files, get_time_feature())
 config <- get_config()
 
 join_cols <- c('project_id')
@@ -181,7 +182,6 @@ for (idx in 1:length(results$projects)) {
     sprint_ids <- sort(results$sprints[results$organizations == organization &
                                        results$projects == project_id])
 
-    feature_sets <- intersect(results$configuration$features, names(features))
     tag_names <- get_tags(setNames(rep(T, length(features)), names(features)))
     feature_excludes <- c("project_id", "sprint_num", "organization", tag_names)
     feature_mask <- !(names(features) %in% feature_excludes)
@@ -282,7 +282,9 @@ write_projects_metadata(conn, fields, metadata, projects=NA,
                         project_ids=project_ids,
                         output_directory=organization_path,
                         patterns=patterns, join_cols=join_cols)
-write_feature_metadata(unique(projects), specifications, organization_path)
+write_feature_metadata(unique(projects), specifications, organization_path,
+                       features=results$configuration$features,
+                       categories=c(), metadata=c('values', 'measurement'))
 
 write(toJSON(results$configuration, auto_unbox=T),
       file=paste(organization_path, "configuration.json", sep="/"))

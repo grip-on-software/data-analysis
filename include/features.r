@@ -91,19 +91,21 @@ get_locales <- function(items) {
     return(locales)
 }
 
-get_feature_locales <- function(items, field='descriptions') {
+get_feature_locales <- function(items, field='descriptions', features=c()) {
     locales <- list()
     for (item in items) {
-        for (code in names(item[[field]])) {
-            if (!(code %in% names(locales))) {
-                locales[[code]] <- list()
+        if (length(features) == 0 || any(item$column %in% features)) {
+            for (code in names(item[[field]])) {
+                if (!(code %in% names(locales))) {
+                    locales[[code]] <- list()
+                }
+                locales[[code]] <- c(locales[[code]],
+                                     mapply(function(column, description) {
+                                                safe_unbox(description)
+                                            },
+                                            item$column, item[[field]][[code]],
+                                            SIMPLIFY=F))
             }
-            locales[[code]] <- c(locales[[code]],
-                                 mapply(function(column, description) {
-                                            safe_unbox(description)
-                                        },
-                                        item$column, item[[field]][[code]],
-                                        SIMPLIFY=F))
         }
     }
     return(locales)
@@ -1293,6 +1295,21 @@ get_story_features <- function(conn, features, exclude='^$',
     return(result)
 }
 
+get_time_feature <- function() {
+    return list(column="time",
+                combine=F,
+                values=list(type="time",
+                            unit="days",
+                            epoch="1970-01-01 00:00:00"),
+                descriptions=list(nl="Begindatum",
+                                  en="Start date"),
+                long_descriptions=list(nl="Datum waarop de sprint is begonnen",
+                                       en="Date when the sprint started"),
+                units=list(nl="begonnen op %s",
+                           en="started on %s"),
+                measurement=list(unit='days'))
+}
+
 get_sprint_features <- function(conn, features, exclude, variables, latest_date,
                                 core=F, sprint_days=NA, sprint_patch=NA,
                                 future=T, combine=F, details=F, time=F,
@@ -1354,6 +1371,10 @@ get_sprint_features <- function(conn, features, exclude, variables, latest_date,
                            colnames, join_cols, details=details,
                            required=c("sprint_num"), table="sprint_features",
                            cache_update=cache_update)
+
+    if (time) {
+        result$items <- c(result$items, list(get_time_feature()))
+    }
 
     if (scores) {
         result$scores <- list()
@@ -2094,6 +2115,8 @@ get_prediction_feature <- function(prediction, result, join_cols) {
                                                  "story points that could be",
                                                  "realized during the sprint",
                                                  "based on historical data")),
+                 units=list(nl="%s voorspelde storypoints",
+                            en="%s predicted story points"),
                  source=list(prediction=prediction$source),
                  measurement=list(unit='point'))
     result$items <- c(result$items, list(item))
@@ -2139,13 +2162,14 @@ write_feature_metadata <- function(projects, specifications, output_directory,
                                              'long_descriptions', 'units',
                                              'short_units', 'tags',
                                              'predictor'),
+                                   categories=NULL,
                                    metadata=c('values', 'measurement',
                                               'preferred', 'prediction')) {
     if (length(items) == 0) {
         items <- specifications$files
     }
     for (locale in locales) {
-        write(toJSON(get_feature_locales(items, locale)),
+        write(toJSON(get_feature_locales(items, locale, features=features)),
               file=paste(output_directory, paste(locale, "json", sep="."),
                          sep="/"))
     }
@@ -2155,7 +2179,9 @@ write_feature_metadata <- function(projects, specifications, output_directory,
     source_types <- yaml.load_file("source_types.yml")
     sources <- get_locales(source_types)
     if (length(features) > 0) {
-        cats <- specifications$categories
+        if (is.null(categories)) {
+            categories <- specifications$categories
+        }
         meta <- rep(list(NULL), length(metadata))
         names(meta) <- metadata
         sources$feature <- list()
@@ -2165,7 +2191,10 @@ write_feature_metadata <- function(projects, specifications, output_directory,
             if (length(feature) > 0) {
                 cat <- ifelse("category" %in% names(item), item$category,
                               "other")
-                cats[[cat]]$items <- c(cats[[cat]]$items, feature)
+                if (cat == "other" || cat %in% names(categories)) {
+                    categories[[cat]]$items <- c(categories[[cat]]$items,
+                                                 feature)
+                }
 
                 metas <- lapply(item[metadata[metadata %in% names(item)]],
                                 function(fields) {
@@ -2189,18 +2218,18 @@ write_feature_metadata <- function(projects, specifications, output_directory,
                 }
             }
         }
-        categories <- mapply(function(cat, name) {
-                                 if (name == "other") {
-                                     cat$nl <- "Overig"
-                                     cat$en <- "Other"
-                                     cat$icon <- c("fas", "fa-ellipsis-h")
-                                 }
-                                 cat$name <- name
-                                 cat$items <- I(cat$items)
-                                 return(cat)
-                             },
-                             cats, names(cats), SIMPLIFY=F, USE.NAMES=F)
-        write(toJSON(categories, auto_unbox=T),
+        cats <- mapply(function(cat, name) {
+                           if (name == "other") {
+                               cat$nl <- "Overig"
+                               cat$en <- "Other"
+                               cat$icon <- c("fas", "fa-ellipsis-h")
+                           }
+                           cat$name <- name
+                           cat$items <- I(cat$items)
+                           return(cat)
+                       },
+                       categories, names(categories), SIMPLIFY=F, USE.NAMES=F)
+        write(toJSON(cats, auto_unbox=T),
               file=paste(output_directory, "categories.json", sep="/"))
         write(toJSON(meta, auto_unbox=T),
               file=paste(output_directory, "metadata.json", sep="/"))
