@@ -1296,7 +1296,7 @@ get_story_features <- function(conn, features, exclude='^$',
 }
 
 get_time_feature <- function() {
-    return list(column="time",
+    return(list(column="time",
                 combine=F,
                 values=list(type="time",
                             unit="days",
@@ -1307,7 +1307,7 @@ get_time_feature <- function() {
                                        en="Date when the sprint started"),
                 units=list(nl="begonnen op %s",
                            en="started on %s"),
-                measurement=list(unit='days'))
+                measurement=list(unit='days')))
 }
 
 get_sprint_features <- function(conn, features, exclude, variables, latest_date,

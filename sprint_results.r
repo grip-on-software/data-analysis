@@ -19,7 +19,7 @@ core <- get_arg('--core', default=F)
 
 projects <- list()
 specifications <- yaml.load_file('sprint_features.yml')
-specifications$files <- c(specifications$files, get_time_feature())
+specifications$files <- c(specifications$files, list(get_time_feature()))
 config <- get_config()
 
 join_cols <- c('project_id')
