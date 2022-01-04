@@ -156,9 +156,9 @@ if (!is.null(results$configuration$assignments)) {
                                                        features))
     results$configuration$assignments <- assignments
 }
-results$configuration$label <- list(expression=results$configuration$label,
-                                    attributes=results$configuration$labels)
 labels <- results$configuration$labels
+results$configuration$label <- list(expression=results$configuration$label,
+                                    attributes=as.list(labels))
 results$configuration$labels <- NULL
 results$configuration$organizations <- as.list(unique(results$organizations))
 
