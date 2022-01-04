@@ -158,6 +158,7 @@ if (!is.null(results$configuration$assignments)) {
 }
 results$configuration$label <- list(expression=results$configuration$label,
                                     attributes=results$configuration$labels)
+labels <- results$configuration$labels
 results$configuration$labels <- NULL
 results$configuration$organizations <- as.list(unique(results$organizations))
 
@@ -287,7 +288,7 @@ write_projects_metadata(conn, fields, metadata, projects=NA,
                         output_directory=organization_path,
                         patterns=patterns, join_cols=join_cols)
 write_feature_metadata(unique(projects), specifications, organization_path,
-                       features=c(feature_names, tag_names),
+                       features=unique(c(feature_names, tag_names, labels)),
                        categories=c(), metadata=c('values', 'measurement'))
 
 write(toJSON(results$configuration, auto_unbox=T),

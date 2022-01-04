@@ -615,6 +615,8 @@ files:
         en: "%s planned points"
     measurement:
         unit: point
+        moment: [1, days]
+        post: done_story_points
     preferred: true
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=burndownChart&sprint=${jira_sprint_id}"
@@ -648,6 +650,8 @@ files:
     measurement:
         unit: point
         superset: velocity_one
+        moment: post
+        pre: num_story_points
     preferred: true
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
@@ -678,6 +682,8 @@ files:
         en: "%s planned bug points"
     measurement:
         unit: point
+        moment: [1, days]
+        post: done_bug_points
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=burndownChart&sprint=${jira_sprint_id}"
     category: velocity
@@ -707,6 +713,8 @@ files:
     measurement:
         unit: point
         superset: velocity_one
+        moment: post
+        pre: planned_bug_points
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=reporting&chart=sprintRetrospective&sprint=${jira_sprint_id}"
     category: velocity
