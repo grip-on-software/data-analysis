@@ -5,14 +5,20 @@ library(ncdf4)
 library(yaml)
 
 source('include/args.r')
+source('include/database.r')
 source('include/log.r')
 
-config <- yaml.load_file('weather.yml')
+config <- get_config()$weather
 output_directory <- get_arg('--output', default='output')
 
 knmi_file <- paste(output_directory, "knmi.nc", sep="/")
 if (!file.exists(knmi_file)) {
-    tryCatch(download.file(config$url, knmi_file, mode="wb"),
+    files <- url(config$url, headers=list("Authorization"=config$api_key))
+    urls <- fromJSON(files)
+    file <- url(paste(config$url, urls$files[1]$filename, "url", sep="/"),
+                headers=list("Authorization"=config$api_key))
+    data <- fromJSON(file)
+    tryCatch(download.file(data$temporaryDownloadUrl, knmi_file, mode="wb"),
              error=function(e) {
                  logwarn(paste("Download problems: ", e))
                  quit("no", status=0, runLast=F)
