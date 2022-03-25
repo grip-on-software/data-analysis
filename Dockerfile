@@ -1,9 +1,9 @@
-FROM r-base:3.6.1
+FROM r-base:3.6.3
 RUN apt-get update \
 	&& apt-get install -y --no-install-recommends libnetcdf-dev procps libssl-dev libxml2-dev \
 	&& rm -rf /var/lib/apt/lists/*
-COPY requirements.txt /tmp/
-RUN Rscript -e "install.packages(readLines('/tmp/requirements.txt'))"
+COPY requirements.txt install.r /tmp/
+RUN ANALYSIS_REQUIREMENTS=/tmp/requirements.txt Rscript /tmp/install.r
 
 WORKDIR /home/docker
 COPY *.r *.yml /home/docker/

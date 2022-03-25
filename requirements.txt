@@ -1,7 +1,7 @@
 MonetDB.R
 DBI
 digest
-foreign
+foreign==0.8-76
 jsonlite
 logging
 yaml
@@ -15,3 +15,8 @@ viridis
 lintr
 CORElearn
 triangle
+ggplot2;optional
+qqplotr;optional
+github:bnosac/pattern.nlp;optional
+github:twitter/AnomalyDetection;optional
+xts;optional
