@@ -9,10 +9,40 @@ fields:
     jenkins_url: $JENKINS_URL
     quality_time_url: $QUALITY_TIME_URL
     quality_url: $QUALITY_URL
-    metric_history_file: compact-history.json
-    metric_options_file: project_definition.py
+    metric_history_file: $METRIC_HISTORY_FILE
+    metric_options_file: $METRIC_OPTIONS_FILE
+    prediction_combine: $PREDICTION_COMBINE
+    prediction_data: $PREDICTION_DATA
+    prediction_url: $PREDICTION_URL
+weather:
+    url: $WEATHER_URL
+    api_key: $WEATHER_API_KEY
+    lat: $WEATHER_LAT
+    lon: $WEATHER_LON
+    origin: $WEATHER_DATE_ORIGIN
+exclude_domain:
+    - $EXCLUDE_DOMAIN_NAME
 teams:
-	- name: $TEAM_NAME
-	  display_name: $TEAM_DISPLAY_NAME
-	  board: $TEAM_BOARD
-	  projects: $TEAM_PROJECTS
+    - name: $TEAM_NAME
+      display_name: $TEAM_DISPLAY_NAME
+      board: $TEAM_BOARD
+      recent: $TEAM_RECENT
+      invisible: $TEAM_INVISIBLE
+      overlap: $TEAM_OVERLAP
+      projects:
+        - key: $TEAM_PROJECT_KEY
+          board: $TEAM_PROJECT_BOARD
+          replace: $TEAM_PROJECT_REPLACE
+          own_board: $TEAM_PROJECT_OWN_BOARD
+          start_date: $TEAM_PROJECT_START_DATE
+          end_date: $TEAM_PROJECT_END_DATE
+          exclude: $TEAM_PROJECT_EXCLUDE
+          include: $TEAM_PROJECT_INCLUDE
+components:
+    - name: $COMPONENT_NAME
+      display_name: $COMPONENT_DISPLAY_NAME
+      project: $COMPONENT_PROJECT
+      $COMPONENT_SOURCE:
+        include: $COMPONENT_INCLUDE
+        exclude: $COMPONENT_EXCLUDE
+arguments: $ANALYSIS_ARGUMENTS

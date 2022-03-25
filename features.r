@@ -1,5 +1,7 @@
-# R script that extracts features regarding sprints from the database and
-# exports them to an ARFF file readable by Weka and other data mining tools.
+# Script that extracts features regarding sprints or stories from the database
+# and exports them to an ARFF file readable by Weka and other data mining tools,
+# or recent/split data to JSON or CSV files, or features regarding projects
+# to JSON files.
 
 library(foreign) # For write.arff
 library(plyr)
@@ -7,43 +9,182 @@ library(jsonlite)
 source('include/args.r')
 source('include/database.r')
 source('include/features.r')
+source('include/log.r')
 source('include/metrics.r')
 source('include/sources.r')
 source('include/tracker.r')
 options(warn=1)
+
+make_opt_parser(desc="Extract features and export them into ARFF, JSON or CSV",
+                options=list(make_option('--output', default='output',
+                                         help='Output directory'),
+                             make_option('--project-ids', default='0',
+                                         help='Anonymize projects (0 or 1)'),
+                             make_option('--projects', default='',
+                                         help='List of projects to collect'),
+                             make_option('--features', default=NA_character_,
+                                         help='List of features to collect'),
+                             make_option('--exclude', default='^$',
+                                         help=paste('Regular expression of',
+                                                    'features to filter')),
+                             make_option('--core', action='store_true',
+                                         default=FALSE,
+                                         help=paste('Only consider non-support',
+                                                    'team, main projects')),
+                             make_option('--recent', action='store_true',
+                                         default=FALSE,
+                                         help=paste('Collect recent sprints',
+                                                    '(exported as JSON/CSV)')),
+                             make_option('--limit', default=5,
+                                         help='Number of recent sprints'),
+                             make_option('--split', action='store_true',
+                                         default=FALSE,
+                                         help=paste('Export older sprints',
+                                                    'separate from recent',
+                                                    '(exported as JSON)')),
+                             make_option('--old', action='store_true',
+                                         default=FALSE,
+                                         help=paste('Collect older sprints',
+                                                    'next to recent sprints',
+                                                    '(exported as JSON)')),
+                             make_option('--closed', action='store_true',
+                                         default=FALSE,
+                                         help=paste('Collect recent sprints',
+                                                    'only if they are closed')),
+                             make_option('--combine', default='',
+                                         help=paste('Combine sprints based on',
+                                                    'metadata/feature field',
+                                                    '(recent/sprint only)')),
+                             make_option('--details', action='store_true',
+                                         default=FALSE,
+                                         help=paste('Collect feature details',
+                                                    '(recent/sprint only)')),
+                             make_option('--extra', action='store_true',
+                                         default=TRUE,
+                                         help=paste('Collect non-default',
+                                                    'recent sprint features')),
+                             make_option('--default', default=NA_character_,
+                                         help=paste('List of default features',
+                                                    'next to the standard ones',
+                                                    'for recent sprints')),
+                             make_option('--teams', action='store_true',
+                                         default=FALSE,
+                                         help=paste('Combine projects into',
+                                                    'teams (recent only)')),
+                             make_option('--prediction', default='',
+                                         help=paste('Format for prediction URL',
+                                                    '(recent only)')),
+                             make_option('--fixversions', default='',
+                                         help=paste('List of fix version IDs',
+                                                    'to filter issues on',
+                                                    '(recent only)')),
+                             make_option('--project', action='store_true',
+                                         default=FALSE,
+                                         help=paste('Collect project features',
+                                                    '(exported as JSON)')),
+                             make_option('--story', action='store_true',
+                                         default=FALSE,
+                                         help=paste('Collect story features',
+                                                    '(exported as ARFF)')),
+                             make_option('--latest', action='store_true',
+                                         default=FALSE,
+                                         help=paste('Only collect features for',
+                                                    'latest changelog version',
+                                                    '(story only)')),
+                             make_option('--filename', default=NA_character_,
+                                         help=paste('File name to export ARFF',
+                                                    'to (story/sprint only)')),
+                             make_option('--scores', action='store_true',
+                                         default=FALSE,
+                                         help='Collect feature scores'),
+                             make_option('--future', default=0,
+                                         help=paste('Generate future sprints',
+                                                    'and perform predictions',
+                                                    '(recent/story only)')),
+                             make_option('--latest-date',
+                                         default=as.character(Sys.time()),
+                                         help=paste('Sprint start date/time',
+                                                    'after which later sprints',
+                                                    'are left out')),
+                             make_option('--days', default=NA_integer_,
+                                         help=paste('Number of days before a',
+                                                    'sprint is left out',
+                                                    '(recent/sprint only)')),
+                             make_option('--patch', action='store_true',
+                                         default=NA,
+                                         help=paste('Exclude patch sprints',
+                                                    '(inverse: include only,',
+                                                    'default: no filter,',
+                                                    'recent/sprint only)')),
+                             make_option('--time', action='store_true',
+                                         default=FALSE,
+                                         help=paste('Export time feature',
+                                                    '(day that sprint started)',
+                                                    'for temporal data set',
+                                                    '(sprint only)')),
+                             make_option('--append', action='store_true',
+                                         default=FALSE,
+                                         help=paste('Add data set to end of',
+                                                    'ARFF instead of overwrite',
+                                                    '(sprint only)')),
+                             make_option('--points', action='store_true',
+                                         default=TRUE,
+                                         help=paste('Filter on sprints with',
+                                                    'planned story points',
+                                                    '(sprint only)')),
+                             make_option('--cache-update', action='store_true',
+                                         default=TRUE,
+                                         help='Update feature cache tables'),
+                             make_option('--project-metadata',
+                                         default='recent,core,main',
+                                         help=paste('List of project metadata',
+                                                    'fields to output')),
+                             make_option('--story-metadata',
+                                         default=paste(c('project_name',
+                                                         'sprint_name',
+                                                         'story_name',
+                                                         'latest'),
+                                                       collapse=','),
+                                         help=paste('List of story metadata',
+                                                    'fields to output')),
+                             make_option('--sprint-metadata',
+                                         default=paste(c('sprint_name',
+                                                         'sprint_num',
+                                                         'start_date'),
+                                                       collapse=','),
+                                         help=paste('List of sprint metadata',
+                                                    'fields to output'))),
+                variables=get_config_fields())
+config <- get_config()
+arguments <- config$args
+log_setup(arguments)
+
 conn <- connect()
 
-output_directory <- get_arg('--output', default='output')
-project_ids <- get_arg('--project-ids', default='0')
+output_directory <- arguments$output
+project_ids <- arguments$project_id
 if (project_ids != '0') {
     project_ids <- '1'
 }
-projects <- strsplit(get_arg('--projects', default=''), ',')[[1]]
-features <- get_arg('--features', default=NA)
-exclude <- get_arg('--exclude', default='^$')
-core <- get_arg('--core', default=F)
-recent <- get_arg('--recent', default=F)
-story <- get_arg('--story', default=F)
-scores <- get_arg('--scores', default=F)
-futures <- get_arg('--future', default=0)
-latest_date <- as.POSIXct(get_arg('--latest-date', default=Sys.time()))
-cache_update <- get_arg('--cache-update', default=T)
+projects <- strsplit(arguments$projects, ',')[[1]]
+features <- arguments$features
+exclude <- arguments$exclude
+core <- arguments$core
+story <- arguments$story
+scores <- arguemtns$score
+futures <- arguments$future
+latest_date <- as.POSIXct(arguments$latest_date)
+cache_update <- arguments$cache_update
 
-config <- get_config()
 patterns <- load_definitions('sprint_definitions.yml', config$fields,
                              current_time=latest_date)
 
-project_metadata <- get_arg('--project-metadata', default='recent,core,main')
-metadata <- get_meta_keys(project_metadata)
+metadata <- get_meta_keys(arguments$project_metadata)
 
-story_meta_keys <- 'project_name,sprint_name,story_name,latest'
-story_metadata <- strsplit(get_arg('--story-metadata',
-                                   default=story_meta_keys), ',')[[1]]
+story_metadata <- strsplit(arguments$story_metadata, ',')[[1]]
 fields <- list('project_id', 'name', 'quality_display_name')
 
-sprint_metadata <- get_arg('--sprint-metadata',
-                           default='sprint_name,sprint_num,start_date')
-sprint_meta <- strsplit(sprint_metadata, ',')[[1]]
+sprint_meta <- strsplit(arguments$sprint_metadata, ',')[[1]]
 
 map_details <- function(details, project_ids, component, join_cols) {
     if (identical(details, F)) {
@@ -90,7 +231,7 @@ filter_sprint_details <- function(feature_details, sprint_ids) {
     return(feature_details[names(feature_details) %in% sprint_ids])
 }
 
-if (get_arg('--project', default=F)) {
+if (arguments$project) {
     result <- get_project_features(conn, features, exclude, NULL, core=core,
                                    metadata=metadata, project_fields=fields)
     subprojects <- get_subprojects(conn)
@@ -158,22 +299,19 @@ if (get_arg('--project', default=F)) {
                             project_ids=project_ids,
                             output_directory=output_directory,
                             join_cols=result$join_cols)
-} else if (recent) {
-    if (isTRUE(recent)) {
-        recent <- 5
-    }
-    split <- get_arg('--split', default=F)
-    with_old <- get_arg('--old', default=F)
-    closed <- get_arg('--closed', default=F)
-    combine <- get_arg('--combine', default='')
-    details <- get_arg('--details', default=T)
-    extra <- get_arg('--extra', default=T)
-    more_default <- get_arg('--default', default=NA)
+} else if (arguments$recent) {
+    split <- arguments$split
+    with_old <- arguments$old
+    closed <- arguments$closed
+    combine <- arguments$combine
+    details <- arguments$details
+    extra <- arguments$extra
+    more_default <- arguments$default
     if (combine == '') {
         combine <- F
     }
 
-    if (get_arg('--teams', default=F)) {
+    if (arguments$teams) {
         metadata$team <- T
         metadata$component <- T
         teams <- config$teams
@@ -181,7 +319,6 @@ if (get_arg('--project', default=F)) {
     else {
         teams <- list()
     }
-    prediction <- get_arg('--prediction', default='')
     specifications <- yaml.load_file('sprint_features.yml')
     all_features <- unlist(sapply(specifications$files, function(item) {
         if (is.null(item$tag) || is.null(item$expression)) {
@@ -222,7 +359,7 @@ if (get_arg('--project', default=F)) {
         default <- unique(c(default, more_default_features))
     }
     extra_features <- features[!(features %in% default_features)]
-    prediction <- list(data=str_interp(prediction, config$fields),
+    prediction <- list(data=str_interp(arguments$prediction, config$fields),
                        combine=config$fields$prediction_combine,
                        source=config$fields$prediction_url)
     if (prediction$data != '') {
@@ -230,20 +367,17 @@ if (get_arg('--project', default=F)) {
     }
     old_features <- unique(c(sprint_meta, default_features, extra_features))
 
-    core <- get_arg('--core', default=F)
-    sprint_days <- get_arg('--days', default=NA)
-    sprint_patch <- ifelse(get_arg('--patch', default=F), NA, F)
-    fixversions <- strsplit(get_arg('--fixversions', default=''), ',')[[1]]
+    fixversions <- strsplit(arguments$fixversions, ',')[[1]]
     # Latest date condition is handled by recent sprint features itself
     sprint_conditions <- get_sprint_conditions(latest_date='', core=core,
-                                               sprint_days=sprint_days,
-                                               sprint_patch=sprint_patch,
+                                               sprint_days=arguments$days,
+                                               sprint_patch=arguments$patch,
                                                future=futures > 0)
     variables <- list(project_ids=project_ids)
     result <- get_recent_sprint_features(conn,
                                          unique(c(meta_features, features)),
                                          exclude,
-                                         limit=recent,
+                                         limit=arguments$limit,
                                          closed=closed,
                                          sprint_conditions=sprint_conditions,
                                          project_fields=fields,
@@ -479,7 +613,7 @@ if (get_arg('--project', default=F)) {
                                features=shown_features, items=result$items,
                                locales=c('descriptions', 'long_descriptions',
                                          'units', 'short_units', 'predictor'))
-        write(toJSON(list(limit=recent, closed=closed,
+        write(toJSON(list(limit=arguments$limit, closed=closed,
                           old=with_old, future=futures),
                      auto_unbox=T),
               file=paste(output_dir, "sprints.json", sep="/"))
@@ -524,8 +658,9 @@ if (get_arg('--project', default=F)) {
                   row.names=F)
     }
 } else if (story) {
-    changelog <- !get_arg('--latest', default=F)
-    filename <- get_arg('--filename', default='story_features.arff')
+    changelog <- !arguments$latest
+    filename <- ifelse(is.na(arguments$filename), 'story_features.arff',
+                       arguments$filename)
 
     result <- get_story_features(conn, features, exclude, latest_date,
                                  changelog=changelog, project_fields=fields,
@@ -538,22 +673,18 @@ if (get_arg('--project', default=F)) {
                file=paste(output_directory, filename, sep="/"),
                relation="story_data")
 } else {
-    days <- get_arg('--days', default=NA)
-    patch <- ifelse(get_arg('--patch', default=F), NA, F)
-    combine <- get_arg('--combine', default=F)
-    details <- get_arg('--details', default=F)
-    time <- get_arg('--time', default=F)
-    append <- get_arg('--append', default=F)
-    points <- get_arg('--points', default=T)
-    filename <- get_arg('--filename', default='sprint_features.arff')
+    filename <- ifelse(is.na(arguments$filename), 'sprint_features.arff',
+                       arguments$filename)
 
     result <- get_sprint_features(conn, features, exclude, NULL, latest_date,
-                                  core=core, sprint_days=days,
-                                  sprint_patch=patch, combine=combine,
-                                  details=details, time=time, scores=scores,
+                                  core=core, sprint_days=arguments$days,
+                                  sprint_patch=arguments$patch,
+                                  combine=arguments$combine,
+                                  details=arguments$details,
+                                  time=arguments$time, scores=scores,
                                   cache_update=cache_update)
     sprint_data <- result$data[, result$colnames]
-    if (points && 'num_story_points' %in% result$colnames) {
+    if (arguments$points && 'num_story_points' %in% result$colnames) {
         sprint_data <- result$data[result$data$num_story_points > 0, ]
     }
     if ('team_id' %in% result$colnames) {
@@ -561,7 +692,7 @@ if (get_arg('--project', default=F)) {
     }
 
     path <- paste(output_directory, filename, sep="/")
-    if (append) {
+    if (arguments$append) {
         if (nrow(sprint_data) == 0) {
             loginfo('No sprints found for organization %s!', organization)
         } else {

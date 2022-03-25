@@ -1,3 +1,5 @@
+# Script to plot metric values.
+
 library(MonetDB.R)
 library(DBI)
 library(digest)

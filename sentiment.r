@@ -1,13 +1,29 @@
-source('include/args.r')
-source('include/database.r')
-source('include/log.r')
+# Script to output sentiment analysis values for issue tracker comments
+# Requires pattern.nlp package - https://github.com/bnosac/pattern.nlp
+
 library(pattern.nlp)
 library(foreign)
 library(ggplot2)
 library(jsonlite)
 library(zoo)
+source('include/args.r')
+source('include/database.r')
+source('include/log.r')
 
-output_directory <- get_arg('--output', default='output')
+make_opt_parser(desc="Output sentiment values for issue tracker comments",
+                options=list(make_option('--output', default='output',
+                                         help='Output directory'),
+                             make_option('--plot', action='store_true',
+                                         default=F, help='Create a plot'),
+                             make_option('--load', action='store_true',
+                                         default=F,
+                                         help='Load sentiments from CSV file')))
+config <- get_config()
+arguments <- config$args
+log_setup(arguments)
+
+output_directory <- arguments$output
+plot <- arguments$plot
 
 collect <- function() {
     conn <- connect()
@@ -57,8 +73,7 @@ load <- function(path) {
 }
 
 path <- paste(output_directory, 'sentiment.csv', sep='/')
-plot <- get_arg('--plot', default=F)
-if (get_arg('--load', default=F)) {
+if (arguments$load) {
     loginfo('loading from %s', path)
     res <- load(path)
 } else {

@@ -1,3 +1,5 @@
+# Script to plot/tabularize results from prediction estimators
+
 library(jsonlite)
 library(ggplot2)
 if ("qqplotr" %in% rownames(installed.packages())) {
@@ -11,8 +13,28 @@ source('include/args.r')
 source('include/database.r')
 source('include/log.r')
 
-glob <- get_arg('--glob', default="output/recent_sprint_features/")
-predictor <- get_arg('--predictor', default="backlog_points")
+default_features <- paste(c("backlog_points", "velocity_three",
+                            "number_of_devs"), collapse=',')
+
+make_opt_parser(desc="Plot or aggregate results of prediction estimators",
+                options=list(make_option('--glob',
+                                         default="output/recent_sprint_features/",
+                                         help='Glob pattern to include data'),
+                             make_option('--predictor',
+                                         default='backlog_points',
+                                         help='Predictor name to collect'),
+                             make_option('--features', default=default_features,
+                                         help=paste('Features to use for',
+                                                    'sorting projects and',
+                                                    'filtering empty sprints')),
+                             make_option('--discrete', action='store_true',
+                                         default=F,
+                                         help=paste('Use the feature sorting',
+                                                    'the projects as a',
+                                                    'discrete axis'))))
+config <- get_config()
+arguments <- config$args
+log_setup(arguments)
 
 ones <- list()
 twos <- list()
@@ -20,11 +42,10 @@ counts <- list()
 count <- 10000
 stat_projects <- list()
 sort_by <- list()
-default_features <- paste(c("backlog_points", "velocity_three",
-                            "number_of_devs"), collapse=',')
-project_features <- strsplit(get_arg('--features', default=default_features),
-                             ',')[[1]]
-discrete <- get_arg('--discrete', default=F)
+
+predictor <- arguments$predictor
+project_features <- strsplit(arguments$features, ',')[[1]]
+discrete <- arguments$discrete
 sprint_features <- load_queries('sprint_features.yml', static=T)
 if (length(project_features) == 0) {
     description <- "Project"
@@ -41,7 +62,7 @@ if (length(project_features) == 0) {
     }
 }
 
-for (dir in Sys.glob(glob)) {
+for (dir in Sys.glob(arguments$glob)) {
     loginfo('Directory: %s', dir)
 
     projects <- read_json(paste(dir, "projects_meta.json", sep="/"))

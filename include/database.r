@@ -14,18 +14,34 @@ if (!exists('INC_DATABASE_R')) {
     organization <- NULL
     get_config <- function() {
         if (is.null(config)) {
-            config_file <- get_arg('--config', default='config.yml')
-            organization <<- get_arg('--org',
-                                     default=Sys.getenv("ANALYSIS_ORGANIZATION"))
+            if (!is.null(parser)) {
+                args <- get_opt_args()
+                config_file <- args$config
+                organization <<- args$org
+            }
+            else {
+                args <- NULL
+                config_file <- 'config.yml'
+                organization <<- Sys.getenv("ANALYSIS_ORGANIZATION")
+            }
+
             config <<- yaml.load_file(config_file)
-            if (!is.null(config[[organization]])) {
+            config$args <<- args
+            if (!is.null(organization) && !is.null(config[[organization]])) {
                 config <<- config[[organization]]
-                if (!is.null(config$arguments)) {
-                    add_args(config$arguments)
+                arguments <- config$arguments
+                if (!is.null(arguments)) {
+                    add_args(arguments)
+                    if (!is.null(parser)) {
+                        config$args <<- get_opt_args(args=arguments, partial=T)
+                    }
                 }
             }
         }
         return(config)
+    }
+    get_config_fields <- function() {
+        return(yaml.load_file('config.yml.example')$fields)
     }
 
     connect <- function() {
@@ -67,10 +83,14 @@ if (!exists('INC_DATABASE_R')) {
     load_definitions <- function(definition_file, variables=NULL,
                                  current_time=Sys.time()) {
         definitions <- yaml.load_file(definition_file)
-        for (name in names(variables)) {
-            arg <- get_arg(paste('--', gsub('_', '-', name), sep=''),
-                           default=variables[[name]])
-            variables[[name]] <- arg
+        config <- get_config()
+        if (!is.null(config$args)) {
+            for (name in names(variables)) {
+                arg <- config$args[[name]]
+                if (!is.null(arg)) {
+                    variables[[name]] <- arg
+                }
+            }
         }
         primary_tables <- get_primary_tables()
         variables <- c(variables, primary_tables)

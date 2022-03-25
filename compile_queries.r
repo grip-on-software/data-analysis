@@ -1,6 +1,39 @@
+# Script to convert MonetDB SQL queries with patterns to executable queries.
+
+source('include/args.r')
 source('include/database.r')
 source('include/features.r')
 source('include/log.r')
+source('include/analysis_reports.r')
+
+make_opt_parser(desc="Compile SQL queries with patterns to executable queries",
+                options=list(
+                             make_option('--project-ids', default='0',
+                                         help='Anonymize projects (0 or 1)'),
+                             make_option('--days', default=NA_integer_,
+                                         help=paste('Number of days before a',
+                                                    'sprint is left out')),
+                             make_option('--patch', action='store_true',
+                                         default=NA,
+                                         help=paste('Exclude patch sprints',
+                                                    '(inverse: include only,',
+                                                    'default: no filter)')),
+                             make_option('--latest-date',
+                                         default=as.character(Sys.time()),
+                                         help=paste('Sprint start date/time',
+                                                    'after which later sprints',
+                                                    'are left out')),
+                             make_option('--core', action='store_true',
+                                         default=FALSE,
+                                         help=paste('Only consider non-support',
+                                                    'team, main projects')),
+                             make_option('--connect', action='store_true',
+                                         default=TRUE,
+                                         help='Connect to DB for sprint IDs')),
+                variables=analysis_definitions$fields)
+config <- get_config()
+arguments <- config$args
+log_setup(arguments)
 
 export <- function(items, prefix, fields) {
     seen <- c()
@@ -19,15 +52,16 @@ export <- function(items, prefix, fields) {
     }
 }
 
-project_ids <- get_arg('--project-ids', default='0')
-latest_date <- as.POSIXct(get_arg('--latest-date', default=Sys.time()))
+project_ids <- arguments$project_ids
+if (project_ids != '0') {
+    project_ids <- '1'
+}
+latest_date <- as.POSIXct(arguments$latest_date)
 
-core <- get_arg('--core', default=F)
-sprint_days <- get_arg('--days', default=NA)
-sprint_patch <- ifelse(get_arg('--patch', default=F), NA, F)
-sprint_conditions <- paste(get_sprint_conditions(latest_date='', core=core,
-                                                 sprint_days=sprint_days,
-                                                 sprint_patch=sprint_patch),
+sprint_conditions <- paste(get_sprint_conditions(latest_date='',
+                                                 core=arguments$core,
+                                                 sprint_days=arguments$days,
+                                                 sprint_patch=arguments$patch),
                            collapse=' AND ')
 
 config <- get_config()
@@ -43,12 +77,16 @@ query <- paste('SELECT ${f(join_cols, "sprint")}',
                'ON ${j(join_cols, "project", "sprint", mask=1)}',
                'WHERE', sprint_conditions)
 sprint_definitions <- load_definitions('sprint_definitions.yml',
-                                       list(sprint_days=sprint_days,
+                                       list(sprint_days=arguments$days,
                                             join_cols=join_cols))
 sprint_query <- load_query(list(query=query), sprint_definitions)
-conn <- connect()
-sprint_data <- dbGetQuery(conn, sprint_query$query)
-sprint_ids <- paste(sprint_data[[join_cols[2]]], collapse=',')
+if (arguments$connect) {
+    conn <- connect()
+    sprint_data <- dbGetQuery(conn, sprint_query$query)
+    sprint_ids <- paste(sprint_data[[join_cols[2]]], collapse=',')
+} else {
+    sprint_ids <- '0'
+}
 
 definitions <- yaml.load_file('analysis_definitions.yml')
 analysis_definitions <- c(lapply(definitions$fields,

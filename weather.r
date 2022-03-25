@@ -8,15 +8,20 @@ source('include/args.r')
 source('include/database.r')
 source('include/log.r')
 
-config <- get_config()$weather
-output_directory <- get_arg('--output', default='output')
+make_opt_parser(desc="Retrieve daily weather information for a nearby station",
+                options=list(make_option('--output', default='output',
+                                         help='Output directory')))
+config <- get_config()
+arguments <- config$args
+weather <- config$weather
+log_setup(arguments)
 
-knmi_file <- paste(output_directory, "knmi.nc", sep="/")
+knmi_file <- paste(arguments$output, "knmi.nc", sep="/")
 if (!file.exists(knmi_file)) {
-    files <- url(config$url, headers=list("Authorization"=config$api_key))
+    files <- url(weather$url, headers=list("Authorization"=weather$api_key))
     urls <- fromJSON(files)
-    file <- url(paste(config$url, urls$files[1]$filename, "url", sep="/"),
-                headers=list("Authorization"=config$api_key))
+    file <- url(paste(weather$url, urls$files[1]$filename, "url", sep="/"),
+                headers=list("Authorization"=weather$api_key))
     data <- fromJSON(file)
     tryCatch(download.file(data$temporaryDownloadUrl, knmi_file, mode="wb"),
              error=function(e) {
@@ -36,7 +41,7 @@ tryCatch(knmi$nc <- nc_open(knmi_file),
 knmi$lat <- ncvar_get(knmi$nc, 'lat')
 knmi$lon <- ncvar_get(knmi$nc, 'lon')
 # Simple distance calculation (does not account for WGS coordinate geometry)
-knmi$distance <- abs(config$lat - knmi$lat) + abs(config$lon - knmi$lon)
+knmi$distance <- abs(weather$lat - knmi$lat) + abs(weather$lon - knmi$lon)
 
 num_measurements <- knmi$nc$var$TG$size[1]
 
@@ -64,9 +69,9 @@ get_temperatures <- function(end_index) {
 na_temperatures <- get_temperatures(num_measurements)
 first_measurement <- which(!is.na(na_temperatures))[1]
 seconds <- knmi$nc$dim$time$vals[first_measurement:length(na_temperatures)]
-dates <- as.Date(as.POSIXct(seconds, origin=config$origin))
+dates <- as.Date(as.POSIXct(seconds, origin=weather$origin))
 temperatures <- na_temperatures[first_measurement:length(na_temperatures)]
 names(temperatures) <- dates
 
 write(toJSON(as.list(temperatures), auto_unbox=T),
-      paste(output_directory, "weather.json", sep="/"))
+      paste(arguments$output, "weather.json", sep="/"))

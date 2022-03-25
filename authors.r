@@ -1,3 +1,5 @@
+# Script to count the sprints each developer of each project is active in.
+
 source('include/database.r')
 
 conn <- connect()

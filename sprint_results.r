@@ -1,4 +1,4 @@
-# R script that combines output from a prediction model with other sprint data
+# Script that combines output from a prediction model with other sprint data
 # such that it can be used by an API producer.
 
 library(foreign)
@@ -12,31 +12,62 @@ source('include/project.r')
 source('include/sources.r')
 source('include/tracker.r')
 
-latest_date <- as.POSIXct(get_arg('--latest-date', default=Sys.time()))
-sprint_days <- get_arg('--days', default=NA)
-sprint_patch <- ifelse(get_arg('--patch', default=F), NA, F)
-core <- get_arg('--core', default=F)
+make_opt_parser(desc="Combine prediction run output with sprint data for API",
+                options=list(make_option('--file', default='sprint_labels.json',
+                                         help='Prediction run result input'),
+                             make_option('--features',
+                                         default='output/sprint_features.arff',
+                                         help='Features data set input file'),
+                             make_option('--output', default='output',
+                                         help='Output directory'),
+                             make_option('--project-ids', default='0',
+                                         help='Anonymize projects (0 or 1)'),
+                             make_option('--project-metadata',
+                                         default='recent,core,main',
+                                         help=paste('List of project metadata',
+                                                    'fields to output')),
+                             make_option('--days', default=NA_integer_,
+                                         help=paste('Number of days before a',
+                                                    'sprint is left out')),
+                             make_option('--patch', action='store_true',
+                                         default=NA,
+                                         help=paste('Exclude patch sprints',
+                                                    '(inverse: include only,',
+                                                    'default: no filter)')),
+                             make_option('--latest-date',
+                                         default=as.character(Sys.time()),
+                                         help=paste('Sprint start date/time',
+                                                    'after which later sprints',
+                                                    'are left out')),
+                             make_option('--core', action='store_true',
+                                         default=FALSE,
+                                         help=paste('Only consider non-support',
+                                                    'team, main projects'))))
+config <- get_config()
+arguments <- config$args
+log_setup(arguments)
+
+latest_date <- as.POSIXct(arguments$latest_date)
+sprint_days <- arguments$days
+sprint_patch <- arguments$patch
+core <- arguments$core
 
 projects <- list()
 specifications <- yaml.load_file('sprint_features.yml')
 specifications$files <- c(specifications$files, list(get_time_feature()))
-config <- get_config()
 
 join_cols <- c('project_id')
 if (config$db$primary_source == "tfs") {
     join_cols <- c('team_id')
 }
 
-input_file <- get_arg('--file', default='sprint_labels.json')
-feature_file <- get_arg('--features', default='output/sprint_features.arff')
-output_directory <- get_arg('--output', default='output')
-project_ids <- get_arg('--project-ids', default='0')
+output_directory <- arguments$output
+project_ids <- arguments$project_ids
 if (project_ids != '0') {
     project_ids <- '1'
 }
 
-project_metadata <- get_arg('--project-metadata', default='recent,core,main')
-metadata <- get_meta_keys(project_metadata)
+metadata <- get_meta_keys(arguments$project_metadata)
 fields <- list(join_cols, 'name')
 if (config$db$primary_source != "tfs") {
     fields <- c(fields, 'quality_display_name')
@@ -98,12 +129,14 @@ get_project <- function(project_id) {
     return(sprint_cache[sprint_cache$project_id == project_id, ])
 }
 
-results <- read_json(input_file, simplifyVector=T)
+# Read prediction results input file
+results <- read_json(arguments$file, simplifyVector=T)
 if (is.list(results$projects)) {
     logwarn("Results is a multiple-run output which we cannot parse.")
     quit("no", status=0, runLast=F)
 }
-features <- read.arff(feature_file)
+# Read data set of features
+features <- read.arff(arguments$features)
 
 get_tags <- function(features_row) {
     tags <- list()

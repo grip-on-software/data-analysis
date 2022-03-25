@@ -17,7 +17,9 @@ source('include/args.r')
 source('include/log.r')
 source('include/project.r')
 
-not_done_ratio <- function(item, result, output_dir) {
+analysis_definitions <- yaml.load_file('analysis_definitions.yml')
+
+not_done_ratio <- function(item, result, output_dir, format) {
     if (!GGPLOT2) {
         stop("This analysis requires ggplot")
     }
@@ -77,8 +79,10 @@ not_done_ratio <- function(item, result, output_dir) {
     loginfo("Wrote plot to %s", plot_file)
 }
 
-sprint_burndown <- function(item, result, output_dir) {
-    format <- get_arg('--format', default='pdf')
+sprint_burndown <- function(item, result, output_dir, format) {
+    if (is.na(format)) {
+        format <- 'pdf'
+    }
 
     project_col <- item$patterns$join_cols[1]
     sprint_col <- item$patterns$join_cols[2]
@@ -195,7 +199,7 @@ sprint_burndown <- function(item, result, output_dir) {
     }
 }
 
-commit_volume <- function(item, result, output_dir) {
+commit_volume <- function(item, result, output_dir, format) {
     projects <- get_repo_projects(conn)
     data <- lapply(as.list(projects$project_id), function(project_id) {
         commit_data <- result[result$project_id == project_id,
@@ -213,7 +217,7 @@ commit_volume <- function(item, result, output_dir) {
           file=paste(output_dir, paste(item$table, "json", sep="."), sep="/"))
 }
 
-developers <- function(item, result, output_dir) {
+developers <- function(item, result, output_dir, format) {
     projects <- get_repo_projects(conn)
     data <- lapply(as.list(projects$project_id), function(project_id) {
         dev_data <- result[result$project_id == project_id,
@@ -245,7 +249,7 @@ to_map <- function(df) {
     return(map)
 }
 
-story_flow <- function(item, result, output_dir) {
+story_flow <- function(item, result, output_dir, format) {
     config <- get_config()
     if (config$db$primary_source == "tfs") {
         colors <- list('To Do'='blue',
@@ -408,7 +412,7 @@ story_flow <- function(item, result, output_dir) {
           file=paste(output_dir, "story_flow_states.json", sep="/"))
 }
 
-long_waiting_commits <- function(item, result, output_dir) {
+long_waiting_commits <- function(item, result, output_dir, format) {
     path <- paste(output_dir, item$table, sep="/")
     if (!dir.exists(path)) {
         dir.create(path)
@@ -440,7 +444,7 @@ long_waiting_commits <- function(item, result, output_dir) {
                   as.list(projects$project_id), as.list(projects$name)))
 }
 
-project_members <- function(item, result, output_dir) {
+project_members <- function(item, result, output_dir, format) {
     path <- paste(output_dir, item$table, sep="/")
     if (item$patterns[['id']] != 'all') {
         if (!dir.exists(path)) {
@@ -458,9 +462,11 @@ project_members <- function(item, result, output_dir) {
           file=paste(path, paste(filename, "json", sep="."), sep="/"))
 }
 
-project_backlog_burndown <- function(item, result, output_dir) {
+project_backlog_burndown <- function(item, result, output_dir, format) {
     # Output plot
-    format <- get_arg('--format', default='json')
+    if (is.na(format)) {
+        format <- 'json'
+    }
     export_file <- function(name, format) {
         paste(output_dir, paste(name, format, sep="."), sep="/")
     }
@@ -491,10 +497,12 @@ project_backlog_burndown <- function(item, result, output_dir) {
         }
     } else if (format == 'json') {
         write(toJSON(result), file=export_file(item$table, format))
+    } else {
+        loginfo("Not a supported format")
     }
 }
 
-bigboat_status <- function(item, result, output_dir) {
+bigboat_status <- function(item, result, output_dir, format) {
     path <- paste(output_dir, item$table, sep="/")
     if (!dir.exists(path)) {
         dir.create(path)
@@ -581,13 +589,12 @@ get_analysis_reports <- function(analysis_variables, latest_date) {
                     project_members=project_members,
                     project_backlog_burndown=project_backlog_burndown,
                     bigboat_status=bigboat_status)
-    definitions <- yaml.load_file('analysis_definitions.yml')
-    analysis_definitions <- modifyList(lapply(definitions$fields,
-                                              function(define) {
-                                                  define$field
-                                              }),
-                                       analysis_variables)
-    patterns <- load_definitions('sprint_definitions.yml', analysis_definitions,
+    variables <- modifyList(lapply(analysis_definitions$fields,
+                                   function(define) {
+                                       define$field
+                                   }),
+                            analysis_variables)
+    patterns <- load_definitions('sprint_definitions.yml', variables,
                                  current_time=latest_date)
     spec <- yaml.load_file('analysis_reports.yml')
     config <- get_config()

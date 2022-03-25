@@ -1,3 +1,5 @@
+# Script to make a QQ plot diagram for tabular data from res.r 
+
 library(ggplot2)
 if ("qqplotr" %in% rownames(installed.packages())) {
     library(qqplotr)
@@ -25,4 +27,3 @@ for (file in Sys.glob("qqplot.*.txt")) {
     counts <- matrix(as.numeric(unlist(read.table(file))), ncol=count, byrow=T)
     qqplot_monte_carlo(counts, sub("\\.txt", ".pdf", file))
 }
-

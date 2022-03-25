@@ -1,3 +1,5 @@
+# Script to perform a lint on a number of provided R scripts.
+
 library(lintr)
 
 linters <- with_defaults(infix_spaces_linter=NULL,

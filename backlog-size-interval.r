@@ -1,14 +1,24 @@
 # Script to generate CSV file containing a measured backlog size between certain
 # intervals defined by project length.
 
+source('include/args.r')
 source('include/log.r')
 source('include/project.r')
 
-conn <- connect()
+make_opt_parser(desc="Generate CSV of backlog sizes at project-based intervals",
+                options=list(make_option('--output', default='output',
+                                         help='Output directory'),
+                             make_option('--count', default=4,
+                                         help='Number of intervals')),
+                variables=get_config_fields())
 config <- get_config()
+arguments <- config$args
+log_setup(arguments)
+
+conn <- connect()
 patterns <- load_definitions('sprint_definitions.yml', config$fields)
-output_directory <- get_arg('--output', default='output')
-count <- get_arg('--count', default=4)
+output_directory <- arguments$output
+count <- arguments$count
 
 fields <- c('project_id', 'name', 'quality_display_name')
 projects <- get_projects_meta(conn,

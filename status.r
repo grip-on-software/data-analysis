@@ -1,3 +1,5 @@
+# Script to read BigBoat status information and create a plot
+
 library(jsonlite)
 library(ggplot2)
 

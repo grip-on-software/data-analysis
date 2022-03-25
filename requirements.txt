@@ -15,6 +15,7 @@ viridis
 lintr
 CORElearn
 triangle
+optparse
 ggplot2;optional
 qqplotr;optional
 github:bnosac/pattern.nlp;optional

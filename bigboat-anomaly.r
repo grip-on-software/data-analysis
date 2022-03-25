@@ -1,3 +1,5 @@
+# Script to perform anomaly detection on BigBoat status and plot the results. 
+
 library(MonetDB.R)
 library(DBI)
 library(digest)

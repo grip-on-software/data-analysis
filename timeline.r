@@ -1,3 +1,5 @@
+# Script that collects data for a timeline visualization.
+
 library(jsonlite)
 library(logging)
 library(plyr)
@@ -12,8 +14,41 @@ dateFormat <- function(date) {
     format(as.POSIXct(date), format="%Y-%m-%dT%H:%M:%S")
 }
 
-conn <- connect()
+make_opt_parser(desc="Collect data for timeline visualization",
+                options=list(make_option('--project-ids', default='0',
+                                         help='Anonymize projects (0 or 1)'),
+                             make_option('--output', default='output',
+                                         help='Output directory'),
+                             make_option('--days', default=NA_integer_,
+                                         help=paste('Number of days before a',
+                                                    'sprint is left out')),
+                             make_option('--patch', action='store_true',
+                                         default=NA,
+                                         help=paste('Exclude patch sprints',
+                                                    '(inverse: include only,',
+                                                    'default: no filter)')),
+                             make_option('--latest-date',
+                                         default=as.character(Sys.time()),
+                                         help=paste('Sprint start date/time',
+                                                    'after which later sprints',
+                                                    'are left out')),
+                             make_option('--features', default=NA_character_,
+                                         help='List of features to retrieve'),
+                             make_option('--exclude', default='^$',
+                                         help=paste('Regular expression of',
+                                                    'features to filter')),
+                             make_option('--events', default='',
+                                         help='List of events to retrieve'),
+                             make_option('--no-features', dest='no_features',
+                                         action='store_true', default=F,
+                                         help=paste('Do not filter events on',
+                                                    'sprints with features,',
+                                                    'e.g., when no features',
+                                                    'were retrieved'))))
 config <- get_config()
+arguments <- config$args
+log_setup(arguments)
+conn <- connect()
 
 if (config$db$primary_source == "tfs") {
     join_cols <- c("team_id")
@@ -27,24 +62,20 @@ projects <- get_projects_meta(conn, fields=project_fields,
                               metadata=list(core=T), join_cols=join_cols)
 projects <- projects[projects$core, ]
 
-project_ids <- get_arg('--project-ids', default='0')
+project_ids <- arguments$project_ids
 if (project_ids != '0') {
     project_ids <- '1'
 }
-output_directory <- get_arg('--output', default='output')
+output_directory <- arguments$output
 
 variables <- list(project_ids=project_ids)
 items <- load_queries('sprint_events.yml', 'sprint_definitions.yml', variables)
 
-sprint_days <- get_arg('--days', default=NA)
-sprint_patch <- ifelse(get_arg('--patch', default=F), NA, F)
-latest_date <- as.POSIXct(get_arg('--latest-date', default=Sys.time()))
-
 exportFeatures <- function(features, exclude, output_directory) {
     result <- get_sprint_features(conn, features, exclude, variables,
-                                  latest_date=latest_date,
-                                  sprint_days=sprint_days,
-                                  sprint_patch=sprint_patch,
+                                  latest_date=as.POSIXct(arguments$latest_date),
+                                  sprint_days=arguments$days,
+                                  sprint_patch=arguments$patch,
                                   future=F)
     data <- result$data
     colnames <- result$colnames
@@ -167,11 +198,8 @@ types <- list()
 projects_with_data <- list()
 project_boards <- list()
 
-features <- get_arg('--features', default=NA)
-exclude <- get_arg('--exclude', default='^$')
-events <- strsplit(get_arg('--events', default=''), ',')[[1]]
-data <- exportFeatures(features, exclude, output_directory)
-no_features <- get_arg('--no-features', default=F)
+events <- strsplit(arguments$events, ',')[[1]]
+data <- exportFeatures(arguments$features, arguments$exclude, output_directory)
 for (item in items) {
     if (length(events) > 0 && !(item$type %in% events)) {
         next
@@ -179,7 +207,7 @@ for (item in items) {
     loginfo('Executing query for type %s', item$type)
     time <- system.time(result <- dbGetQuery(conn, item$query))
     loginfo('Query for type %s took %f seconds', item$type, time['elapsed'])
-    if (!no_features) {
+    if (!arguments$no_features) {
         result <- result[result$sprint_id %in% data$sprint_id, ]
     }
     if (nrow(result) > 0) {
