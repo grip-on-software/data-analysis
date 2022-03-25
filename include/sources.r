@@ -47,7 +47,7 @@ get_source_urls <- function(conn, project_id, sources='all', web=T, one=F,
                                         paste(project_id, collapse=','), ')'))
     config <- get_config()
     default_urls <- config$fields[endsWith(names(config$fields), '_url')]
-    if (sources != 'all') {
+    if (is.na(sources) || sources != 'all') {
         if ('vcs' %in% sources) {
             sources <- c(sources, vcs_sources)
         }

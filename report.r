@@ -65,6 +65,9 @@ if (config$db$primary_source == "tfs") {
 }
 
 project_sources <- strsplit(arguments$project_sources, ',')[[1]]
+if (project_ids != '0') {
+    project_sources <- NA
+}
 
 run_reports <- function(definitions) {
     reports <- get_analysis_reports(definitions, latest_date)

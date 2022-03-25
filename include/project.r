@@ -211,7 +211,7 @@ if (!exists('INC_PROJECT_R')) {
                                 sources=sources,
                                 one=length(sources) == 1 && sources != 'all')
         if (project_ids != '0') {
-            names(urls) <- paste('Proj', names(sources), sep='')
+            names(urls) <- paste('Proj', names(urls), sep='')
         }
         else {
             names(urls) <- projects[projects$project_id %in% names(urls),

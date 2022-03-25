@@ -275,6 +275,7 @@ if (arguments$project) {
     }
     else {
         links <- list()
+        names(links) <- list()
     }
     write(toJSON(links),
           file=paste(output_directory, "project_features_links.json", sep="/"))
