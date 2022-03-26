@@ -72,7 +72,7 @@ if (config$db$primary_source == "tfs") {
 
 project_sources <- strsplit(arguments$project_sources, ',')[[1]]
 if (project_ids != '0') {
-    project_sources <- NA
+    project_sources <- NA_character_
 }
 
 run_reports <- function(definitions) {

@@ -205,18 +205,20 @@ if (!exists('INC_PROJECT_R')) {
         }))
     }
 
-    write_projects_sources <- function(conn, projects, sources=NA,
+    write_projects_sources <- function(conn, projects, sources=NA_character_,
                                        project_ids='0',
                                        output_directory='output') {
         urls <- get_source_urls(conn, projects$project_id,
                                 sources=sources,
                                 one=length(sources) == 1 && sources != 'all')
-        if (project_ids != '0') {
-            names(urls) <- paste('Proj', names(urls), sep='')
-        }
-        else {
-            names(urls) <- projects[projects$project_id %in% names(urls),
-                                    'name']
+        if (length(urls) > 0) {
+            if (project_ids != '0') {
+                names(urls) <- paste('Proj', names(urls), sep='')
+            }
+            else {
+                names(urls) <- projects[projects$project_id %in% names(urls),
+                                        'name']
+            }
         }
 
         write(toJSON(urls, auto_unbox=T),
