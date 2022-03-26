@@ -249,7 +249,7 @@ for (item in items) {
 
 total_data <- list(min_date=safe_unbox(min(unlist(min_date), na.rm=T)),
                    max_date=safe_unbox(max(unlist(max_date), na.rm=T)),
-                   update_date=safe_unbox(dateFormat(latest_date)),
+                   update_date=safe_unbox(dateFormat(arguments$latest_date)),
                    projects=names(projects_with_data),
                    boards=project_boards)
 
