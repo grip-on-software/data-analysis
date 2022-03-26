@@ -6,7 +6,7 @@ COPY requirements.txt install.r /tmp/
 RUN ANALYSIS_REQUIREMENTS=/tmp/requirements.txt Rscript /tmp/install.r
 
 WORKDIR /home/docker
-COPY *.r *.yml /home/docker/
+COPY *.r *.yml config.yml.example /home/docker/
 COPY analysis_reports/ /home/docker/analysis_reports/
 COPY include/ /home/docker/include/
 COPY project_features/ /home/docker/project_features/
