@@ -162,7 +162,7 @@ anonymize_result <- function(sprint, project_id) {
         sprint$project_id <- sprint$project
     }
     if (sprint_ids != '0') {
-        sprint$name <- paste("Sprint #", sprint$sprint)
+        sprint$name <- paste("Sprint ", sprint$sprint)
     }
     return(sprint)
 }
