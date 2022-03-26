@@ -114,11 +114,9 @@ make_opt_parser(desc="Extract features and export them into ARFF, JSON or CSV",
                                                     'sprint is left out',
                                                     '(recent/sprint only)')),
                              make_option('--patch', action='store_true',
-                                         default=NA,
+                                         default=FALSE,
                                          help=paste('Exclude patch sprints',
-                                                    '(inverse: include only,',
-                                                    'default: no filter,',
-                                                    'recent/sprint only)')),
+                                                    '(recent/sprint only)')),
                              make_option('--time', action='store_true',
                                          default=FALSE,
                                          help=paste('Export time feature',
@@ -377,11 +375,12 @@ if (arguments$project) {
     }
     old_features <- unique(c(sprint_meta, default_features, extra_features))
 
+    sprint_patch <- ifelse(arguments$patch, NA, F)
     fixversions <- strsplit(arguments$fixversions, ',')[[1]]
     # Latest date condition is handled by recent sprint features itself
     sprint_conditions <- get_sprint_conditions(latest_date='', core=core,
                                                sprint_days=arguments$days,
-                                               sprint_patch=arguments$patch,
+                                               sprint_patch=sprint_patch,
                                                future=futures > 0)
     result <- get_recent_sprint_features(conn,
                                          unique(c(meta_features, features)),

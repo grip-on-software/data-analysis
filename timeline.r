@@ -25,10 +25,8 @@ make_opt_parser(desc="Collect data for timeline visualization",
                                          help=paste('Number of days before a',
                                                     'sprint is left out')),
                              make_option('--patch', action='store_true',
-                                         default=NA,
-                                         help=paste('Exclude patch sprints',
-                                                    '(inverse: include only,',
-                                                    'default: no filter)')),
+                                         default=FALSE,
+                                         help='Exclude patch sprints'),
                              make_option('--latest-date',
                                          default=as.character(Sys.time()),
                                          help=paste('Sprint start date/time',
@@ -81,7 +79,7 @@ exportFeatures <- function(features, exclude, output_directory) {
     result <- get_sprint_features(conn, features, exclude, variables,
                                   latest_date=as.POSIXct(arguments$latest_date),
                                   sprint_days=arguments$days,
-                                  sprint_patch=arguments$patch,
+                                  sprint_patch=ifelse(arguments$patch, NA, F),
                                   future=F)
     data <- result$data
     colnames <- result$colnames

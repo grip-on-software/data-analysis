@@ -32,10 +32,8 @@ make_opt_parser(desc="Combine prediction run output with sprint data for API",
                                          help=paste('Number of days before a',
                                                     'sprint is left out')),
                              make_option('--patch', action='store_true',
-                                         default=NA,
-                                         help=paste('Exclude patch sprints',
-                                                    '(inverse: include only,',
-                                                    'default: no filter)')),
+                                         default=FALSE,
+                                         help='Exclude patch sprints'),
                              make_option('--latest-date',
                                          default=as.character(Sys.time()),
                                          help=paste('Sprint start date/time',
@@ -51,7 +49,7 @@ log_setup(arguments)
 
 latest_date <- as.POSIXct(arguments$latest_date)
 sprint_days <- arguments$days
-sprint_patch <- arguments$patch
+sprint_patch <- ifelse(arguments$patch, NA, F)
 core <- arguments$core
 
 projects <- list()

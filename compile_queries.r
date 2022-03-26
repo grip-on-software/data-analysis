@@ -15,10 +15,8 @@ make_opt_parser(desc="Compile SQL queries with patterns to executable queries",
                                          help=paste('Number of days before a',
                                                     'sprint is left out')),
                              make_option('--patch', action='store_true',
-                                         default=NA,
-                                         help=paste('Exclude patch sprints',
-                                                    '(inverse: include only,',
-                                                    'default: no filter)')),
+                                         default=FALSE,
+                                         help='Exclude patch sprints'),
                              make_option('--latest-date',
                                          default=as.character(Sys.time()),
                                          help=paste('Sprint start date/time',
@@ -62,11 +60,12 @@ if (sprint_ids != '0') {
     sprint_ids <- '1'
 }
 latest_date <- as.POSIXct(arguments$latest_date)
+sprint_patch <- ifelse(arguments$patch, NA, F)
 
 sprint_conditions <- paste(get_sprint_conditions(latest_date='',
                                                  core=arguments$core,
                                                  sprint_days=arguments$days,
-                                                 sprint_patch=arguments$patch),
+                                                 sprint_patch=sprint_patch),
                            collapse=' AND ')
 
 config <- get_config()
