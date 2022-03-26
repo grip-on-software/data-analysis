@@ -178,7 +178,7 @@ features <- arguments$features
 exclude <- arguments$exclude
 core <- arguments$core
 story <- arguments$story
-scores <- arguemtns$score
+scores <- arguments$score
 futures <- arguments$future
 latest_date <- as.POSIXct(arguments$latest_date)
 cache_update <- arguments$cache_update
