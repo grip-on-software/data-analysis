@@ -29,13 +29,9 @@ if (!exists('INC_DATABASE_R')) {
             config$args <<- args
             if (!is.null(organization) && !is.null(config[[organization]])) {
                 config <<- config[[organization]]
-                arguments <- config$arguments
-                if (!is.null(arguments)) {
-                    add_args(arguments)
-                    if (!is.null(parser)) {
-                        config$args <<- get_opt_args(args=arguments, partial=T)
-                    }
-                }
+            }
+            if (!is.null(config$arguments) && !is.null(parser)) {
+                config$args <<- get_opt_args(args=config$arguments, partial=T)
             }
         }
         return(config)
