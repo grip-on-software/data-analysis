@@ -57,6 +57,9 @@ configuration items within their sections to properly configure the scripts:
   - `prediction_url` (`$PREDICTION_URL`): URL to a human-readable website that 
     explains the source of the prediction results, which may itself contain 
     some format patterns such as `${jira_key}`.
+  - `sprint_patch` (`$SPRINT_PATCH`): SQL query pattern to use to determine if 
+    a sprint has a patch name or not. If no differentiation between normal 
+    sprints and patch sprints is necessary, then this can be set to `'false'`.
 - `weather` (used by `weather.r`): External weather data collection.
   - `url` (`$WEATHER_URL`): URL to an API endpoint that indicates locations of 
     files for daily temperatures, for example the API URL pointed by the [KNMI 

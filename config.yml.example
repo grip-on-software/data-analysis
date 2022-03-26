@@ -14,6 +14,7 @@ fields:
     prediction_combine: $PREDICTION_COMBINE
     prediction_data: $PREDICTION_DATA
     prediction_url: $PREDICTION_URL
+    sprint_patch: $SPRINT_PATCH
 weather:
     url: $WEATHER_URL
     api_key: $WEATHER_API_KEY

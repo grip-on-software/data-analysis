@@ -350,13 +350,3 @@ conditions:
             table: [fixversion]
             column: [start_date, release_date]
             condition: COALESCE(CAST(${t("sprint")}.start_date + (${t("sprint")}.release_date - ${t("sprint")}.start_date)/7 AS TIMESTAMP), ${current_timestamp})
-    sprint_patch:
-        description: "Sprints that have patch names"
-        jira:
-            table: [sprint, tfs_sprint]
-            column: [name]
-            condition: 'false'
-        jira_version:
-            table: fixversion
-            column: [name]
-            condition: 'false'
