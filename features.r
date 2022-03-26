@@ -56,6 +56,7 @@ make_opt_parser(desc="Extract features and export them into ARFF, JSON or CSV",
                              make_option('--combine', default='',
                                          help=paste('Combine sprints based on',
                                                     'metadata/feature field',
+                                                    'or number of intervals',
                                                     '(recent/sprint only)')),
                              make_option('--details', action='store_true',
                                          default=FALSE,
@@ -182,6 +183,10 @@ scores <- arguments$score
 futures <- arguments$future
 latest_date <- as.POSIXct(arguments$latest_date)
 cache_update <- arguments$cache_update
+combine <- arguments$combine
+if (combine == '') {
+    combine <- F
+}
 
 patterns <- load_definitions('sprint_definitions.yml', config$fields,
                              current_time=latest_date)
@@ -312,13 +317,9 @@ if (arguments$project) {
     split <- arguments$split
     with_old <- arguments$old
     closed <- arguments$closed
-    combine <- arguments$combine
     details <- arguments$details
     extra <- arguments$extra
     more_default <- arguments$default
-    if (combine == '') {
-        combine <- F
-    }
 
     if (arguments$teams) {
         metadata$team <- T
@@ -689,7 +690,7 @@ if (arguments$project) {
     result <- get_sprint_features(conn, features, exclude, NULL, latest_date,
                                   core=core, sprint_days=arguments$days,
                                   sprint_patch=arguments$patch,
-                                  combine=arguments$combine,
+                                  combine=combine,
                                   details=arguments$details,
                                   time=arguments$time, scores=scores,
                                   cache_update=cache_update)
