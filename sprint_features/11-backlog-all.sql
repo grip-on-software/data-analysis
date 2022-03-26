@@ -8,7 +8,7 @@ LEFT JOIN gros.${t("sprint")}
 ON ${j(join_cols, "issue", "sprint")}
 JOIN gros.${t("sprint")} AS interval_sprint
 ON ${j(join_cols, "issue", "interval_sprint", 1)}
-AND interval_sprint.sprint_id IN (${sprint_ids})
+AND interval_sprint.sprint_id IN (${filter_sprint_ids})
 AND ${t("issue")}.updated <= ${s(sprint_close, sprint="interval_sprint")}
 AND COALESCE(newer_issue.updated, ${s(sprint_close, sprint="interval_sprint")}) >= ${s(sprint_close, sprint="interval_sprint")}
 ${s(issue_join)}

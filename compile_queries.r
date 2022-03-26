@@ -7,9 +7,10 @@ source('include/log.r')
 source('include/analysis_reports.r')
 
 make_opt_parser(desc="Compile SQL queries with patterns to executable queries",
-                options=list(
-                             make_option('--project-ids', default='0',
+                options=list(make_option('--project-ids', default='0',
                                          help='Anonymize projects (0 or 1)'),
+                             make_option('--sprint-ids', default='0',
+                                         help='Anonymize sprints (0 or 1)'),
                              make_option('--days', default=NA_integer_,
                                          help=paste('Number of days before a',
                                                     'sprint is left out')),
@@ -56,6 +57,10 @@ project_ids <- arguments$project_ids
 if (project_ids != '0') {
     project_ids <- '1'
 }
+sprint_ids <- arguments$sprint_ids
+if (sprint_ids != '0') {
+    sprint_ids <- '1'
+}
 latest_date <- as.POSIXct(arguments$latest_date)
 
 sprint_conditions <- paste(get_sprint_conditions(latest_date='',
@@ -83,9 +88,9 @@ sprint_query <- load_query(list(query=query), sprint_definitions)
 if (arguments$connect) {
     conn <- connect()
     sprint_data <- dbGetQuery(conn, sprint_query$query)
-    sprint_ids <- paste(sprint_data[[join_cols[2]]], collapse=',')
+    filter_sprint_ids <- paste(sprint_data[[join_cols[2]]], collapse=',')
 } else {
-    sprint_ids <- '0'
+    filter_sprint_ids <- '0'
 }
 
 definitions <- yaml.load_file('analysis_definitions.yml')
@@ -97,11 +102,12 @@ analysis_definitions <- c(lapply(definitions$fields,
 export(load_queries('sprint_features.yml', 'sprint_definitions.yml',
                     list(join_cols=join_cols,
                          sprint_conditions=sprint_conditions,
-                         sprint_ids=sprint_ids),
+                         filter_sprint_ids=filter_sprint_ids),
                     current_time=latest_date),
        'feature', c('column', 'table'))
 export(load_queries('sprint_events.yml', 'sprint_definitions.yml',
                     list(project_ids=project_ids,
+                         sprint_ids=sprint_ids,
                          join_cols=join_cols),
                     current_time=latest_date),
        'event', 'type')

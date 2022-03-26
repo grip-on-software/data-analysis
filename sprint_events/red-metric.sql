@@ -1,4 +1,4 @@
-SELECT DISTINCT ${s(project_name)} AS project_name, ${f(join_cols, "sprint", mask=2, alias=F)} AS sprint_id, ${t("sprint")}."name" AS sprint_name, since_date AS date
+SELECT DISTINCT ${s(project_name)} AS project_name, ${f(join_cols, "sprint", mask=2, alias=F)} AS sprint_id, ${s(sprint_name)} AS sprint_name, since_date AS date
 FROM gros.${t("metric_value")}
 JOIN gros.${t("project")}
 ON ${j(join_cols, "metric_value", "project", mask=1)}

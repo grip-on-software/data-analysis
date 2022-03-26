@@ -17,6 +17,8 @@ dateFormat <- function(date) {
 make_opt_parser(desc="Collect data for timeline visualization",
                 options=list(make_option('--project-ids', default='0',
                                          help='Anonymize projects (0 or 1)'),
+                             make_option('--sprint-ids', default='0',
+                                         help='Anonymize sprints (0 or 1)'),
                              make_option('--output', default='output',
                                          help='Output directory'),
                              make_option('--days', default=NA_integer_,
@@ -66,9 +68,13 @@ project_ids <- arguments$project_ids
 if (project_ids != '0') {
     project_ids <- '1'
 }
+sprint_ids <- arguments$sprint_ids
+if (sprint_ids != '0') {
+    sprint_ids <- '1'
+}
 output_directory <- arguments$output
 
-variables <- list(project_ids=project_ids)
+variables <- list(project_ids=project_ids, sprint_ids=sprint_ids)
 items <- load_queries('sprint_events.yml', 'sprint_definitions.yml', variables)
 
 exportFeatures <- function(features, exclude, output_directory) {

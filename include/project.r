@@ -206,6 +206,7 @@ if (!exists('INC_PROJECT_R')) {
     }
 
     write_projects_sources <- function(conn, projects, sources=NA,
+                                       project_ids='0',
                                        output_directory='output') {
         urls <- get_source_urls(conn, projects$project_id,
                                 sources=sources,
@@ -223,7 +224,8 @@ if (!exists('INC_PROJECT_R')) {
     }
 
     write_projects_metadata <- function(conn, fields, metadata, projects=NA,
-                                        project_ids='0', project_sources=c(),
+                                        project_ids='0', sprint_ids='0',
+                                        project_sources=c(),
                                         output_directory='output',
                                         patterns=list(), join_cols=NULL,
                                         fixversions=F) {
@@ -237,10 +239,14 @@ if (!exists('INC_PROJECT_R')) {
                 fields <- names(fields)
             }
             projects <- projects[, c(as.character(fields), names(metadata))]
+            if (project_ids != '0' && "component" %in% names(metadata)) {
+                projects[!(projects$component %in% c(T, F)), 'component'] <- T
+            }
         }
 
         if (length(project_sources) > 0) {
             write_projects_sources(conn, projects, sources=project_sources,
+                                   project_ids=project_ids,
                                    output_directory=output_directory)
         }
 
@@ -252,7 +258,7 @@ if (!exists('INC_PROJECT_R')) {
         }
         join_col <- ifelse(project_ids != '0', project_col, 'name')
 
-        if (fixversions) {
+        if (sprint_ids != '1' && fixversions) {
             projects$fixversions <- list(setNames(list(), character(0)))
             versions <- get_project_fixversions(conn, join_col)
             with_versions <- projects[[join_col]] %in% names(versions)

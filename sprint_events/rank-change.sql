@@ -1,4 +1,4 @@
-SELECT ${s(project_name)} AS project_name, ${f(join_cols, "sprint", mask=2, alias=F)} AS sprint_id, ${t("sprint")}."name" AS sprint_name, ${t("issue")}.updated AS date
+SELECT ${s(project_name)} AS project_name, ${f(join_cols, "sprint", mask=2, alias=F)} AS sprint_id, ${s(sprint_name)} AS sprint_name, ${t("issue")}.updated AS date
 FROM gros.${t("issue")}
 LEFT OUTER JOIN gros.${t("sprint")}
 ON ${j(join_cols, "issue", "sprint")}

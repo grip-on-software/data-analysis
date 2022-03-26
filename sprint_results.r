@@ -22,6 +22,8 @@ make_opt_parser(desc="Combine prediction run output with sprint data for API",
                                          help='Output directory'),
                              make_option('--project-ids', default='0',
                                          help='Anonymize projects (0 or 1)'),
+                             make_option('--sprint-ids', default='0',
+                                         help='Anonymize sprints (0 or 1)'),
                              make_option('--project-metadata',
                                          default='recent,core,main',
                                          help=paste('List of project metadata',
@@ -66,6 +68,10 @@ project_ids <- arguments$project_ids
 if (project_ids != '0') {
     project_ids <- '1'
 }
+sprint_ids <- arguments$sprint_ids
+if (sprint_ids != '0') {
+    sprint_ids <- '1'
+}
 
 metadata <- get_meta_keys(arguments$project_metadata)
 fields <- list(join_cols, 'name')
@@ -81,6 +87,7 @@ get_sprints <- function(conn) {
     conditions <- get_sprint_conditions(latest_date=latest_date, core=core,
                                         sprint_days=sprint_days,
                                         sprint_patch=sprint_patch)
+    # Fields are anonymized for project_ids/sprint_ids later in anonymize_result
     fields <- list(project_id='${t("project")}.project_id',
                    project_key='${t("project")}.name',
                    quality_name='${t("project")}.quality_name',
@@ -153,7 +160,9 @@ anonymize_result <- function(sprint, project_id) {
     if (project_ids != '0') {
         sprint$project <- paste("Proj", project_id, sep="")
         sprint$project_id <- sprint$project
-        sprint$name <- paste("Sprint", sprint$sprint)
+    }
+    if (sprint_ids != '0') {
+        sprint$name <- paste("Sprint #", sprint$sprint)
     }
     return(sprint)
 }
@@ -213,7 +222,7 @@ feature_excludes <- c("project_id", "sprint_num", "organization", tag_names)
 feature_mask <- !(names(features) %in% feature_excludes)
 feature_names <- as.character(results$configuration$features)
 
-for (idx in 1:length(results$projects)) {
+for (idx in seq_along(results$projects)) {
     if (results$organizations[idx] != organization) {
         next
     }
@@ -227,7 +236,7 @@ for (idx in 1:length(results$projects)) {
     if (!is.null(results$analogy_indexes) &&
         nrow(results$analogy_indexes) >= idx) {
         analogies <- mapply(get_analogy_results,
-                            1:length(results$analogy_indexes[idx, ]),
+                            seq_along(results$analogy_indexes[idx, ]),
                             MoreArgs=list(idx=idx), SIMPLIFY=F)
     }
     else {
@@ -317,7 +326,7 @@ for (idx in 1:length(results$projects)) {
 }
 
 write_projects_metadata(conn, fields, metadata, projects=NA,
-                        project_ids=project_ids,
+                        project_ids=project_ids, sprint_ids=sprint_ids,
                         output_directory=organization_path,
                         patterns=patterns, join_cols=join_cols)
 write_feature_metadata(unique(projects), specifications, organization_path,

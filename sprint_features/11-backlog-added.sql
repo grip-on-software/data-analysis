@@ -8,7 +8,7 @@ LEFT JOIN gros.${t("issue")} AS older_issue
 ON ${j(issue_next_changelog, "issue", "older_issue")}
 JOIN gros.${t("sprint")} AS interval_sprint
 ON ${j(join_cols, "issue", "interval_sprint", 1)}
-AND interval_sprint.sprint_id IN (${sprint_ids})
+AND interval_sprint.sprint_id IN (${filter_sprint_ids})
 AND ${t("issue")}.updated > ${s(sprint_open, sprint="interval_sprint")}
 ${s(issue_join)}
 WHERE ${s(issue_not_done)}

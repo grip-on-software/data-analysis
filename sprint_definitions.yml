@@ -24,6 +24,11 @@ fields:
         table: [sprint, tfs_sprint, fixversion]
         column: [sprint_id]
         field: COALESCE(${f(join_cols, "sprint", mask=2, alias="alias")}, 0)
+    sprint_name:
+        description: "Human-readable description of a sprint"
+        table: [sprint, tfs_sprint, fixversion]
+        column: [name]
+        field: CASE WHEN ${sprint_ids} THEN CONCAT('#', COALESCE(${f(join_cols, "sprint", mask=2, alias="alias")}, 0)) ELSE ${t("sprint")}.name END
     issue_key:
         description: "Human-readable identifier of an issue"
         jira:

@@ -909,7 +909,8 @@ get_features <- function(conn, features, exclude, items, data, colnames,
 
             insert_query <- paste('INSERT INTO gros.', table,
                                   '(project_id, sprint_id',
-                                  ifelse(!is.null(components), ', component', ''),
+                                  ifelse(!is.null(components), ', component',
+                                         ''),
                                   ', "value", "name", update_date',
                                   ifelse(is.list(details), ', details', ''),
                                   ') VALUES', sep="")
@@ -1205,9 +1206,9 @@ get_story_features <- function(conn, features, exclude='^$',
                                latest_date=Sys.time(), changelog=T,
                                project_fields=list('project_id'),
                                project_meta=list(), project_names=NULL,
-                               scores=F, old=F, future=0) {
-    fields <- list(project_name='${t("project")}.name',
-                   sprint_name='${t("sprint")}.name',
+                               scores=F, old=F, future=0, variables=list()) {
+    fields <- list(project_name='${s(project_name)}',
+                   sprint_name='${s(sprint_name)}',
                    story_name='${t("issue")}.title',
                    latest='max_changelog.changelog_id IS NOT NULL')
 
@@ -1237,7 +1238,7 @@ get_story_features <- function(conn, features, exclude='^$',
                     AND ${s(issue_story)}
                     ${s(project_condition)}')
 
-    variables <- list(join_cols=list(default=join_cols))
+    variables <- c(variables, list(join_cols=list(default=join_cols)))
     patterns <- load_definitions('sprint_definitions.yml', variables,
                                  current_time=latest_date)
 
@@ -1339,7 +1340,7 @@ get_sprint_features <- function(conn, features, exclude, variables, latest_date,
         colnames <- c(colnames, 'time')
     }
     order_by <- c('${f(join_cols, "sprint", mask=1)}', '${s(sprint_open)}',
-               '${t("sprint")}.name')
+                  '${t("sprint")}.name')
 
     patterns <- load_definitions('sprint_definitions.yml',
                                  list(sprint_days=sprint_days,
@@ -1360,10 +1361,10 @@ get_sprint_features <- function(conn, features, exclude, variables, latest_date,
         sprint_data$time <- as.integer(sprint_data$time / 86400)
     }
 
-    sprint_ids <- paste(sprint_data[[join_cols[2]]], collapse=',')
+    filter_sprint_ids <- paste(sprint_data[[join_cols[2]]], collapse=',')
     items <- load_queries('sprint_features.yml', 'sprint_definitions.yml',
                           c(variables,
-                            list(sprint_ids=sprint_ids,
+                            list(filter_sprint_ids=filter_sprint_ids,
                                  sprint_conditions=sprint_conditions,
                                  join_cols=join_cols)))
 
@@ -1775,8 +1776,9 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
                                        latest_date=Sys.time(),
                                        variables=list(), filters=list(),
                                        cache_update=T) {
+    # Use unanonymized project name since combined teams need them
     fields <- list(project_name='${t("project")}.name',
-                   sprint_name='${t("sprint")}.name',
+                   sprint_name='${s(sprint_name)}',
                    start_date='${s(sprint_open)}',
                    close_date='COALESCE(${s(sprint_close)}, ${s(sprint_open)})',
                    old='${old}',
@@ -1841,7 +1843,8 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
             jira_join <- 'LEFT JOIN (
                           gros.${t("issue_component")}
                           JOIN gros.${t("component")}
-                          ON ${j("component_id", "issue_component", "component")}
+                          ON
+                          ${j("component_id", "issue_component", "component")}
                           )
                           ON ${j(join_cols, "issue", "component", mask=1)}
                           AND ${t("component")}.name IN (${components})
@@ -1918,7 +1921,8 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
         as.Date(sprint_data$start_date) >= as.Date(latest_date)
     sprint_data <- arrange(sprint_data, sprint_data$project_name,
                            sprint_data$start_date, sprint_data$sprint_name)
-    patterns$sprint_ids <- paste(sprint_data[[join_cols[2]]], collapse=',')
+    patterns$filter_sprint_ids <- paste(sprint_data[[join_cols[2]]],
+                                        collapse=',')
 
     data <- yaml.load_file('sprint_features.yml')
     items <- list()

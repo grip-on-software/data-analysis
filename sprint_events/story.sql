@@ -1,4 +1,4 @@
-SELECT ${s(project_name)} AS project_name, ${f(join_cols, "sprint", mask=2, alias=F)} AS sprint_id, ${t("sprint")}."name" AS sprint_name, issuedata.date AS start_date, issuedata.end_date AS date 
+SELECT ${s(project_name)} AS project_name, ${f(join_cols, "sprint", mask=2, alias=F)} AS sprint_id, ${s(sprint_name)} AS sprint_name, issuedata.date AS start_date, issuedata.end_date AS date 
 FROM (
 	SELECT ${f(join_cols, "start_issue")}, start_issue.issue_id,
 		MIN(start_issue.updated) AS date, MIN(${t("issue")}.updated) AS end_date

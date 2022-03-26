@@ -17,6 +17,8 @@ make_opt_parser(desc="Perform analysis and generate report",
                                          default=F, help='Invert project list'),
                              make_option('--project-ids', default='0',
                                          help='Anonymize projects (0 or 1)'),
+                             make_option('--sprint-ids', default='0',
+                                         help='Anonymize sprints (0 or 1)'),
                              make_option('--project-metadata',
                                          default='recent,core,main',
                                          help=paste('List of project metadata',
@@ -51,6 +53,10 @@ output_directory <- arguments$output
 project_ids <- arguments$project_ids
 if (project_ids != '0') {
     project_ids <- '1'
+}
+sprint_ids <- arguments$sprint_ids
+if (sprint_ids != '0') {
+    sprint_ids <- '1'
 }
 
 metadata <- get_meta_keys(arguments$project_metadata)
@@ -153,7 +159,7 @@ if (arguments$interval != '') {
            },
            projects$project_id, projects$name, SIMPLIFY=F)
     write_projects_metadata(conn, fields, metadata, projects=projects,
-                            project_ids=project_ids,
+                            project_ids=project_ids, sprint_ids=sprint_ids,
                             project_sources=project_sources,
                             output_directory=output_directory)
     write(toJSON(projects$project_id),

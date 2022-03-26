@@ -20,6 +20,8 @@ make_opt_parser(desc="Extract features and export them into ARFF, JSON or CSV",
                                          help='Output directory'),
                              make_option('--project-ids', default='0',
                                          help='Anonymize projects (0 or 1)'),
+                             make_option('--sprint-ids', default='0',
+                                         help='Anonymize sprints (0 or 1)'),
                              make_option('--projects', default='',
                                          help='List of projects to collect'),
                              make_option('--features', default=NA_character_,
@@ -162,10 +164,15 @@ log_setup(arguments)
 conn <- connect()
 
 output_directory <- arguments$output
-project_ids <- arguments$project_id
+project_ids <- arguments$project_ids
 if (project_ids != '0') {
     project_ids <- '1'
 }
+sprint_ids <- arguments$sprint_ids
+if (sprint_ids != '0') {
+    sprint_ids <- '1'
+}
+variables <- list(project_ids=project_ids, sprint_ids=sprint_ids)
 projects <- strsplit(arguments$projects, ',')[[1]]
 features <- arguments$features
 exclude <- arguments$exclude
@@ -249,7 +256,7 @@ if (arguments$project) {
         }
         data[subproject] <- NULL
     }
-    if (project_ids == '1') {
+    if (project_ids != '0') {
         num <- result$data[[project_col]][result$data$name %in% names(data)]
         names(data) <- paste("Proj", num, sep="")
     }
@@ -298,6 +305,7 @@ if (arguments$project) {
     write_projects_metadata(conn, result$project_fields, metadata,
                             projects=result$projects,
                             project_ids=project_ids,
+                            sprint_ids=sprint_ids,
                             output_directory=output_directory,
                             join_cols=result$join_cols)
 } else if (arguments$recent) {
@@ -374,7 +382,6 @@ if (arguments$project) {
                                                sprint_days=arguments$days,
                                                sprint_patch=arguments$patch,
                                                future=futures > 0)
-    variables <- list(project_ids=project_ids)
     result <- get_recent_sprint_features(conn,
                                          unique(c(meta_features, features)),
                                          exclude,
@@ -648,6 +655,7 @@ if (arguments$project) {
         write_projects_metadata(conn, result$project_fields, metadata,
                                 projects=result$projects,
                                 project_ids=project_ids,
+                                sprint_ids=sprint_ids,
                                 output_directory=output_dir,
                                 fixversions=config$db$primary_source == "jira")
     }
@@ -666,7 +674,8 @@ if (arguments$project) {
     result <- get_story_features(conn, features, exclude, latest_date,
                                  changelog=changelog, project_fields=fields,
                                  project_meta=metadata, project_names=projects,
-                                 scores=scores, future=futures)
+                                 scores=scores, future=futures,
+                                 variables=variables)
     story_data <- result$data
     colnames <- unique(c(story_metadata, result$colnames))
 
