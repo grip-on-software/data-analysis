@@ -187,6 +187,7 @@ combine <- arguments$combine
 if (combine == '') {
     combine <- F
 }
+details <- arguments$details
 
 patterns <- load_definitions('sprint_definitions.yml', config$fields,
                              current_time=latest_date)
@@ -317,7 +318,6 @@ if (arguments$project) {
     split <- arguments$split
     with_old <- arguments$old
     closed <- arguments$closed
-    details <- arguments$details
     extra <- arguments$extra
     more_default <- arguments$default
 
@@ -691,7 +691,7 @@ if (arguments$project) {
                                   core=core, sprint_days=arguments$days,
                                   sprint_patch=arguments$patch,
                                   combine=combine,
-                                  details=arguments$details,
+                                  details=details,
                                   time=arguments$time, scores=scores,
                                   cache_update=cache_update)
     sprint_data <- result$data[, result$colnames]
