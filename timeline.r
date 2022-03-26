@@ -44,7 +44,8 @@ make_opt_parser(desc="Collect data for timeline visualization",
                                          help=paste('Do not filter events on',
                                                     'sprints with features,',
                                                     'e.g., when no features',
-                                                    'were retrieved'))))
+                                                    'were retrieved'))),
+                variables=get_config_fields())
 config <- get_config()
 arguments <- config$args
 log_setup(arguments)
@@ -72,7 +73,8 @@ if (sprint_ids != '0') {
 }
 output_directory <- arguments$output
 
-variables <- list(project_ids=project_ids, sprint_ids=sprint_ids)
+variables <- c(config$fields,
+               list(project_ids=project_ids, sprint_ids=sprint_ids))
 items <- load_queries('sprint_events.yml', 'sprint_definitions.yml', variables)
 
 exportFeatures <- function(features, exclude, output_directory) {
