@@ -103,6 +103,7 @@ if (arguments$interval != '') {
                                    WHERE assignee IS NOT NULL'),
                        reports$patterns)
 
+    logdebug(item$query)
     start_date <- dbGetQuery(conn, item$query)[[1]]
     intervals <- seq(as.POSIXct(start_date), latest_date, by=arguments$interval)
     loginfo(intervals)
