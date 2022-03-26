@@ -1343,8 +1343,9 @@ get_sprint_features <- function(conn, features, exclude, variables, latest_date,
                   '${t("sprint")}.name')
 
     patterns <- load_definitions('sprint_definitions.yml',
-                                 list(sprint_days=sprint_days,
-                                      join_cols=join_cols),
+                                 c(variables,
+                                   list(sprint_days=sprint_days,
+                                        join_cols=join_cols)),
                                  current_time=latest_date)
 
     query <- paste('SELECT', paste(fields, collapse=', '),
