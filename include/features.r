@@ -1815,7 +1815,12 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
                                '${s(sprint_close)} < ${current_timestamp}')
     }
     colnames <- c(join_cols, names(fields)[names(fields) != ""])
-    sprint_conditions <- paste(sprint_conditions, collapse=' AND ')
+    if (length(sprint_conditions) != 0) {
+        sprint_conditions <- paste(sprint_conditions, collapse=' AND ')
+    }
+    else {
+        sprint_conditions <- '1'
+    }
 
     variables <- c(variables,
                    get_filter_conditions(filters),
