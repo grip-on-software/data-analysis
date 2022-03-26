@@ -171,7 +171,8 @@ sprint_ids <- arguments$sprint_ids
 if (sprint_ids != '0') {
     sprint_ids <- '1'
 }
-variables <- list(project_ids=project_ids, sprint_ids=sprint_ids)
+variables <- c(config$fields,
+               list(project_ids=project_ids, sprint_ids=sprint_ids))
 projects <- strsplit(arguments$projects, ',')[[1]]
 features <- arguments$features
 exclude <- arguments$exclude
