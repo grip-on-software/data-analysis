@@ -687,7 +687,8 @@ if (arguments$project) {
     filename <- ifelse(is.na(arguments$filename), 'sprint_features.arff',
                        arguments$filename)
 
-    result <- get_sprint_features(conn, features, exclude, NULL, latest_date,
+    result <- get_sprint_features(conn, features, exclude, variables,
+                                  latest_date,
                                   core=core, sprint_days=arguments$days,
                                   sprint_patch=arguments$patch,
                                   combine=combine,

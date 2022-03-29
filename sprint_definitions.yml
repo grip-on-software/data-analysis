@@ -28,7 +28,7 @@ fields:
         description: "Human-readable description of a sprint"
         table: [sprint, tfs_sprint, fixversion]
         column: [name]
-        field: CASE WHEN ${sprint_ids} THEN CONCAT('Sprint ', COALESCE(${f(join_cols, "sprint", mask=2, alias="alias")}, 0)) ELSE ${t("sprint")}.name END
+        field: "CASE WHEN ${sprint_ids} THEN CONCAT('Sprint ', COALESCE(${f(join_cols, \"sprint\", mask=2, alias=\"alias\")}, 0)) ELSE ${t(\"sprint\")}.name END"
     issue_key:
         description: "Human-readable identifier of an issue"
         jira:

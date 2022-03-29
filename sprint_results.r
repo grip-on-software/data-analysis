@@ -42,7 +42,8 @@ make_opt_parser(desc="Combine prediction run output with sprint data for API",
                              make_option('--core', action='store_true',
                                          default=FALSE,
                                          help=paste('Only consider non-support',
-                                                    'team, main projects'))))
+                                                    'team, main projects'))),
+                variables=get_config_fields())
 config <- get_config()
 arguments <- config$args
 log_setup(arguments)
