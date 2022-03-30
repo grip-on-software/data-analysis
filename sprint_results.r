@@ -216,7 +216,8 @@ if (!is.null(organization)) {
     organization_path <- output_directory
 }
 
-tag_names <- get_tags(setNames(rep(T, length(features)), names(features)))
+tag_names <- get_tags(data.frame(as.list(setNames(rep(T, length(features)),
+                                                  colnames(features)))))
 feature_excludes <- c("project_id", "sprint_num", "organization", tag_names)
 feature_mask <- !(names(features) %in% feature_excludes)
 feature_names <- as.character(results$configuration$features)
