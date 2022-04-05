@@ -161,7 +161,7 @@ anonymize_result <- function(sprint, project_id) {
         sprint$project_id <- sprint$project
     }
     if (sprint_ids != '0') {
-        sprint$name <- paste("Sprint ", sprint$sprint)
+        sprint$name <- paste("Sprint", sprint$sprint)
     }
     return(sprint)
 }
@@ -230,8 +230,8 @@ for (idx in seq_along(results$projects)) {
     project_id <- results$projects[idx]
     sprint_id <- results$sprints[idx]
     sprint <- get_sprint_by_id(project_id, sprint_id)
-    sprint_ids <- sort(results$sprints[results$organizations == organization &
-                                       results$projects == project_id])
+    ids <- sort(results$sprints[results$organizations == organization &
+                                results$projects == project_id])
 
     if (!is.null(results$analogy_indexes) &&
         nrow(results$analogy_indexes) >= idx) {
@@ -283,17 +283,17 @@ for (idx in seq_along(results$projects)) {
         dir.create(path)
     }
     data <- toJSON(project_data, auto_unbox=T, na="null", null="null")
-    if (all(sprint_id <= sprint_ids)) {
+    if (all(sprint_id <= ids)) {
         write(data, file=paste(path, "latest.json", sep="/"))
         project_sprints <- get_project(project_id)
         project_sprints$sprint_num <- row(project_sprints)[, 1]
         if (nrow(project_sprints) > 0) {
-            if (project_ids != '0') {
+            if (sprint_ids != '0') {
                 project_sprints$name <- paste("Sprint",
                                               project_sprints$sprint_num)
             }
         }
-        write(toJSON(project_sprints[project_sprints$sprint_id %in% sprint_ids,
+        write(toJSON(project_sprints[project_sprints$sprint_id %in% ids,
                                      c('name', 'sprint_num', 'sprint_id')]),
               file=paste(path, "sprints.json", sep="/"))
     }
@@ -314,7 +314,7 @@ for (idx in seq_along(results$projects)) {
                                                        specifications$files,
                                                        patterns))
         write(source_data, file=paste(path, sprint_links, sep="/"))
-        if (all(sprint_id <= sprint_ids)) {
+        if (all(sprint_id <= ids)) {
             write(source_data, file=paste(path, "links.json", sep="/"))
         }
     }
