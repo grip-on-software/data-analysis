@@ -61,12 +61,10 @@ if (sprint_ids != '0') {
 
 metadata <- get_meta_keys(arguments$project_metadata)
 
-join_cols <- c('project_id')
-fields <- list('project_id', 'name', 'quality_display_name')
+join_cols <- ifelse(config$db$primary_source == "tfs", 'team_id', 'project_id')
+fields <- list(join_cols, 'name', 'quality_display_name')
 names(fields) <- fields
 if (config$db$primary_source == "tfs") {
-    join_cols <- c('team_id')
-    fields$project_id <- "team_id"
     fields$quality_display_name <- NULL
 }
 
@@ -138,10 +136,10 @@ if (arguments$interval != '') {
     }
     else if (projects_list != 'each') {
         ids <- as.vector(as.numeric(unlist(strsplit(projects_list, ','))))
-        projects <- projects[projects$project_id %in% ids, ]
+        projects <- projects[projects[[join_cols[1]]] %in% ids, ]
     }
-    if (project_ids != '0') {
-        projects$name <- paste('Proj', projects$project_id, sep='')
+    if (project_ids != '0' && nrow(projects) > 0) {
+        projects$name <- paste('Proj', projects[[join_cols[1]]], sep='')
     }
     mapply(function(project_id, name) {
                condition <- paste('AND', join_cols[1])
@@ -158,12 +156,12 @@ if (arguments$interval != '') {
                                                               project_id)))
                }
            },
-           projects$project_id, projects$name, SIMPLIFY=F)
+           projects[[join_cols[1]]], projects$name, SIMPLIFY=F)
     write_projects_metadata(conn, fields, metadata, projects=projects,
                             project_ids=project_ids, sprint_ids=sprint_ids,
                             project_sources=project_sources,
                             output_directory=output_directory)
-    write(toJSON(projects$project_id),
+    write(toJSON(projects[[join_cols[1]]]),
           file=paste(output_directory, 'report_projects.json', sep='/'))
     write(toJSON(projects$name),
           file=paste(output_directory, 'report_project_names.json', sep='/'))
