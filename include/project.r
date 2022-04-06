@@ -206,18 +206,20 @@ if (!exists('INC_PROJECT_R')) {
     }
 
     write_projects_sources <- function(conn, projects, sources=NA_character_,
-                                       project_ids='0',
+                                       project_ids='0', join_cols=NULL,
                                        output_directory='output') {
-        urls <- get_source_urls(conn, projects$project_id,
-                                sources=sources,
+        if (is.null(join_cols)) {
+            join_cols <- c('project_id')
+        }
+        ids <- projects[[join_cols[1]]]
+        urls <- get_source_urls(conn, ids, sources=sources,
                                 one=length(sources) == 1 && sources != 'all')
         if (length(urls) > 0) {
             if (project_ids != '0') {
                 names(urls) <- paste('Proj', names(urls), sep='')
             }
             else {
-                names(urls) <- projects[projects$project_id %in% names(urls),
-                                        'name']
+                names(urls) <- projects[ids %in% names(urls), 'name']
             }
         }
 
@@ -248,7 +250,7 @@ if (!exists('INC_PROJECT_R')) {
 
         if (length(project_sources) > 0) {
             write_projects_sources(conn, projects, sources=project_sources,
-                                   project_ids=project_ids,
+                                   project_ids=project_ids, join_cols=join_cols,
                                    output_directory=output_directory)
         }
 
