@@ -40,7 +40,7 @@ pipeline {
         stage('Lint') {
             agent {
                 docker {
-                    image '$AGENT_IMAGE'
+                    image "${env.AGENT_IMAGE}"
                 }
             }
             steps {
