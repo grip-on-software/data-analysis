@@ -52,16 +52,12 @@ log_setup(arguments)
 conn <- connect()
 
 if (config$db$primary_source == "tfs") {
-    join_cols <- c("team_id")
-    project_fields <- list(project_id='team_id', name='name')
+    join_cols <- c("team_id", "sprint_id")
+    project_fields <- list(project_id='team_id', name='${s(project_name)}')
 } else {
-    join_cols <- c("project_id")
-    project_fields <- list(project_id='project_id', name='name')
+    join_cols <- c("project_id", "sprint_id")
+    project_fields <- list(project_id='project_id', name='${s(project_name)}')
 }
-
-projects <- get_projects_meta(conn, fields=project_fields,
-                              metadata=list(core=T), join_cols=join_cols)
-projects <- projects[projects$core, ]
 
 project_ids <- arguments$project_ids
 if (project_ids != '0') {
@@ -71,11 +67,20 @@ sprint_ids <- arguments$sprint_ids
 if (sprint_ids != '0') {
     sprint_ids <- '1'
 }
-output_directory <- arguments$output
 
 variables <- c(config$fields,
                list(project_ids=project_ids, sprint_ids=sprint_ids))
-items <- load_queries('sprint_events.yml', 'sprint_definitions.yml', variables)
+patterns <- load_definitions('sprint_definitions.yml', variables)
+
+projects <- get_projects_meta(conn, fields=project_fields,
+                              metadata=list(core=T), join_cols=join_cols,
+                              patterns=patterns)
+projects <- projects[projects$core, ]
+
+output_directory <- arguments$output
+
+items <- load_queries('sprint_events.yml',
+                      variables=c(patterns, list(join_cols=join_cols)))
 
 exportFeatures <- function(features, exclude, output_directory) {
     result <- get_sprint_features(conn, features, exclude, variables,
@@ -86,11 +91,12 @@ exportFeatures <- function(features, exclude, output_directory) {
     data <- result$data
     colnames <- result$colnames
     project_col <- result$join_cols[1]
+    sprint_col <- result$join_cols[2]
     project_data <- lapply(as.list(projects$project_id), function(project) {
         project_id <- projects[project, 'project_id']
         if (project_id %in% data[[project_col]]) {
             sprint_data <- data[data[[project_col]] == project,
-                                c('sprint_id', colnames)]
+                                c(sprint_col, colnames)]
             result <- lapply(as.list(1:dim(sprint_data)[1]), function(i) {
                 safe_unbox(sprint_data[i, colnames])
             })
@@ -99,12 +105,7 @@ exportFeatures <- function(features, exclude, output_directory) {
         }
         return(NA)
     })
-    if (project_ids != '1') {
-        names(project_data) <- projects$name
-    }
-    else {
-        names(project_data) <- paste('Proj', projects$project_id, sep='')
-    }
+    names(project_data) <- projects$name
     write(toJSON(get_feature_locales(result$items)),
           file=paste(output_directory, "locales.json", sep="/"))
     write(toJSON(project_data),
@@ -123,10 +124,14 @@ exportSplitData <- function(data, item, output_directory) {
             project_name <- paste('Proj', project_id, sep='')
         }
 
-        sprints <- dbGetQuery(conn, paste('SELECT sprint.sprint_id
-                                           FROM gros.sprint
-                                           WHERE sprint.project_id =',
-                                           project_id))
+        query <- paste('SELECT ${f(join_cols, "sprint", mask=2)}
+                        FROM gros.${t("sprint")}
+                        WHERE ${f(join_cols, "sprint", mask=1)} =',
+                        project_id)
+        item <- load_query(list(query=query),
+                           c(patterns, list(join_cols=join_cols)))
+        logdebug(item$query)
+        sprints <- dbGetQuery(conn, item$query)
         if (nrow(sprints) == 0) {
             return(sprints)
         }
@@ -136,9 +141,10 @@ exportSplitData <- function(data, item, output_directory) {
             dir.create(path)
         }
 
-        for (sprint_id in sprints$sprint_id) {
+        sprint_col <- join_cols[2]
+        for (sprint_id in sprints[[sprint_col]]) {
             sprint_split_data <- data[data$project_name == project_name &
-                                      data$sprint_id == sprint_id, ]
+                                      data[[sprint_col]] == sprint_id, ]
 
             filename <- paste(path,
                               paste(item$type, sprint_id, "json", sep="."),
@@ -147,12 +153,7 @@ exportSplitData <- function(data, item, output_directory) {
         }
         return(sprints)
     })
-    if (project_ids != '1') {
-        names(project_data) <- projects$name
-    }
-    else {
-        names(project_data) <- paste('Proj', projects$project_id, sep='')
-    }
+    names(project_data) <- projects$name
     return(project_data)
 }
 
@@ -161,12 +162,7 @@ exportData <- function(data, item, output_directory) {
     if (isTRUE(item$split)) {
         return(exportSplitData(data, item, output_directory))
     }
-    if (project_ids != '1') {
-        project_names <- as.list(projects$name)
-    }
-    else {
-        project_names <- paste('Proj', as.list(projects$project_id), sep='')
-    }
+    project_names <- as.list(projects$name)
     project_boards <- lapply(project_names, function(project) {
         result <- data[data$project_name == project, ]
         if ("board_id" %in% colnames(result)) {
@@ -181,12 +177,7 @@ exportData <- function(data, item, output_directory) {
     project_data <- lapply(project_names, function(project) {
         return(data[data$project_name == project, ])
     })
-    if (project_ids != '1') {
-        names(project_data) <- projects$name
-    }
-    else {
-        names(project_data) <- paste('Proj', projects$project_id, sep='')
-    }
+    names(project_data) <- projects$name
     path <- paste(output_directory, paste(item$type, "json", sep="."), sep="/")
     write(toJSON(project_data), file=path)
 
@@ -206,6 +197,7 @@ project_boards <- list()
 
 events <- strsplit(arguments$events, ',')[[1]]
 data <- exportFeatures(arguments$features, arguments$exclude, output_directory)
+sprint_col <- join_cols[2]
 for (item in items) {
     if (length(events) > 0 && !(item$type %in% events)) {
         next
@@ -214,7 +206,7 @@ for (item in items) {
     time <- system.time(result <- dbGetQuery(conn, item$query))
     loginfo('Query for type %s took %f seconds', item$type, time['elapsed'])
     if (!arguments$no_features) {
-        result <- result[result$sprint_id %in% data$sprint_id, ]
+        result <- result[result[[sprint_col]] %in% data[[sprint_col]], ]
     }
     if (nrow(result) > 0) {
         result$date <- dateFormat(result$date)
