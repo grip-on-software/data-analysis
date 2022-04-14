@@ -639,7 +639,7 @@ if (arguments$project) {
         write(toJSON(list(default=setdiff(default_features, sprint_meta),
                           all=known_features,
                           future=setdiff(future_features, sprint_meta),
-                          details=unlist(unique(details_features)),
+                          details=as.list(unlist(unique(details_features))),
                           metrics=metrics,
                           meta=sprint_meta)),
               file=paste(output_dir, "features.json", sep="/"))
