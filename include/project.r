@@ -36,7 +36,7 @@ if (!exists('INC_PROJECT_R')) {
                                          list(join_cols=join_cols))
         }
 
-        variables <- c(patterns, list(join_cols=join_cols))
+        variables <- c(list(join_cols=join_cols), patterns)
         if (!is.null(metadata$recent)) {
             date <- get_recent_date(metadata$recent)
             variables$date <- date

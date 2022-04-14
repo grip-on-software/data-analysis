@@ -80,7 +80,7 @@ projects <- projects[projects$core, ]
 output_directory <- arguments$output
 
 items <- load_queries('sprint_events.yml',
-                      variables=c(patterns, list(join_cols=join_cols)))
+                      variables=c(list(join_cols=join_cols), patterns))
 
 exportFeatures <- function(features, exclude, output_directory) {
     result <- get_sprint_features(conn, features, exclude, variables,
@@ -203,6 +203,7 @@ for (item in items) {
         next
     }
     loginfo('Executing query for type %s', item$type)
+    logdebug(item$query)
     time <- system.time(result <- dbGetQuery(conn, item$query))
     loginfo('Query for type %s took %f seconds', item$type, time['elapsed'])
     if (!arguments$no_features) {
