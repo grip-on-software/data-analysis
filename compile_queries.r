@@ -29,7 +29,7 @@ make_opt_parser(desc="Compile SQL queries with patterns to executable queries",
                              make_option('--connect', action='store_true',
                                          default=TRUE,
                                          help='Connect to DB for sprint IDs')),
-                variables=analysis_definitions$fields)
+                variables=c(get_config_fields(), analysis_definitions$fields))
 config <- get_config()
 arguments <- config$args
 log_setup(arguments)
@@ -81,8 +81,9 @@ query <- paste('SELECT ${f(join_cols, "sprint")}',
                'ON ${j(join_cols, "project", "sprint", mask=1)}',
                'WHERE', sprint_conditions)
 sprint_definitions <- load_definitions('sprint_definitions.yml',
-                                       list(sprint_days=arguments$days,
-                                            join_cols=join_cols))
+                                       c(config$fields,
+                                         list(sprint_days=arguments$days,
+                                              join_cols=join_cols)))
 sprint_query <- load_query(list(query=query), sprint_definitions)
 if (arguments$connect) {
     conn <- connect()
