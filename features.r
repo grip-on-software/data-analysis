@@ -636,10 +636,14 @@ if (arguments$project) {
         if (is.null(metrics)) {
             metrics <- list()
         }
+        details_meta <- unlist(unique(details_features))
+        if (is.null(details_meta)) {
+            details_meta <- list()
+        }
         write(toJSON(list(default=setdiff(default_features, sprint_meta),
                           all=known_features,
                           future=setdiff(future_features, sprint_meta),
-                          details=as.list(unlist(unique(details_features))),
+                          details=details_meta,
                           metrics=metrics,
                           meta=sprint_meta)),
               file=paste(output_dir, "features.json", sep="/"))
