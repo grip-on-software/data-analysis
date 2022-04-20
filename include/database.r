@@ -83,7 +83,7 @@ if (!exists('INC_DATABASE_R')) {
         if (!is.null(config$args)) {
             for (name in names(variables)) {
                 arg <- config$args[[name]]
-                if (!identical(arg, default)) {
+                if (!is.null(arg) && !identical(arg, default)) {
                     variables[[name]] <- arg
                 }
             }
