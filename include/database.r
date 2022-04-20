@@ -76,14 +76,14 @@ if (!exists('INC_DATABASE_R')) {
         return(sources[[config$db$primary_source]])
     }
 
-    load_definitions <- function(definition_file, variables=NULL,
+    load_definitions <- function(definition_file, variables=NULL, default=NULL,
                                  current_time=Sys.time()) {
         definitions <- yaml.load_file(definition_file)
         config <- get_config()
         if (!is.null(config$args)) {
             for (name in names(variables)) {
                 arg <- config$args[[name]]
-                if (!is.null(arg)) {
+                if (!identical(arg, default)) {
                     variables[[name]] <- arg
                 }
             }
@@ -416,7 +416,7 @@ if (!exists('INC_DATABASE_R')) {
             patterns <- variables
         }
         else {
-            patterns <- load_definitions(definition_file, variables,
+            patterns <- load_definitions(definition_file, variables=variables,
                                          current_time=current_time)
         }
 

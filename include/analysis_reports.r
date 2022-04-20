@@ -594,8 +594,8 @@ get_analysis_reports <- function(analysis_variables, latest_date) {
                                        define$field
                                    }),
                             analysis_variables)
-    patterns <- load_definitions('sprint_definitions.yml', variables,
-                                 current_time=latest_date)
+    patterns <- load_definitions('sprint_definitions.yml', variables=variables,
+                                 default="", current_time=latest_date)
     spec <- yaml.load_file('analysis_reports.yml')
     config <- get_config()
     items <- lapply(spec$files, load_report_query,
