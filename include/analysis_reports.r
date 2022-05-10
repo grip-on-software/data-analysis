@@ -1,4 +1,19 @@
 # Analysis reports.
+#
+# Copyright 2017-2020 ICTU
+# Copyright 2017-2022 Leiden University
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 library(yaml)
 library(jsonlite)
@@ -91,12 +106,12 @@ sprint_burndown <- function(item, result, output_dir, format) {
                                   join_cols=item$patterns$join_cols,
                                   patterns=item$patterns)
 
-    baseDir <- paste(output_dir, item$table, sep="/")
-    if (!dir.exists(baseDir)) {
-        dir.create(baseDir)
+    base_dir <- paste(output_dir, item$table, sep="/")
+    if (!dir.exists(base_dir)) {
+        dir.create(base_dir)
     } else {
-        loginfo("Emptying %s directory", baseDir)
-        unlink(paste(baseDir, "*", sep="/"), recursive=TRUE)
+        loginfo("Emptying %s directory", base_dir)
+        unlink(paste(base_dir, "*", sep="/"), recursive=TRUE)
     }
     aspect_ratio <- 1 / 1.6
     for (project in levels(factor(result[[project_col]]))) {
@@ -116,7 +131,7 @@ sprint_burndown <- function(item, result, output_dir, format) {
             end_time <- sprint_data[sprint_data$event_type == 'close',
                                     'close_date']
             if (!is.na(start_points) && !identical(end_time, character(0))) {
-                path <- paste(baseDir, project_name, sep="/")
+                path <- paste(base_dir, project_name, sep="/")
                 if (!dir.exists(path)) {
                     dir.create(path)
                 }
@@ -391,7 +406,7 @@ story_flow <- function(item, result, output_dir, format) {
              'bgcolor="#FDFDFD";',
              paste(names(edges), lapply(edges, dot_attrs)),
              paste(names(nodes), lapply(nodes, dot_attrs)),
-             paste(mapply(dot_ranks, ranks, 1:length(ranks))),
+             paste(mapply(dot_ranks, ranks, seq_along(ranks))),
              "}")
 
     export_file <- paste(output_dir,
@@ -552,7 +567,7 @@ bigboat_status <- function(item, result, output_dir, format) {
     }
 
     write(toJSON(project_names, auto_unbox=T),
-        file=paste(path, "projects.json", sep="/"))
+          file=paste(path, "projects.json", sep="/"))
 
     if (length(project_ids) > 0 && item$patterns[['project_ids']] != '1') {
         # Create list of source URLs

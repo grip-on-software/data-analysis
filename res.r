@@ -1,4 +1,19 @@
 # Script to plot/tabularize results from prediction estimators
+#
+# Copyright 2017-2020 ICTU
+# Copyright 2017-2022 Leiden University
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 library(jsonlite)
 library(ggplot2)
@@ -18,7 +33,9 @@ default_features <- paste(c("backlog_points", "velocity_three",
 
 make_opt_parser(desc="Plot or aggregate results of prediction estimators",
                 options=list(make_option('--glob',
-                                         default="output/recent_sprint_features/",
+                                         default=paste("output",
+                                                       "recent_sprint_features",
+                                                       sep="/"),
                                          help='Glob pattern to include data'),
                              make_option('--predictor',
                                          default='backlog_points',
@@ -69,10 +86,10 @@ for (dir in Sys.glob(arguments$glob)) {
     features <- read_json(paste(dir, "features.json", sep="/"))
     default_features <- project_features[project_features %in% features$meta |
                                          project_features %in% features$default]
-    other_features <- project_features[project_features %in% features$all &
-                                       !(project_features %in% default_features)]
+    other <- project_features[project_features %in% features$all &
+                              !(project_features %in% default_features)]
     print(default_features)
-    print(other_features)
+    print(other)
     for (project in projects) {
         if (project$num_sprints == 0) {
             next
@@ -83,7 +100,7 @@ for (dir in Sys.glob(arguments$glob)) {
         all_zero <- length(project_features) > 0
         features <- default[[length(default)]][default_features]
         other_data <- list()
-        for (feature in other_features) {
+        for (feature in other) {
             other_data[[feature]] <- read_json(paste(dir, project$name,
                                                      paste(feature, "json",
                                                            sep="."),
@@ -96,7 +113,7 @@ for (dir in Sys.glob(arguments$glob)) {
             if (any(default[[sprint]][default_features] != 0)) {
                 all_zero <- F
             }
-            for (feature in other_features) {
+            for (feature in other) {
                 if (is.null(other_data[[feature]][[sprint]])) {
                     next
                 }
@@ -133,10 +150,10 @@ for (dir in Sys.glob(arguments$glob)) {
             sc2 <- paste(scenario, 'mc', sep='_')
             twos[[sc2]] <- c(twos[[sc2]], stats[[mcp2]][[scenario]][1])
         }
-        mcc <- paste(predictor, 'counts', sep='_')
-        for (scenario in names(stats[[mcc]])) {
+        mc <- paste(predictor, 'counts', sep='_')
+        for (scenario in names(stats[[mc]])) {
             counts[[scenario]] <- c(counts[[scenario]],
-                                    as.numeric(unlist(stats[[mcc]][[scenario]])))
+                                    as.numeric(unlist(stats[[mc]][[scenario]])))
         }
 
         for (scenario in names(ones)) {
@@ -153,7 +170,7 @@ qqplot_monte_carlo <- function(counts, file) {
                      ymin=sapply(counts, min, na.rm=T),
                      ymax=sapply(counts, max, na.rm=T))
     ggplot(data=df, aes(sample=df$sample)) +
-        stat_qq_line(colour="#3366FF") +
+        stat_qq_line(colour="# 3366FF") +
         stat_qq_point() +
         labs(x="Theoretical Quantiles", y="Sample Quantiles")
     ggsave(file)

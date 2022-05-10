@@ -1,4 +1,19 @@
 # Script that collects data for a timeline visualization.
+#
+# Copyright 2017-2020 ICTU
+# Copyright 2017-2022 Leiden University
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 library(jsonlite)
 library(logging)
@@ -10,7 +25,7 @@ source('include/features.r')
 source('include/sources.r')
 source('include/project.r')
 
-dateFormat <- function(date) {
+date_format <- function(date) {
     format(as.POSIXct(date), format="%Y-%m-%dT%H:%M:%S")
 }
 
@@ -82,7 +97,7 @@ output_directory <- arguments$output
 items <- load_queries('sprint_events.yml',
                       variables=c(list(join_cols=join_cols), patterns))
 
-exportFeatures <- function(features, exclude, output_directory) {
+export_features <- function(features, exclude, output_directory) {
     result <- get_sprint_features(conn, features, exclude, variables,
                                   latest_date=as.POSIXct(arguments$latest_date),
                                   sprint_days=arguments$days,
@@ -114,7 +129,7 @@ exportFeatures <- function(features, exclude, output_directory) {
 }
 
 # Export data to separate per-sprint files.
-exportSplitData <- function(data, item, output_directory) {
+export_split_data <- function(data, item, output_directory) {
     project_data <- lapply(as.list(1:dim(projects)[1]), function(project) {
         project_id <- projects[project, 'project_id']
         if (project_ids != '1') {
@@ -158,9 +173,9 @@ exportSplitData <- function(data, item, output_directory) {
 }
 
 # Export result of a type query to the correct JSON file(s).
-exportData <- function(data, item, output_directory) {
+export_data <- function(data, item, output_directory) {
     if (isTRUE(item$split)) {
-        return(exportSplitData(data, item, output_directory))
+        return(export_split_data(data, item, output_directory))
     }
     project_names <- as.list(projects$name)
     project_boards <- lapply(project_names, function(project) {
@@ -196,7 +211,7 @@ projects_with_data <- list()
 project_boards <- list()
 
 events <- strsplit(arguments$events, ',')[[1]]
-data <- exportFeatures(arguments$features, arguments$exclude, output_directory)
+data <- export_features(arguments$features, arguments$exclude, output_directory)
 sprint_col <- join_cols[2]
 for (item in items) {
     if (length(events) > 0 && !(item$type %in% events)) {
@@ -210,20 +225,18 @@ for (item in items) {
         result <- result[result[[sprint_col]] %in% data[[sprint_col]], ]
     }
     if (nrow(result) > 0) {
-        result$date <- dateFormat(result$date)
+        result$date <- date_format(result$date)
         result$type <- item$type
         if ("end_date" %in% colnames(result)) {
-            result$end_date <- dateFormat(result$end_date)
+            result$end_date <- date_format(result$end_date)
         }
-        project_data <- exportData(result, item, output_directory)
+        project_data <- export_data(result, item, output_directory)
         have_data <- lapply(project_data, nrow) > 0
         projects_with_data <- modifyList(projects_with_data,
                                           as.list(have_data)[have_data])
 
-        minDate <- min(result$date, na.rm=T)
-        maxDate <- max(result$date, result$end_date, na.rm=T)
-        min_date[[item$type]] <- minDate
-        max_date[[item$type]] <- maxDate
+        min_date[[item$type]] <- min(result$date, na.rm=T)
+        max_date[[item$type]] <- max(result$date, result$end_date, na.rm=T)
 
         type <- list(name=safe_unbox(item$type),
                       locales=safe_unbox(item$descriptions))
@@ -242,7 +255,7 @@ for (item in items) {
 
 total_data <- list(min_date=safe_unbox(min(unlist(min_date), na.rm=T)),
                    max_date=safe_unbox(max(unlist(max_date), na.rm=T)),
-                   update_date=safe_unbox(dateFormat(arguments$latest_date)),
+                   update_date=safe_unbox(date_format(arguments$latest_date)),
                    projects=names(projects_with_data),
                    boards=project_boards)
 

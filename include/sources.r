@@ -1,8 +1,23 @@
-# Functions for obtaining source information
+# Functions for obtaining source information.
+#
+# Copyright 2017-2020 ICTU
+# Copyright 2017-2022 Leiden University
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 source('include/database.r')
 
-dateFormat <- function(date) {
+date_format <- function(date) {
     format(as.POSIXct(date), format="%Y-%m-%d %H:%M:%S")
 }
 
@@ -282,12 +297,14 @@ build_sprint_source_urls <- function(conn, project_id, project_name,
                                 sprint_end_date='{{end_date}}')
     }
     else {
+        start_date <- date_format(sprint$start_date)
+        end_date <- date_format(sprint$close_date)
         sprint_patterns <- list(jira_board_id=sprint$board_id[1],
                                 jira_sprint_id=sprint$sprint_id[1],
                                 jira_sprint_ids=paste(sprint$sprint_id,
                                                       collapse=","),
-                                sprint_start_date=dateFormat(sprint$start_date),
-                                sprint_end_date=dateFormat(sprint$close_date))
+                                sprint_start_date=start_date,
+                                sprint_end_date=end_date)
     }
     sprint_patterns$quality_name <- ifelse(is.null(quality_name) ||
                                            is.na(quality_name), '',

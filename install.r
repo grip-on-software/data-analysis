@@ -1,12 +1,27 @@
 # Script to install all requirements.
+#
+# Copyright 2017-2020 ICTU
+# Copyright 2017-2022 Leiden University
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 install.packages("devtools")
 
 require(devtools)
 
-REQUIREMENTS_FILE <- Sys.getenv("ANALYSIS_REQUIREMENTS",
+requirements_file <- Sys.getenv("ANALYSIS_REQUIREMENTS",
                                 unset='requirements.txt')
-for (line in readLines(REQUIREMENTS_FILE)) {
+for (line in readLines(requirements_file)) {
     if (endsWith(line, ";optional")) {
         print(paste("Not installing", line))
         next

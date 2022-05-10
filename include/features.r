@@ -1,4 +1,19 @@
 # Utilities for retrieving sprint features.
+#
+# Copyright 2017-2020 ICTU
+# Copyright 2017-2022 Leiden University
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 library(jsonlite)
 library(plyr)
@@ -979,11 +994,11 @@ get_summarize_group <- function(group, group_names, data, columns, details,
         }
         return(total)
     }
-    MoreArgs <- list(field=summarize$field,
-                     reference=summarize$reference,
-                     with_missing=summarize$with_missing)
+    more_args <- list(field=summarize$field,
+                      reference=summarize$reference,
+                      with_missing=summarize$with_missing)
     group_result[, columns] <- mapply(summarizer, summarize$operation,
-                                      MoreArgs=MoreArgs)
+                                      MoreArgs=more_args)
     return(group_result)
 }
 
