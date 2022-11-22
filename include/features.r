@@ -2231,7 +2231,7 @@ write_feature_metadata <- function(projects, specifications, output_directory,
                                     return(mapply(function(column, value) {
                                                       return(value)
                                                   },
-                                                  item$column, metas,
+                                                  item$column, fields,
                                                   SIMPLIFY=F))
                                 })
                 meta <- modifyList(meta, metas)
