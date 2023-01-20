@@ -1,0 +1,16 @@
+path: old_performance
+files:
+    - filename: 09-metric-count.sql
+      column: num_metrics
+    - filename: 09-red-metric-count.sql
+      column: num_red_metrics
+    - filename: 02-team-spirit-metric.sql
+      column: team_spirit
+    - filename: 11-backlog-added.sql
+      column: backlog_added_story_points
+    - filename: 11-backlog-all.sql
+      column: backlog_story_points
+    - filename: 11-backlog-epic.sql
+      column: backlog_epic_points
+    - filename: 04-done-story-points.sql
+      column: done_story_points

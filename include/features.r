@@ -579,22 +579,6 @@ update_combine_interval <- function(items, old_data, data, row_num, details,
     return(result)
 }
 
-include_feature <- function(item, features, exclude, required=c()) {
-    if (all(item$column %in% required)) {
-        return(T)
-    }
-    if (all(item$column %in% features)) {
-        if (length(grep(exclude, item$column)) != 0) {
-            return(F)
-        }
-        if (is.null(item$expression)) {
-            return(length(grep(exclude, item$table)) == 0)
-        }
-        return(T)
-    }
-    return(F)
-}
-
 expand_feature_names <- function(feature, items, categories=list()) {
     features <- strsplit(feature, ",")[[1]]
     all <- unlist(lapply(items, function(item) { item$column }))

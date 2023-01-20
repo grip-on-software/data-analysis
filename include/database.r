@@ -131,8 +131,13 @@ if (!exists('INC_DATABASE_R')) {
                            issue_join='', component_join='', source='',
                            project_condition='', filter_condition='',
                            filter_inverse='', cond_op='AND', project_ids='0',
-                           current_timestamp=paste("CAST('", current_time,
-                                                   "' AS TIMESTAMP)", sep="")))
+                           filter_sprint_ids='0',
+                           current_timestamp=ifelse(is.character(current_time),
+                                                    current_time,
+                                                    paste("CAST('",
+                                                          current_time,
+                                                          "' AS TIMESTAMP)",
+                                                          sep=""))))
         recursive_str_interp <- function(string, ...) {
             vars <- c(..., as.list(parent.frame()), patterns)
             if (is.list(string)) {
@@ -423,9 +428,25 @@ if (!exists('INC_DATABASE_R')) {
         return(item)
     }
 
+    include_feature <- function(item, features, exclude='^$', required=c()) {
+        if (any(item$column %in% required)) {
+            return(T)
+        }
+        if (any(item$column %in% features)) {
+            if (length(grep(exclude, item$column)) != 0) {
+                return(F)
+            }
+            if (is.null(item$expression)) {
+                return(length(grep(exclude, item$table)) == 0)
+            }
+            return(T)
+        }
+        return(F)
+    }
+
     load_queries <- function(specification_file, definition_file=NULL,
                              variables=NULL, current_time=Sys.time(),
-                             static=F) {
+                             static=F, features=NULL, exclude='^$') {
         data <- yaml.load_file(specification_file)
         if (is.null(definition_file)) {
             patterns <- variables
@@ -435,10 +456,24 @@ if (!exists('INC_DATABASE_R')) {
                                          current_time=current_time)
         }
 
-        if (static) {
-            return(data$files)
+        # Filter queries, this does not take 'required' queries into account
+        queries <- data$files
+        index <- 1
+        if (!is.null(features)) {
+            for (item in data$files) {
+                if (include_feature(item, features, exclude)) {
+                    index <- index + 1
+                }
+                else {
+                    queries[[index]] <- NULL
+                }
+            }
         }
 
-        lapply(data$files, load_query, patterns, data$path)
+        if (static) {
+            return(queries)
+        }
+
+        return(lapply(queries, load_query, patterns, data$path))
     }
 }
