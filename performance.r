@@ -33,46 +33,54 @@ disable_querylog <- function(conn) {
 }
 
 cold_start <- function(conn, config, arguments) {
-    if (arguments$import != '' && arguments$path != '' &&
-        arguments$org != '' && arguments$date != '') {
-        dbDisconnect(conn)
-        dbname <- 'gros_temp_perf'
-        loginfo('Recreating %s database by running %s %s %s in %s', dbname,
-                arguments$import, arguments$org, arguments$date, arguments$path)
-        system(paste('/bin/bash -c "cd', shQuote(arguments$path), ';',
-                     shQuote(arguments$import), shQuote(arguments$org),
-                     shQuote(arguments$date), dbname, '"',
-                     sep=' '))
-        config$db$dbname <<- dbname
-        conn <- connect()
-        enable_querylog(conn)
-        loginfo('Sleeping for %d seconds', arguments$sleep)
-        Sys.sleep(arguments$sleep)
+    dbDisconnect(conn)
+    dbname <- 'gros_temp_perf'
+    if (Sys.getenv('USER') == 'root') {
+        # Stop/start the database while clearing memory.
+        # This also clears/disables the query log.
+        system(paste('monetdb stop', dbname))
+        system('echo 3 > /proc/sys/vm/drop_caches')
+        system(paste('monetdb start', dbname))
     }
+    else if (arguments$import != '' && arguments$path != '' &&
+             arguments$date != '') {
+        virtual_env <- '/usr/local/envs/controller'
+        loginfo('Recreating %s database by running %s %s %s in %s', dbname,
+                arguments$import, arguments$org, arguments$date,
+                arguments$path)
+        system(paste('/bin/bash -c "cd', shQuote(arguments$path), ';',
+                     paste('VIRTUAL_ENV="', virtual_env, '" PATH="',
+                           virtual_env, '/bin:$PATH"', sep=''),
+                     shQuote(arguments$import), 'temp_perf',
+                     shQuote(arguments$date), config$db$host, '"',
+                     sep=' '))
+    }
+    else {
+        stop('Cannot use a performance test database for cold start')
+    }
+    config$db$dbname <<- dbname
+    conn <- connect()
+    enable_querylog(conn)
+    loginfo('Sleeping for %d seconds', arguments$sleep)
+    Sys.sleep(arguments$sleep)
     return(conn)
 }
 
 cold_start_end <- function(conn, info, intermediate, run, item) {
-    if (arguments$import != '' && arguments$path != '' &&
-        arguments$org != '' && arguments$date != '') {
-        # Ensure querylog results are kept between runs by merging the stats
-        output <- list(collect_stats(conn, info))
+    # Ensure querylog results are kept between runs by merging the stats
+    output <- list(as.list(collect_stats(conn, info)))
 
-        # Dump for future reference
-        write(toJSON(output[[1]]), file=paste('output',
-                                              paste(arguments$filename, run,
-                                                    item$column[1], sep='.'),
-                                              sep='/'))
+    # Dump for future reference
+    write(toJSON(output[[1]]),
+          file=paste('output', paste('performance', run, item$column[1],
+                                     ifelse(is.null(item$old), 'new', 'old'),
+                                     'json', sep='.'), sep='/'))
 
-        if (length(intermediate) > 0) {
-            output <- c(intermediate, output)
-        }
-        loginfo('Sleeping for %d seconds', arguments$sleep)
-        Sys.sleep(arguments$sleep)
+    if (length(intermediate) > 0) {
+        output <- c(intermediate, output)
     }
-    else {
-        output <- list()
-    }
+    loginfo('Sleeping for %d seconds', arguments$sleep)
+    Sys.sleep(arguments$sleep)
     return(output)
 }
 
@@ -108,6 +116,9 @@ collect_stats <- function(conn, info) {
                                       gsub('[ \t]+', ' ',
                                            tolower(performance_query))))
         performance <- data[normalized == normalized_query, ]
+        if (nrow(performance) == 0) {
+            next
+        }
         performance$rows <- performance_item$rows
         if (is.null(output[[performance_item$column[1]]])) {
             output[[performance_item$column[1]]] <- list()
@@ -128,17 +139,21 @@ combine_stats <- function(intermediate, info) {
     for (performance_query in names(info)) {
         column <- info[[performance_query]]$column[1]
         output[[column]] <- list()
-        for (version in c('old', 'new')) {
-            first <- intermediate[[1]][[column]][[version]]
+        for (version in c('new', 'old')) {
+            performance_inter <- Filter(function(inter) {
+                                            !is.null(inter[[column]][[version]])
+                                        },
+                                        intermediate)
+            first <- performance_inter[[1]][[column]][[version]]
             performance <- list(query=first$query,
                                 columns=first$columns,
                                 rows=first$rows)
             for (metric in names(stats)) {
                 mean_metric <- paste(metric, 'mean', sep='_')
                 std_metric <- paste(metric, 'std', sep='_')
-                values <- lapply(intermediate,
-                                 function(inter) {
-                                     inter[[column]][[version]][[mean_metric]]
+                values <- sapply(performance_inter,
+                                 function(perf) {
+                                     perf[[column]][[version]][[mean_metric]]
                                  })
                 performance[[mean_metric]] <- mean(values)
                 performance[[std_metric]] <- sd(values)
@@ -151,14 +166,15 @@ combine_stats <- function(intermediate, info) {
 
 # Parse options
 make_opt_parser(desc="Measure performance of queries in different conditions",
-                options=list(make_option('--import', default='',
+                options=list(make_option('--cold', action='store_true',
+                                         default=FALSE,
+                                         help='Enable cold-start experiment'),
+                             make_option('--import', default='',
                                          help=paste('Script that imports dumps',
                                                     'into new databases.',
-                                                    'This enables cold-start',
-                                                    'performance experiment',
-                                                    'if and only if --path,',
-                                                    '--org and --date are all',
-                                                    'given.')),
+                                                    'Only used in --cold, and',
+                                                    '--path and --date must',
+                                                    'all be given.')),
                              make_option('--path', default='',
                                          help=paste('Working directory from',
                                                     'which the import script',
@@ -253,15 +269,17 @@ old_queries <- lapply(queries, function(item) {
                           load_query(item, item$patterns, 'old_performance')
                       })
 
+info <- list()
+intermediate <- list()
 if (arguments$runs > 0) {
     # Clear out querylog, enable querylog, perform queries, disable querylog
     enable_querylog(conn)
 
-    info <- list()
-    intermediate <- list()
     for (run in seq(1, arguments$runs)) {
         for (item in c(queries, old_queries)) {
-            conn <- cold_start(conn, config, arguments)
+            if (arguments$cold) {
+                conn <- cold_start(conn, config, arguments)
+            }
             loginfo('Executing %s query for table %s: column(s) %s', item$old,
                     item$table, item$column)
             logdebug(item$query)
@@ -272,7 +290,10 @@ if (arguments$runs > 0) {
                     item$old, item$table, item$column, nrow(result))
             info[[item$query]] <- item
             info[[item$query]]$rows <- nrow(result)
-            intermediate <- cold_start_end(conn, info, intermediate, run, item)
+            if (arguments$cold) {
+                intermediate <- cold_start_end(conn, info, intermediate, run,
+                                               item)
+            }
         }
     }
 
@@ -281,6 +302,17 @@ if (arguments$runs > 0) {
     # No information on row counts
     info <- c(queries, old_queries)
     names(info) <- lapply(info, function(item) { item$query })
+    if (arguments$cold) {
+        for (filename in Sys.glob('output/performance.*.*.*.json')) {
+            performance <- list(fromJSON(filename))
+            if (length(intermediate) > 0) {
+                intermediate <- c(intermediate, performance)
+            }
+            else {
+                intermediate <- performance
+            }
+        }
+    }
 }
 
 # Collect and export results
@@ -289,4 +321,5 @@ if (length(intermediate) == 0) {
 } else {
     output <- combine_stats(intermediate, info)
 }
-write(toJSON(output), file=paste('output', arguments$filename, sep='/'))
+write(toJSON(output, auto_unbox=T),
+      file=paste('output', arguments$filename, sep='/'))
