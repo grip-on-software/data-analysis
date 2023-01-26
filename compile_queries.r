@@ -114,12 +114,28 @@ analysis_definitions <- c(lapply(definitions$fields,
                           list(project_ids=project_ids,
                                join_cols=join_cols))
 
-export(load_queries('sprint_features.yml', 'sprint_definitions.yml',
-                    list(join_cols=join_cols,
-                         sprint_conditions=sprint_conditions,
-                         filter_sprint_ids=filter_sprint_ids),
-                    current_time=latest_date),
+export(queries <- load_queries('sprint_features.yml', 'sprint_definitions.yml',
+                               list(join_cols=join_cols,
+                                    sprint_conditions=sprint_conditions,
+                                    filter_sprint_ids=filter_sprint_ids),
+                               current_time=latest_date),
        'feature', c('column', 'table'))
+old_performance <- load_queries('old_performance.yml', static=T)
+filenames <- lapply(old_performance, function(item) { item$filename })
+columns <- lapply(old_performance, function(item) { item$column })
+names(filenames) <- columns
+export(lapply(queries,
+              function(item) {
+                  if (length(item$column) > 1 ||
+                      is.null(filenames[[item$column]])) {
+                      return(NULL)
+                  }
+                  item$definition <- NULL
+                  item$metric <- NULL
+                  item$query <- NULL
+                  item$filename <- filenames[[item$column]]
+                  load_query(item, item$patterns, 'old_performance')
+              }), 'old', c('column', 'table'))
 export(load_queries('sprint_events.yml', 'sprint_definitions.yml',
                     list(project_ids=project_ids,
                          sprint_ids=sprint_ids,
