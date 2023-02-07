@@ -52,7 +52,13 @@ make_opt_parser(desc="Perform analysis and generate report",
                                          default=as.character(Sys.time()),
                                          help=paste('Sprint start date/time',
                                                     'after which later sprints',
-                                                    'are left out'))),
+                                                    'are left out')),
+                             make_option('--recent-date',
+                                         default=as.character(Sys.Date() -
+                                             as.difftime(12, units="weeks")),
+                                         help=paste('Date from which projects',
+                                                    'should have sprints to be',
+                                                    'considered recent'))),
                 variables=analysis_definitions$fields)
 config <- get_config()
 arguments <- config$args
@@ -74,7 +80,7 @@ if (sprint_ids != '0') {
     sprint_ids <- '1'
 }
 
-metadata <- get_meta_keys(arguments$project_metadata)
+metadata <- get_meta_keys(arguments$project_metadata, arguments$recent_date)
 
 join_cols <- ifelse(config$db$primary_source == "tfs", 'team_id', 'project_id')
 fields <- list(join_cols, 'name', 'quality_display_name')

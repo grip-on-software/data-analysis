@@ -54,6 +54,12 @@ make_opt_parser(desc="Combine prediction run output with sprint data for API",
                                          help=paste('Sprint start date/time',
                                                     'after which later sprints',
                                                     'are left out')),
+                             make_option('--recent-date',
+                                         default=as.character(Sys.Date() -
+                                             as.difftime(12, units="weeks")),
+                                         help=paste('Date from which projects',
+                                                    'should have sprints to be',
+                                                    'considered recent')),
                              make_option('--core', action='store_true',
                                          default=FALSE,
                                          help=paste('Only consider non-support',
@@ -87,7 +93,7 @@ if (sprint_ids != '0') {
     sprint_ids <- '1'
 }
 
-metadata <- get_meta_keys(arguments$project_metadata)
+metadata <- get_meta_keys(arguments$project_metadata, arguments$recent_date)
 fields <- list(join_cols, 'name')
 if (config$db$primary_source != "tfs") {
     fields <- c(fields, 'quality_display_name')

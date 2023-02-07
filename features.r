@@ -124,6 +124,12 @@ make_opt_parser(desc="Extract features and export them into ARFF, JSON or CSV",
                                          help=paste('Sprint start date/time',
                                                     'after which later sprints',
                                                     'are left out')),
+                             make_option('--recent-date',
+                                         default=as.character(Sys.Date() -
+                                             as.difftime(12, units="weeks")),
+                                         help=paste('Date from which projects',
+                                                    'should have sprints to be',
+                                                    'considered recent')),
                              make_option('--days', default=NA_integer_,
                                          help=paste('Number of days before a',
                                                     'sprint is left out',
@@ -206,7 +212,7 @@ details <- arguments$details
 patterns <- load_definitions('sprint_definitions.yml', config$fields,
                              current_time=latest_date)
 
-metadata <- get_meta_keys(arguments$project_metadata)
+metadata <- get_meta_keys(arguments$project_metadata, arguments$recent_date)
 
 story_metadata <- strsplit(arguments$story_metadata, ',')[[1]]
 fields <- list('project_id', 'name', 'quality_display_name')
@@ -401,6 +407,7 @@ if (arguments$project) {
     result <- get_recent_sprint_features(conn,
                                          unique(c(meta_features, features)),
                                          exclude,
+                                         date=arguments$recent_date,
                                          limit=arguments$limit,
                                          closed=closed,
                                          sprint_conditions=sprint_conditions,

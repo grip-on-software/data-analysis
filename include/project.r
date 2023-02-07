@@ -180,11 +180,14 @@ if (!exists('INC_PROJECT_R')) {
         dbGetQuery(conn, query)
     }
 
-    get_meta_keys <- function(project_metadata) {
+    get_meta_keys <- function(project_metadata, date) {
         meta_keys <- strsplit(project_metadata, ',')[[1]]
         metadata <- vector("list", length(meta_keys))
         names(metadata) <- meta_keys
         metadata[] <- T
+        if (!is.null(metadata$recent) && !missing(date)) {
+            metadata$recent <- date
+        }
         return(metadata)
     }
 
