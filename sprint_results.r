@@ -242,11 +242,10 @@ tag_names <- get_tags(data.frame(as.list(setNames(rep(T, length(features)),
 feature_excludes <- c("project_id", "sprint_num", "organization", tag_names)
 feature_mask <- !(names(features) %in% feature_excludes)
 feature_names <- as.character(results$configuration$features)
-feature_attributes <- unique(do.call(c, unlist(lapply(assignments,
+feature_attributes <- unlist(unique(do.call(c, lapply(assignments,
                                                       function(assignment) {
                                                           assignment$attributes
-                                                      }),
-                                               recursive=F)))
+                                                      }))))
 
 for (idx in seq_along(results$projects)) {
     if (results$organizations[idx] != organization) {
