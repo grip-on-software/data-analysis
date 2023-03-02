@@ -1057,7 +1057,8 @@ get_expressions_metadata <- function(items, data) {
 get_expression_attrs <- function(expression, vars) {
     expr <- parse(text=expression)
     cond <- is.expression(expr)
-    if (!cond) {
+    # We need a valid expression and some example variable values to fill into
+    if (!cond || length(vars) == 0) {
         return()
     }
     environment <- new.env()
@@ -1068,7 +1069,16 @@ get_expression_attrs <- function(expression, vars) {
             if (length(grep("not found", ref[1])) > 0) {
                 aux <- substr(ref, regexpr("object ", ref) + 8,
                               regexpr(" not found", ref) - 2)
-                assign(as.character(aux), vars[[aux]], envir=environment)
+                if (is.null(vars[[aux]])) {
+                    # If the attribute is not provided, then this may mean it is
+                    # a nested expression. Still try to add the variable to the
+                    # environment by picking another variable's values, since
+                    # mostly the similar dimensions should matter.
+                    assign(as.character(aux), vars[[1]], envir=environment)
+                }
+                else {
+                    assign(as.character(aux), vars[[aux]], envir=environment)
+                }
             }
             else {
                 logerror("expression %s could not be evaluated: %s",

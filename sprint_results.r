@@ -242,6 +242,11 @@ tag_names <- get_tags(data.frame(as.list(setNames(rep(T, length(features)),
 feature_excludes <- c("project_id", "sprint_num", "organization", tag_names)
 feature_mask <- !(names(features) %in% feature_excludes)
 feature_names <- as.character(results$configuration$features)
+feature_attributes <- unique(do.call(c, unlist(lapply(assignments,
+                                                      function(assignment) {
+                                                          assignment$attributes
+                                                      }),
+                                               recursive=F)))
 
 for (idx in seq_along(results$projects)) {
     if (results$organizations[idx] != organization) {
@@ -351,7 +356,8 @@ write_projects_metadata(conn, fields, metadata, projects=NA,
                         output_directory=organization_path,
                         patterns=patterns, join_cols=join_cols)
 write_feature_metadata(unique(projects), specifications, organization_path,
-                       features=unique(c(feature_names, tag_names, labels)),
+                       features=unique(c(feature_names, tag_names, labels,
+                                         feature_attributes)),
                        categories=c(), metadata=c('values', 'measurement'))
 
 write(toJSON(results$configuration, auto_unbox=T),
