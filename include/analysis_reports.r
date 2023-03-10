@@ -525,7 +525,9 @@ bigboat_status <- function(item, result, output_dir, format) {
 
     # Write the status field descriptions
     status <- yaml.load_file("bigboat_status.yml")
-    write(toJSON(status$fields, auto_unbox=T),
+    fields <- status$fields
+    fields[['_latest_date']] <- item$patterns$latest_date
+    write(toJSON(fields, auto_unbox=T),
           file=paste(path, "fields.json", sep="/"))
 
     matches <- unlist(status$match)
