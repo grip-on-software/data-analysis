@@ -115,7 +115,9 @@ export_features <- function(features, exclude, output_directory) {
             result <- lapply(as.list(1:dim(sprint_data)[1]), function(i) {
                 safe_unbox(sprint_data[i, colnames])
             })
-            names(result) <- sprint_data$sprint_id
+            names(result) <- sprint_data[[sprint_col]]
+            result[[project_col]] <- NULL
+            result[[sprint_col]] <- NULL
             return(result)
         }
         return(NA)
