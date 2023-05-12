@@ -35,8 +35,7 @@ for (line in readLines(requirements_file)) {
     if (length(versioned) == 1) {
         install.packages(line)
         expected <- c(expected, line)
-    }
-    else {
+    } else {
         install_version(versioned[1], version=versioned[2])
         expected <- c(expected, versioned[1])
     }

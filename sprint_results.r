@@ -123,8 +123,7 @@ get_sprints <- function(conn) {
         fields$quality_name <- NULL
         fields$quality_display_name <- NULL
         fields$board_id <- NULL
-    }
-    else if (config$db$primary_source == "jira_version") {
+    } else if (config$db$primary_source == "jira_version") {
         fields$sprint_id <- '${t("sprint")}.sprint_id'
         fields$board_id <- NULL
     }
@@ -264,16 +263,14 @@ for (idx in seq_along(results$projects)) {
         analogies <- mapply(get_analogy_results,
                             seq_along(results$analogy_indexes[idx, ]),
                             MoreArgs=list(idx=idx), SIMPLIFY=F)
-    }
-    else {
+    } else {
         analogies <- NULL
     }
 
     if (project_ids != '1') {
         project_name <- sprint_data[sprint_data[[project_col]] == project_id,
                                     'name']
-    }
-    else {
+    } else {
         project_name <- paste("Proj", project_id, sep="")
     }
     projects <- c(projects, project_name)
@@ -343,8 +340,7 @@ for (idx in seq_along(results$projects)) {
         if (all(sprint_id <= ids)) {
             write(source_data, file=paste(path, "links.json", sep="/"))
         }
-    }
-    else {
+    } else {
         write("{}", file=paste(path, "sources.json", sep="/"))
         write("{}", file=paste(path, sprint_links, sep="/"))
         write("{}", file=paste(path, "links.json", sep="/"))

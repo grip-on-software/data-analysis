@@ -29,8 +29,7 @@ get_source_dates <- function(tracker, contents) {
         items <- fromJSON(gsub("\\\\", "", contents))
         if (tracker$json == "object") {
             return(lapply(items, as.POSIXct))
-        }
-        else {
+        } else {
             stop(paste("I don't know what to do for tracker",
                        tracker$file, "with JSON parse type",
                        tracker$json))

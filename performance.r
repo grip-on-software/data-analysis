@@ -42,8 +42,7 @@ cold_start <- function(conn, config, arguments) {
         system(paste('monetdb stop', dbname))
         system('echo 3 > /proc/sys/vm/drop_caches')
         system(paste('monetdb start', dbname))
-    }
-    else if (arguments$import != '' && arguments$path != '' &&
+    } else if (arguments$import != '' && arguments$path != '' &&
              arguments$date != '') {
         virtual_env <- '/usr/local/envs/controller'
         loginfo('Recreating %s database by running %s %s %s in %s', dbname,
@@ -55,8 +54,7 @@ cold_start <- function(conn, config, arguments) {
                      shQuote(arguments$import), 'temp_perf',
                      shQuote(arguments$date), config$db$host, '"',
                      sep=' '))
-    }
-    else {
+    } else {
         stop('Cannot use a performance test database for cold start')
     }
     config$db$dbname <<- dbname
@@ -126,8 +124,7 @@ collect_stats <- function(conn, info) {
         }
         if (!is.null(performance_item$old)) {
             output[[performance_item$column[1]]]$old <- performance
-        }
-        else {
+        } else {
             output[[performance_item$column[1]]]$new <- performance
         }
     }
@@ -308,8 +305,7 @@ if (arguments$runs > 0) {
             performance <- list(fromJSON(filename))
             if (length(intermediate) > 0) {
                 intermediate <- c(intermediate, performance)
-            }
-            else {
+            } else {
                 intermediate <- performance
             }
         }

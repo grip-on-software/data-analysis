@@ -155,8 +155,7 @@ if (arguments$interval != '') {
                                   patterns=patterns, join_cols=join_cols)
     if (projects_list == 'main') {
         projects <- projects[projects$main, ]
-    }
-    else if (projects_list != 'each') {
+    } else if (projects_list != 'each') {
         ids <- as.vector(as.numeric(unlist(strsplit(projects_list, ','))))
         projects <- projects[projects[[join_cols[1]]] %in% ids, ]
     }
