@@ -182,8 +182,8 @@ that displays usage instructions:
 The following scripts do not have a `--help` argument:
 
 - `install.r`: Install all requirements.
-- `lint.r`: Perform a lint on a number of R scripts provided via command line 
-  arguments. Used by this repository in the `Jenkinsfile` to check code style.
+- `lint.r`: Perform a lint on the R files in the data analysis repository. Used 
+  by this repository in the `Jenkinsfile` to check code style.
 - `timemachine.r`: Make a train size/score plot based on a time machine 
   prediction run.
 - `res.r`: Plot or aggregate results of prediction estimators.

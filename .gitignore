@@ -8,3 +8,4 @@ time-machine*
 config.yml
 config.*.yml
 profile*
+lintr_results.sarif

@@ -29,6 +29,6 @@ linters <- linters_with_defaults(infix_spaces_linter=NULL,
                                  brace_linter(allow_single_line=TRUE),
                                  single_quotes_linter=NULL,
                                  T_and_F_symbol_linter=NULL)
-for (filename in commandArgs(TRUE)[-1]) {
-    print(lint(filename, linters=linters))
-}
+lints <- lint_dir(linters=linters)
+print(lints)
+sarif_output(lints)

@@ -8,6 +8,7 @@ pipeline {
         REPO_NAME = "${env.DOCKER_REPOSITORY}/gros-data-analysis-dashboard"
         REPO_IMAGE = "${env.REPO_NAME}:${env.AGENT_TAG}"
         GITLAB_TOKEN = credentials('data-analysis-gitlab-token')
+        SCANNER_HOME = tool name: 'SonarQube Scanner 3', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
     }
 
     options {
@@ -44,7 +45,14 @@ pipeline {
                 }
             }
             steps {
-                sh 'Rscript lint.r *.r include/*.r'
+                sh 'Rscript lint.r'
+            }
+        }
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('SonarQube') {
+                    sh '${SCANNER_HOME}/bin/sonar-scanner -Dsonar.projectKey=data-analysis:$BRANCH_NAME -Dsonar.projectName="Data analysis $BRANCH_NAME"'
+                }
             }
         }
         stage('Push') {
