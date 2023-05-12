@@ -17,16 +17,17 @@
 
 library(lintr)
 
-linters <- with_defaults(infix_spaces_linter=NULL,
-                         object_usage_linter=NULL,
-                         camel_case_linter=NULL,
-                         cyclocomp_linter=NULL,
-                         object_name_linter(styles=c("snake_case", "symbols",
-                                                     "dotted.case", "UPPERCASE",
-                                                     "SNAKE_CASE")),
-                         open_curly_linter(allow_single_line=TRUE),
-                         closed_curly_linter(allow_single_line=TRUE),
-                         single_quotes_linter=NULL)
+linters <- linters_with_defaults(infix_spaces_linter=NULL,
+                                 object_usage_linter=NULL,
+                                 cyclocomp_linter=NULL,
+                                 object_name_linter(styles=c("snake_case",
+                                                             "symbols",
+                                                             "dotted.case",
+                                                             "UPPERCASE",
+                                                             "SNAKE_CASE")),
+                                 brace_linter(allow_single_line=TRUE),
+                                 single_quotes_linter=NULL,
+                                 T_and_F_symbol_linter=NULL)
 for (filename in commandArgs(TRUE)[-1]) {
     print(lint(filename, linters=linters))
 }
