@@ -35,8 +35,7 @@ if (!exists('INC_ARGS_R')) {
                                           help="Invert former option")
                 options <- append(options, list(new_option), index)
                 index <- index + 1
-            }
-            else if (option@action == "store") {
+            } else if (option@action == "store") {
                 option@help <- paste(option@help, "(default: %default)")
                 options[[index]] <- option
             }
@@ -66,15 +65,11 @@ if (!exists('INC_ARGS_R')) {
                             metavar=name,
                             help=paste(variables[[name]]$description,
                                        "(default: %default)"))
-            }
-            else {
-                if (startsWith(variables[[name]], '$')) {
-                    var <- list(default=NULL,
-                                metavar=substring(variables[[name]], 2))
-                }
-                else {
-                    var <- list(default=variables[[name]], metavar=name)
-                }
+            } else if (startsWith(variables[[name]], '$')) {
+                var <- list(default=NULL,
+                            metavar=substring(variables[[name]], 2))
+            } else {
+                var <- list(default=variables[[name]], metavar=name)
             }
             flag <- paste('--', gsub('_', '-', name), sep='')
             parser <<- do.call(add_option, c(parser, flag, var))

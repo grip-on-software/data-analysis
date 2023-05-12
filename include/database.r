@@ -33,8 +33,7 @@ if (!exists('INC_DATABASE_R')) {
                 args <- get_opt_args()
                 config_file <- args$config
                 organization <<- args$org
-            }
-            else {
+            } else {
                 args <- NULL
                 config_file <- 'config.yml'
                 organization <<- Sys.getenv("ANALYSIS_ORGANIZATION")
@@ -143,8 +142,7 @@ if (!exists('INC_DATABASE_R')) {
             if (is.list(string)) {
                 if (!is.null(vars$source) && !is.null(string[[vars$source]])) {
                     string <- string[[vars$source]]
-                }
-                else {
+                } else {
                     string <- ''
                 }
             }
@@ -167,8 +165,7 @@ if (!exists('INC_DATABASE_R')) {
             if (is.null(table)) {
                 if (!is.null(definitions$fields[[field]])) {
                     definition <- definitions$fields[[field]]
-                }
-                else {
+                } else {
                     definition <- definitions$conditions[[field]]
                 }
                 table <- get_define(definition, "table")
@@ -180,14 +177,12 @@ if (!exists('INC_DATABASE_R')) {
                 }
                 var_table <- var_str_interp(table, var)
                 field <- get_define(definition, "column")
-            }
-            else {
+            } else {
                 if (table %in% names(var) &&
                     var[[table]] %in% names(primary_tables)) {
                     table <- var[[table]]
                     primary_table <- primary_tables[[var[[table]]]]
-                }
-                else if (table %in% names(primary_tables)) {
+                } else if (table %in% names(primary_tables)) {
                     primary_table <- primary_tables[[table]]
                 }
                 var_table <- var_str_interp(table, var)
@@ -197,12 +192,10 @@ if (!exists('INC_DATABASE_R')) {
                         extra_fields <- field[[var$source]]
                         if (has_aliasing(alias, table)) {
                             extra_fields <- format_aliases(extra_fields)
-                        }
-                        else if (is.na(alias) || is.null(primary_table)) {
+                        } else if (is.na(alias) || is.null(primary_table)) {
                             extra_fields <- paste(var_table,
                                                   names(extra_fields), sep=".")
-                        }
-                        else if (!identical(alias, F)) {
+                        } else if (!identical(alias, F)) {
                             extra_fields <- names(extra_fields)
                         }
                     }
@@ -212,19 +205,16 @@ if (!exists('INC_DATABASE_R')) {
             primary_id <- field == primary_table
             if (var_table == "") {
                 fields <- field
-            }
-            else {
+            } else {
                 fields <- paste(var_table, field, sep=".")
             }
             if (any(primary_id)) {
                 if (is.character(alias) && alias == "alias") {
                     fields[primary_id] <- paste(var_table, "id", sep=".")
-                }
-                else if (has_aliasing(alias, table)) {
+                } else if (has_aliasing(alias, table)) {
                     fields[primary_id] <- paste(paste(var_table, "id", sep="."),
                                                 "AS", field[primary_id])
-                }
-                else if (!identical(alias, F)) {
+                } else if (!identical(alias, F)) {
                     fields[primary_id] <- field[primary_id]
                 }
             }
@@ -244,8 +234,7 @@ if (!exists('INC_DATABASE_R')) {
                                     var=F, ...) {
             if (is.list(field) && !is.null(field$default)) {
                 fields <- field$default
-            }
-            else {
+            } else {
                 fields <- field
             }
             fields <- fields[mask]
@@ -253,8 +242,7 @@ if (!exists('INC_DATABASE_R')) {
             if (is.list(fields)) {
                 left_fields <- fields$left
                 right_fields <- fields$right
-            }
-            else {
+            } else {
                 left_fields <- fields
                 right_fields <- fields
             }
@@ -314,8 +302,7 @@ if (!exists('INC_DATABASE_R')) {
                                 paste('${s(project_condition, project=t("',
                                       item$table, '"))}', sep='')
             )
-        }
-        else if (!is.null(item$metric)) {
+        } else if (!is.null(item$metric)) {
             columns <- c('${f(join_cols, "metric_value")}')
             if (is.null(item$source)) {
                 metric_history <- '${metric_history_url}/${metric_history_file}'
@@ -334,8 +321,7 @@ if (!exists('INC_DATABASE_R')) {
                                        component='domain_name',
                                        key='domain_name',
                                        details=c('domain_name', field))
-            }
-            else {
+            } else {
                 field <- item$column
             }
 
@@ -362,8 +348,7 @@ if (!exists('INC_DATABASE_R')) {
                                     'FROM ($query) AS', table,
                                     'WHERE rev_row = 1
                                      GROUP BY', paste(table_cols, collapse=","))
-            }
-            else {
+            } else {
                 aggregate <- paste(toupper(item$aggregate), "(value)", sep="")
                 aggregate_fields <- field
             }
@@ -392,8 +377,7 @@ if (!exists('INC_DATABASE_R')) {
             if (item$aggregate == "end") {
                 item$query <- str_replace(wrap_query, '\\$query', item$query)
             }
-        }
-        else if (!is.null(item$filename)) {
+        } else if (!is.null(item$filename)) {
             path <- paste(path, item$filename, sep="/")
             item$query <- paste(readLines(path, encoding="UTF-8"),
                                 collapse="\n")
@@ -450,8 +434,7 @@ if (!exists('INC_DATABASE_R')) {
         data <- yaml.load_file(specification_file)
         if (is.null(definition_file)) {
             patterns <- variables
-        }
-        else {
+        } else {
             patterns <- load_definitions(definition_file, variables=variables,
                                          current_time=current_time)
         }
@@ -463,8 +446,7 @@ if (!exists('INC_DATABASE_R')) {
             for (item in data$files) {
                 if (include_feature(item, features, exclude)) {
                     index <- index + 1
-                }
-                else {
+                } else {
                     queries[[index]] <- NULL
                 }
             }

@@ -33,8 +33,7 @@ filter_project_urls <- function(project, one, default_urls) {
     project_urls <- as.list(sub("(/)$", "", project$url))
     if (length(project_urls) == 0) {
         names(project_urls) <- list()
-    }
-    else {
+    } else {
         names(project_urls) <- url_names(project$source_type)
     }
     urls <- modifyList(default_urls[names(default_urls) != 'vcs_url'],
@@ -102,8 +101,7 @@ get_source_pattern <- function(item, project_urls) {
         if (length(index) > 0 && !is.null(item$source[[index[1]]])) {
             return(item$source[[index[1]]])
         }
-    }
-    else if (!is.null(item$source)) {
+    } else if (!is.null(item$source)) {
         return(item$source)
     }
     return(NA)
@@ -145,8 +143,7 @@ build_source_urls <- function(project_id, project_name, items=list(),
     names(project_links) <- list()
     if (is.list(conn) || is.null(conn)) {
         project_urls <- conn
-    }
-    else {
+    } else {
         project_urls <- get_source_urls(conn, project_id)
     }
 
@@ -183,8 +180,7 @@ build_source_urls <- function(project_id, project_name, items=list(),
             project_links[[item$column]] <- list(source=unbox(source_url))
             if ("type" %in% names(item)) {
                 project_links[[item$column]]$type <- unbox(item$type)
-            }
-            else if ("groups" %in% names(item)) {
+            } else if ("groups" %in% names(item)) {
                 project_links[[item$column]]$type <- unbox(item$groups[[1]])
             }
         }
@@ -211,12 +207,10 @@ build_project_source_urls <- function(conn, project_id, project_name, patterns,
                                   get_jira_filters(components, config)),
                                 collapse=' and '),
                           "&runQuery=true", sep="")
-    }
-    else if (length(team_projects) > 0 && "board_id" %in% names(patterns)) {
+    } else if (length(team_projects) > 0 && "board_id" %in% names(patterns)) {
         jira_url <- paste("${jira_url}/secure/RapidBoard.jspa",
                           "?rapidView=${board_id}&view=planning", sep="")
-    }
-    else {
+    } else {
         jira_url <- "${jira_url}/browse/${project_name}"
     }
     default_urls <- config$fields[endsWith(names(config$fields), '_url')]
@@ -231,8 +225,7 @@ build_project_source_urls <- function(conn, project_id, project_name, patterns,
                                         jira_url=jira_url))
     if (is.list(conn) || is.null(conn)) {
         source_urls <- conn
-    }
-    else {
+    } else {
         source_urls <- get_source_urls(conn, project_id, sources=sources)
     }
 
@@ -256,8 +249,7 @@ build_sprint_source_urls <- function(conn, project_id, project_name,
                                      components=NULL, component=NA) {
     if (is.list(conn) || is.null(conn)) {
         source_urls <- conn
-    }
-    else {
+    } else {
         source_urls <- get_source_urls(conn, project_id)
     }
     source_items <- list()
@@ -267,8 +259,7 @@ build_sprint_source_urls <- function(conn, project_id, project_name,
             type <- NULL
             if (config$db$primary_source %in% names(item$source)) {
                 type <- config$db$primary_source
-            }
-            else {
+            } else {
                 urls <- url_names(names(item$source))
                 index <- which(urls %in% names(source_urls))
                 if (length(index) > 0) {
@@ -281,8 +272,7 @@ build_sprint_source_urls <- function(conn, project_id, project_name,
                                              type[1]))
                 source_items[[item$column]] <- c(item, new_item)
             }
-        }
-        else if (!is.null(item$source)) {
+        } else if (!is.null(item$source)) {
             source_items[[item$column]] <- item
         }
     }
@@ -295,8 +285,7 @@ build_sprint_source_urls <- function(conn, project_id, project_name,
                                 jira_sprint_ids='{{sprint_ids}}',
                                 sprint_start_date='{{start_date}}',
                                 sprint_end_date='{{end_date}}')
-    }
-    else {
+    } else {
         start_date <- date_format(sprint$start_date)
         end_date <- date_format(sprint$close_date)
         sprint_patterns <- list(jira_board_id=sprint$board_id[1],
@@ -324,7 +313,7 @@ get_source_ids <- function(conn, project_id) {
            function(project) {
                domain_names <- project$domain_name
                project[, c("project_id", "domain_name")] <- NULL
-               source_ids <- as.list(split(project, seq(nrow(project))))
+               source_ids <- as.list(split(project, seq_len(nrow(project))))
                names(source_ids) <- domain_names
                return(source_ids)
            })

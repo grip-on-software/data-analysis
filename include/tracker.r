@@ -24,8 +24,7 @@ trackers <- yaml.load_file('trackers.yml')
 get_source_dates <- function(tracker, contents) {
     if ("format" %in% names(tracker)) {
         return(list("source"=as.POSIXct(strptime(contents, tracker$format))))
-    }
-    else if ("json" %in% names(tracker)) {
+    } else if ("json" %in% names(tracker)) {
         items <- fromJSON(gsub("\\\\", "", contents))
         if (tracker$json == "object") {
             return(lapply(items, as.POSIXct))

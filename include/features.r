@@ -176,8 +176,7 @@ get_combined_features <- function(items, data, colnames, details, join_cols,
                 metadata <- metadata[, colnames(projects)]
                 if (component$name %in% projects$name) {
                     projects[projects$name == component$name, ] <- metadata
-                }
-                else {
+                } else {
                     projects <- rbind(projects, metadata)
                 }
             }
@@ -206,12 +205,10 @@ get_combined_features <- function(items, data, colnames, details, join_cols,
         if (length(indexes) == 0) {
             start <- c()
             end <- c()
-        }
-        else if (length(indexes) == 1) {
+        } else if (length(indexes) == 1) {
             start <- indexes - 1
             end <- indexes
-        }
-        else {
+        } else {
             start <- indexes[c(0, diff(indexes)) != 1]
             lagged <- embed(indexes, 2)
             diffs <- lagged[lagged[, 1] != lagged[, 2] + 1, ]
@@ -233,8 +230,7 @@ get_combined_features <- function(items, data, colnames, details, join_cols,
                 row_num <- row_num + start[i+1] - end[i]
             }
         }
-    }
-    else {
+    } else {
         colnames <- c(colnames, 'sprint_start', 'sprint_end')
         project_groups <- factor(data[, join_cols[[1]]])
         project_data <- split(data, project_groups)
@@ -376,8 +372,7 @@ get_combined_team <- function(team, team_id, data, projects, team_projects,
     if (length(replace) > 0) {
         data[team_conditions, names(team_meta)] <- team_meta
         data <- data[!(data$project_name %in% replace) | team_conditions, ]
-    }
-    else {
+    } else {
         team_data[, names(team_meta)] <- team_meta
         data <- rbind(data, team_data)
     }
@@ -418,13 +413,11 @@ get_combined_team <- function(team, team_id, data, projects, team_projects,
         if (isTRUE(team$names)) {
             metadata$project_names <- list(c(existing_names,
                                              metadata$project_names[[1]]))
-        }
-        else {
+        } else {
             metadata$project_names <- existing_names
         }
         projects[projects$name == team$name, ] <- as.list(metadata)
-    }
-    else {
+    } else {
         projects[meta_condition, 'team'] <- F
         if (length(replace) > 0) {
             projects <- projects[!(projects$name %in% replace), ]
@@ -482,8 +475,7 @@ update_combine_interval <- function(items, old_data, data, row_num, details,
             if (is.list(item$combine)) {
                 combiner <- ifelse(num_projects > 1, item$combine$project,
                                    item$combine$sprint)
-            }
-            else {
+            } else {
                 combiner <- item$combine
             }
             combine <- function(column, combiner) {
@@ -516,8 +508,7 @@ update_combine_interval <- function(items, old_data, data, row_num, details,
                                                    sprint_ids,
                                                    components,
                                                    sep=".")))
-                }
-                else {
+                } else {
                     detail_name <- paste(team_id, sprint_id, sep=".")
                 }
 
@@ -527,8 +518,7 @@ update_combine_interval <- function(items, old_data, data, row_num, details,
                     row[[sprint_col]] <- sprint_id
                     row$component <- NA
                     current <- as.data.frame(row)
-                }
-                else {
+                } else {
                     current <- feature[[detail_name]]
                 }
                 for (d in item$summarize$details) {
@@ -604,18 +594,15 @@ expand_feature_names <- function(feature, items, categories=list()) {
         if (startsWith(feature, "-")) {
             exclude <- T
             feature <- substring(feature, 2)
-        }
-        else {
+        } else {
             exclude <- F
         }
 
         if (feature == "all") {
             feature <- all
-        }
-        else if (feature %in% sources) {
+        } else if (feature %in% sources) {
             feature <- lapply(items, filter_source, feature)
-        }
-        else if (feature %in% names(categories)) {
+        } else if (feature %in% names(categories)) {
             feature <- lapply(items, filter_category,
                               feature)
         }
@@ -639,8 +626,7 @@ merge_features <- function(data, result, join_cols, components) {
             if ("original_component" %in% colnames(result)) {
                 by <- c(by, "original_component")
             }
-        }
-        else {
+        } else {
             match <- "all"
         }
     }
@@ -660,8 +646,7 @@ get_features <- function(conn, features, exclude, items, data, colnames,
     if (length(features) == 1) {
         if (is.na(features)) {
             features <- unlist(sapply(items, function(item) { item$column }))
-        }
-        else {
+        } else {
             features <- unique(c(required,
                                  expand_feature_names(features, items)))
         }
@@ -710,8 +695,7 @@ get_features <- function(conn, features, exclude, items, data, colnames,
             columns <- get_summarize_columns(item)
             if (!is.null(item$result)) {
                 result <- item$result
-            }
-            else if (!is.null(item$expression)) {
+            } else if (!is.null(item$expression)) {
                 if (isTRUE(item$precompute) || all(columns %in% required)) {
                     data <- get_expression(item, data, join_cols,
                                            components=components, merge=T)
@@ -721,11 +705,9 @@ get_features <- function(conn, features, exclude, items, data, colnames,
                     expressions <- c(expressions, columns)
                 }
                 next
-            }
-            else if (is.null(item$query)) {
+            } else if (is.null(item$query)) {
                 stop(paste('No query or result available for', columns))
-            }
-            else {
+            } else {
                 use_table <- F
                 cache_data <- table_data[table_data$name %in% columns, ]
                 for (source_type in names(item$source)) {
@@ -806,8 +788,7 @@ get_features <- function(conn, features, exclude, items, data, colnames,
                 if (nrow(result) == 0) {
                     result <- result[, group_names]
                     result[, columns] <- rep(list(numeric()), length(columns))
-                }
-                else {
+                } else {
                     result <- do.call("rbind", lapply(groups, function(group) {
                         return(get_summarize_group(group, group_names, data,
                                                    columns, details, summarize))
@@ -821,8 +802,7 @@ get_features <- function(conn, features, exclude, items, data, colnames,
                         group_details <- data.frame(group[1, group_names])
                         if (length(summarize$details) == 1) {
                             details <- list(list(group[, summarize$details]))
-                        }
-                        else {
+                        } else {
                             details <- lapply(group[, summarize$details],
                                               function(detail) { list(detail) })
                         }
@@ -851,11 +831,9 @@ get_features <- function(conn, features, exclude, items, data, colnames,
                 for (column in columns) {
                     if (!(column %in% names(data))) {
                         logwarn('Column %s could not be found', column)
-                    }
-                    else if (length(data[[column]]) == 0) {
+                    } else if (length(data[[column]]) == 0) {
                         logwarn('Column %s is empty', column)
-                    }
-                    else {
+                    } else {
                         data[is.na(data[[column]]), column] <- item$default
                     }
                 }
@@ -940,8 +918,7 @@ get_summarize_group <- function(group, group_names, data, columns, details,
         if (!is.na(reference) && is.list(details) &&
             !is.null(details[[reference]]) && length(field) == 1) {
             args <- c(args, details[[reference]][[name]][[field]])
-        }
-        else if (!is.na(reference) && isTRUE(summarize$expression)) {
+        } else if (!is.na(reference) && isTRUE(summarize$expression)) {
             # Find the current sprint data and use it
             f <- mapply(function(value, key) {
                             if (is.na(value)) {
@@ -970,8 +947,7 @@ get_summarize_group <- function(group, group_names, data, columns, details,
                                 name, as.character(key), as.numeric(adjust))
                     }
                     total <- total - sum(as.numeric(adjust), na.rm=T)
-                }
-                else {
+                } else {
                     loginfo('Missing feature for overlap: %s', overlap)
                 }
             }
@@ -1003,15 +979,13 @@ get_expression <- function(item, data, join_cols, components=NULL, merge=NA) {
         group <- item$window$group
         if ("project_name" %in% colnames(data)) {
             group[group == "project_id"] <- "project_name"
-        }
-        else if (!("project_id" %in% colnames(data))) {
+        } else if (!("project_id" %in% colnames(data))) {
             group[group == "project_id"] <- join_cols[1]
         }
         if (length(group) == 1) {
             group_cols <- list(factor(data[, group]))
             names(group_cols) <- group
-        }
-        else {
+        } else {
             group_cols <- lapply(data[, group], factor)
         }
         groups <- split(data, as.list(group_cols), drop=T)
@@ -1028,13 +1002,11 @@ get_expression <- function(item, data, join_cols, components=NULL, merge=NA) {
         }))
         if (identical(merge, F)) {
             data[[item$column]] <- all[[item$column]]
-        }
-        else {
+        } else {
             data[[item$column]] <- NULL
             data <- merge_features(data, all, join_cols, components)
         }
-    }
-    else {
+    } else {
         all <- eval(expression, data)
         data[, item$column] <- all
     }
@@ -1075,12 +1047,10 @@ get_expression_attrs <- function(expression, vars) {
                     # environment by picking another variable's values, since
                     # mostly the similar dimensions should matter.
                     assign(as.character(aux), vars[[1]], envir=environment)
-                }
-                else {
+                } else {
                     assign(as.character(aux), vars[[aux]], envir=environment)
                 }
-            }
-            else {
+            } else {
                 logerror("expression %s could not be evaluated: %s",
                          expr, ref[1])
                 return()
@@ -1121,8 +1091,7 @@ get_components <- function(data, result, components, source_type, field,
                            summarize=NULL) {
     if (is.null(result$component)) {
         result$component <- rep(NA, nrow(result))
-    }
-    else if (field == "component") {
+    } else if (field == "component") {
         result$original_component <- result$component
     }
     if (is.null(source_type)) {
@@ -1166,15 +1135,13 @@ get_components <- function(data, result, components, source_type, field,
                         result[conditions, "original_component"] <- original
                     }
                     result[conditions, "component"] <- NA
-                }
-                else if (field == "component") {
+                } else if (field == "component") {
                     result[conditions, "original_component"] <- NA
                 }
                 rows <- result[conditions, ]
                 rows$component <- component$name
                 result <- rbind(result, rows)
-            }
-            else {
+            } else {
                 if (field == "component") {
                     original <- result[conditions, "component"]
                     result[conditions, "original_component"] <- original
@@ -1267,8 +1234,7 @@ get_story_features <- function(conn, features, exclude='^$',
     if (length(features) == 1) {
         if (is.na(features)) {
             features <- unlist(sapply(items, function(item) { item$column }))
-        }
-        else {
+        } else {
             features <- expand_feature_names(features, items)
         }
     }
@@ -1329,8 +1295,7 @@ get_sprint_features <- function(conn, features, exclude, variables, latest_date,
     if (length(conditions) != 0) {
         where_clause <- paste('WHERE', paste(conditions, collapse=' AND '))
         sprint_conditions <- paste('AND', paste(conditions, collapse=' AND '))
-    }
-    else {
+    } else {
         where_clause <- ''
         sprint_conditions <- ''
     }
@@ -1455,8 +1420,7 @@ make_future_sprints <- function(group, future, join_cols, colnames,
             step <- max(group[dates$close, prediction$ref],
                         group[last, prediction$ref])
             steps <- seq(1, future) * step
-        }
-        else {
+        } else {
             steps <- rep(0, future)
         }
         predict <- pmax(0, group[last, prediction$column] - steps)
@@ -1522,8 +1486,7 @@ validate_future <- function(project, res, future, join_cols, colnames, error) {
         alt <- "two.sided"
         if (all(bias < 0, na.rm=T)) {
             alt <- "greater"
-        }
-        else if (all(bias > 0, na.rm=T)) {
+        } else if (all(bias > 0, na.rm=T)) {
             alt <- "less"
         }
         t_tests <- lapply(sprints,
@@ -1557,8 +1520,7 @@ simulate_monte_carlo_feature <- function(group, future, item, parameters, last,
         if (isTRUE(factor$sample)) {
             prob <- paste('r', factor$prob, sep='')
             factor_samples <- do.call(prob, c(list(future * count), p))
-        }
-        else {
+        } else {
             prob <- paste('d', factor$prob, sep='')
             weights <- do.call(prob, c(list(last:1), p))
             factor_samples <- sample(group[1:last, factor$column],
@@ -1566,8 +1528,7 @@ simulate_monte_carlo_feature <- function(group, future, item, parameters, last,
         }
         if (is.null(factor$multiplier)) {
             multiplier <- 1
-        }
-        else {
+        } else {
             multipliers <- group[!group$future &
                                  !is.na(group[[factor$multiplier]]),
                                  factor$multiplier]
@@ -1601,8 +1562,7 @@ simulate_monte_carlo_feature <- function(group, future, item, parameters, last,
         cdf <- list()
         center <- median(ends, na.rm=T)
         middle <- which(ends == center)[1]
-    }
-    else {
+    } else {
         P <- ecdf(reached)
         cdf <- P(seq(future))
         center <- median(reached, na.rm=T)
@@ -1650,8 +1610,7 @@ simulate_monte_carlo_story <- function(group, future, item, parameters, last,
     print(c(mean(counts), sd(counts), min(counts), max(counts)))
     if (all(is.na(counts))) {
         cdf <- list()
-    }
-    else {
+    } else {
         P <- ecdf(counts)
         cdf <- P(seq(future))
     }
@@ -1690,8 +1649,7 @@ simulate_monte_carlo <- function(group, future, items, columns, last=NA,
                                                       prediction$column)
                     res <- add_prediction(res, list(column=prediction$column),
                                           prediction, out)
-                }
-                else if (!is.null(prediction$monte_carlo)) {
+                } else if (!is.null(prediction$monte_carlo)) {
                     out <- simulate_monte_carlo_feature(group, future, item,
                                                         prediction$monte_carlo,
                                                         last, target, count,
@@ -1709,8 +1667,7 @@ calculate_feature_scores <- function(data, column, join_cols, one=F) {
                       'close_date', 'future', 'old')
     if ("future" %in% names(data)) {
         filter <- !data$future
-    }
-    else {
+    } else {
         filter <- T
     }
     selectors <- data[filter, !(names(data) %in% meta_columns)]
@@ -1738,8 +1695,7 @@ get_project_conditions <- function(conn, join_cols, patterns, date=NA,
                                    project_meta=list(), project_names=NULL) {
     if (!is.na(date)) {
         project_meta$recent <- date
-    }
-    else {
+    } else {
         project_meta$recent <- T
     }
     projects <- get_projects_meta(conn, fields=project_fields,
@@ -1806,8 +1762,7 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
                          quality_name='project.quality_name'))
         if (primary_source == "jira_version") {
             join_cols <- c("project_id", "fixversion")
-        }
-        else {
+        } else {
             join_cols <- c("project_id", "sprint_id")
             fields$board_id <- 'sprint.board_id'
         }
@@ -1827,8 +1782,7 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
     colnames <- c(join_cols, names(fields)[names(fields) != ""])
     if (length(sprint_conditions) != 0) {
         sprint_conditions <- paste(sprint_conditions, collapse=' AND ')
-    }
-    else {
+    } else {
         sprint_conditions <- '1'
     }
 
@@ -1853,8 +1807,7 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
             component_join <- paste(component_join,
                                     'AND ${t("component")}.start_date <=
                                      CAST(${t("sprint")}.start_date AS DATE)')
-        }
-        else {
+        } else {
             jira_join <- 'LEFT JOIN (
                           gros.${t("issue_component")}
                           JOIN gros.${t("component")}
@@ -1906,8 +1859,7 @@ get_recent_sprint_features <- function(conn, features, exclude='^$', date=NA,
                                             source=primary_source)))
         logdebug(item$query)
         sprint_data <- dbGetQuery(conn, item$query)
-    }
-    else {
+    } else {
         projects <- projects[projects$recent, ]
         sprint_data <- data.frame()
         for (project in projects$project_id) {
@@ -2151,8 +2103,7 @@ get_project_features <- function(conn, features, exclude, variables, core=F,
         project_fields$project_id <- NULL
         project_fields$team_id <- "team_id"
         project_fields$quality_display_name <- NULL
-    }
-    else {
+    } else {
         join_cols <- c("project_id")
     }
     patterns <- load_definitions('sprint_definitions.yml',

@@ -120,8 +120,7 @@ sprint_burndown <- function(item, result, output_dir, format) {
             if (item$patterns[['project_ids']] != '1') {
                 project_name <- projects[projects[[project_col]] == project,
                                          'name']
-            }
-            else {
+            } else {
                 project_name <- paste('Proj', project, sep='')
             }
             columns <- c('story_points', 'close_date', 'key', 'event_type')
@@ -224,8 +223,7 @@ commit_volume <- function(item, result, output_dir, format) {
     })
     if (item$patterns[['project_ids']] != '1') {
         names(data) <- projects$name
-    }
-    else {
+    } else {
         names(data) <- paste('Proj', projects$project_id, sep='')
     }
     write(toJSON(data),
@@ -248,8 +246,7 @@ developers <- function(item, result, output_dir, format) {
     })
     if (item$patterns[['project_ids']] != '1') {
         names(data) <- projects$name
-    }
-    else {
+    } else {
         names(data) <- paste('Proj', projects$project_id, sep='')
     }
     write(toJSON(data),
@@ -286,8 +283,7 @@ story_flow <- function(item, result, output_dir, format) {
                        'In Progress'='yellow',
                        'Completed'='green',
                        'Inactive'='grey')
-    }
-    else {
+    } else {
         colors <- list('Open'='blue',
                        'In Progress'='yellow',
                        'Reopened'='gray',
@@ -393,8 +389,7 @@ story_flow <- function(item, result, output_dir, format) {
         type <- "same"
         if (num == 1) {
             type <- "max"
-        }
-        else if (num == length(ranks)) {
+        } else if (num == length(ranks)) {
             type <- "min"
         }
         return(paste("{rank = ", type, ";",
@@ -443,8 +438,7 @@ long_waiting_commits <- function(item, result, output_dir, format) {
             project_data$repo_name <- unclass(sha256(project_data$repo_name))
             project_data$url <- NULL
             project_data$file <- unclass(sha256(project_data$file))
-        }
-        else if (is.null(project_data$url) ||
+        } else if (is.null(project_data$url) ||
                  length(grep("^https?://", project_data$url)) == 0) {
             # Link to a webpage with relevant information about the source.
             project_data$url <- project_data$environment_url
@@ -547,8 +541,7 @@ bigboat_status <- function(item, result, output_dir, format) {
             project_data$checked_date <- as.POSIXct(project_data$checked_date)
             if (item$patterns[['project_ids']] != '1') {
                 name <- project_name
-            }
-            else {
+            } else {
                 name <- paste('Proj', project_id, sep='')
             }
             project_ids <- c(project_ids, project_id)
@@ -557,12 +550,10 @@ bigboat_status <- function(item, result, output_dir, format) {
             write(toJSON(project_data[with(project_data,
                                            order(name, checked_date)), ]),
                 file=paste(path, paste(name, "json", sep="."), sep="/"))
-        }
-        else {
+        } else {
             if (item$patterns[['project_ids']] != '1') {
                 loginfo("No data for project %d", project_id)
-            }
-            else {
+            } else {
                 loginfo("No data for %s", project_name)
             }
         }
@@ -581,8 +572,7 @@ bigboat_status <- function(item, result, output_dir, format) {
         names(project_names) <- project_ids
         project_urls <- as.list(urls$url)
         names(project_urls) <- project_names[as.character(urls$project_id)]
-    }
-    else {
+    } else {
         project_urls <- list()
     }
     write(toJSON(project_urls, auto_unbox=T),

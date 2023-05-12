@@ -112,9 +112,10 @@ export_features <- function(features, exclude, output_directory) {
         if (project_id %in% data[[project_col]]) {
             sprint_data <- data[data[[project_col]] == project,
                                 c(sprint_col, colnames)]
-            result <- lapply(as.list(1:dim(sprint_data)[1]), function(i) {
-                safe_unbox(sprint_data[i, colnames])
-            })
+            result <- lapply(as.list(seq_len(dim(sprint_data)[1])),
+                             function(i) {
+                                 safe_unbox(sprint_data[i, colnames])
+                             })
             names(result) <- sprint_data[[sprint_col]]
             result[[project_col]] <- NULL
             result[[sprint_col]] <- NULL
@@ -132,12 +133,12 @@ export_features <- function(features, exclude, output_directory) {
 
 # Export data to separate per-sprint files.
 export_split_data <- function(data, item, output_directory) {
-    project_data <- lapply(as.list(1:dim(projects)[1]), function(project) {
+    ids <- as.list(seq_len(dim(projects)[1]))
+    project_data <- lapply(ids, function(project) {
         project_id <- projects[project, 'project_id']
         if (project_ids != '1') {
             project_name <- projects[project, 'name']
-        }
-        else {
+        } else {
             project_name <- paste('Proj', project_id, sep='')
         }
 
@@ -249,8 +250,7 @@ for (item in items) {
             type$subchart <- safe_unbox(item$split)
         }
         types <- c(types, list(type))
-    }
-    else {
+    } else {
         loginfo(paste('No matching data for', item$type, 'event'))
     }
 }

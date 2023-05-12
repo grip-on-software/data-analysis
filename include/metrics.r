@@ -33,8 +33,7 @@ get_metric_targets <- function(conn, project_id, items) {
                         WHERE', paste(conditions, collapse=' AND '),
                        'ORDER BY base_name, commit_date')
 
-    }
-    else {
+    } else {
         conditions$project_id <- paste('metric_target.project_id IN (',
                                        paste(project_id, collapse=','), ')')
         query <- paste('SELECT metric_target.project_id, metric.base_name,

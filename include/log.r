@@ -34,8 +34,7 @@ if (!exists('INC_LOG_R')) {
 
         if (level %in% names(loglevels)) {
             logging::basicConfig(level)
-        }
-        else {
+        } else {
             if (!is.null(parser)) {
                 print_help(parser)
             }

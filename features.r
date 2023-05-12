@@ -229,13 +229,11 @@ map_details <- function(details, project_ids, component, join_cols) {
                           if (identical(component, F) ||
                               is.null(detail$component)) {
                               cond <- T
-                          }
-                          else if (is.na(component)) {
+                          } else if (is.na(component)) {
                               cond <- !("component" %in% colnames(detail)) |
                                   is.null(detail$component) |
                                   is.na(detail$component)
-                          }
-                          else {
+                          } else {
                               cond <- "component" %in% colnames(detail) &
                                   detail$component == component
                           }
@@ -252,8 +250,7 @@ map_details <- function(details, project_ids, component, join_cols) {
                            project)
     if (length(project) == 0) {
         names(feature_details) <- character(0)
-    }
-    else {
+    } else {
         names(feature_details) <- Map(function(detail) { detail[[sprint_col]] },
                                       project)
     }
@@ -271,7 +268,7 @@ if (arguments$project) {
     project_col <- result$join_cols[1]
 
     df <- result$data[, result$colnames]
-    data <- lapply(as.list(split(df, seq(nrow(df)))), unbox)
+    data <- lapply(as.list(split(df, seq_len(nrow(df)))), unbox)
     names(data) <- result$data$name
     for (subproject in subprojects$name) {
         main_project <- subprojects[subprojects$name == subproject,
@@ -305,8 +302,7 @@ if (arguments$project) {
                                       conn=conn),
                         SIMPLIFY=F)
         names(links) <- result$data[['name']]
-    }
-    else {
+    } else {
         links <- list()
         names(links) <- list()
     }
@@ -345,8 +341,7 @@ if (arguments$project) {
         metadata$team <- T
         metadata$component <- T
         teams <- config$teams
-    }
-    else {
+    } else {
         teams <- list()
     }
     specifications <- yaml.load_file('sprint_features.yml')
@@ -363,8 +358,7 @@ if (arguments$project) {
     }))
     if (is.na(features)) {
         features <- all_features
-    }
-    else {
+    } else {
         features <- expand_feature_names(features, specifications$files,
                                          specifications$categories)
     }
@@ -436,8 +430,7 @@ if (arguments$project) {
 
     if (!identical(combine, F)) {
         project_column <- "team_id"
-    }
-    else {
+    } else {
         project_column <- result$join_cols[1]
     }
     sprint_column <- result$join_cols[2]
@@ -457,8 +450,7 @@ if (arguments$project) {
         }
         if (project_ids != '0') {
             names <- paste('Proj', result$projects$project_id, sep='')
-        }
-        else {
+        } else {
             names <- result$projects$name
         }
         projects <- levels(factor(names))
@@ -471,8 +463,7 @@ if (arguments$project) {
         if (!split) {
             old_sprint_data <- data.frame()
             new_sprint_data <- sprint_data[!sprint_data$future, ]
-        }
-        else {
+        } else {
             old_sprint_data <- sprint_data[sprint_data$old, ]
             new_sprint_data <- sprint_data[!sprint_data$old &
                                            !sprint_data$future, ]
@@ -497,8 +488,7 @@ if (arguments$project) {
             new <- write_data(new_sprint_data, default_features, 'default.json')
             if (split) {
                 old <- write_data(old_sprint_data, old_features, 'old.json')
-            }
-            else {
+            } else {
                 old <- data.frame()
             }
             future <- write_data(future_sprint_data, future_features,
@@ -526,8 +516,7 @@ if (arguments$project) {
                 team_id <- project_id
                 team_projects <- c()
                 components <- c()
-            }
-            else {
+            } else {
                 team_id <- new[[project_column]][[1]]
                 meta <- result$projects[result$projects$project_id == team_id, ]
                 result$projects[result$projects$project_id == team_id,
@@ -544,8 +533,7 @@ if (arguments$project) {
                 if (length(team_projects) == 1 ||
                     (length(components) > 0 && !identical(components, F))) {
                     team_ids <- unlist(c(new$team_id[[1]], project_id))
-                }
-                else {
+                } else {
                     team_ids <- new$team_id[[1]]
                 }
 
@@ -559,8 +547,7 @@ if (arguments$project) {
                 component <- new$component[[1]]
                 if (is.null(component)) {
                     component <- NA
-                }
-                else if (length(team_projects) > 1) {
+                } else if (length(team_projects) > 1) {
                     component <- F
                 }
             }
@@ -613,8 +600,7 @@ if (arguments$project) {
                 names(project_source_ids) <- NULL
                 write(toJSON(do.call("c", project_source_ids)),
                       file=paste(project_dir, "source_ids.json", sep="/"))
-            }
-            else {
+            } else {
                 write("{}", file=paste(project_dir, "links.json", sep="/"))
                 write("{}", file=paste(project_dir, "source_ids.json", sep="/"))
             }
@@ -685,8 +671,7 @@ if (arguments$project) {
                                 sprint_ids=sprint_ids,
                                 output_directory=output_dir,
                                 fixversions=config$db$primary_source == "jira")
-    }
-    else {
+    } else {
         columns <- c("project_name", "quality_display_name", sprint_meta)
         write.csv(sprint_data[, columns],
                   file=paste(output_directory, 'recent_sprint_features.csv',

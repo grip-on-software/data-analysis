@@ -25,8 +25,7 @@ if (!exists('INC_PROJECT_R')) {
         if (isTRUE(recent)) {
             # Within the last three months
             date <- Sys.Date() - as.difftime(12, units="weeks")
-        }
-        else {
+        } else {
             date <- as.Date(recent)
         }
         return(date)
@@ -235,8 +234,7 @@ if (!exists('INC_PROJECT_R')) {
         if (length(urls) > 0) {
             if (project_ids != '0') {
                 names(urls) <- paste('Proj', names(urls), sep='')
-            }
-            else {
+            } else {
                 names(urls) <- projects[ids %in% names(urls), 'name']
             }
         }
@@ -255,8 +253,7 @@ if (!exists('INC_PROJECT_R')) {
             projects <- get_projects_meta(conn, fields=fields,
                                           metadata=metadata, patterns=patterns,
                                           join_cols=join_cols)
-        }
-        else {
+        } else {
             if (!is.null(names(fields))) {
                 fields <- names(fields)
             }
@@ -274,8 +271,7 @@ if (!exists('INC_PROJECT_R')) {
 
         if (is.null(join_cols)) {
             project_col <- 'project_id'
-        }
-        else {
+        } else {
             project_col <- join_cols[1]
         }
         join_col <- ifelse(project_ids != '0', project_col, 'name')
