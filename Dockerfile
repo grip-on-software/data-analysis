@@ -1,6 +1,8 @@
 FROM r-base:3.6.3
 RUN apt-get update \
-	&& apt-get install -y --no-install-recommends libnetcdf-dev procps libssl-dev libxml2-dev libfontconfig1-dev libharfbuzz-dev libfribidi-dev \
+	&& apt-get install -y --no-install-recommends libnetcdf-dev procps \
+	libssl-dev libxml2-dev libfontconfig1-dev libharfbuzz-dev libfribidi-dev \
+	libfreetype6-dev libpng-dev libtiff5-dev libjpeg-dev \
 	&& rm -rf /var/lib/apt/lists/*
 COPY requirements.txt install.r /tmp/
 RUN ANALYSIS_REQUIREMENTS=/tmp/requirements.txt Rscript /tmp/install.r
