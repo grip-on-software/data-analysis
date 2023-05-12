@@ -17,10 +17,14 @@
 
 install.packages("devtools")
 
-require(devtools)
+if (!require(devtools)) {
+    print('Could not install or find devtools')
+    quit("no", status=1, runLast=F)
+}
 
 requirements_file <- Sys.getenv("ANALYSIS_REQUIREMENTS",
                                 unset='requirements.txt')
+expected <- c()
 for (line in readLines(requirements_file)) {
     if (endsWith(line, ";optional")) {
         print(paste("Not installing", line))
@@ -29,8 +33,16 @@ for (line in readLines(requirements_file)) {
     versioned <- strsplit(line, "==")[[1]]
     if (length(versioned) == 1) {
         install.packages(line)
+        expected <- c(expected, line)
     }
     else {
         install_version(versioned[1], version=versioned[2])
+        expected <- c(expected, versioned[1])
     }
+}
+ok <- expected %in% rownames(installed.packages())
+if (!all(ok)) {
+    print(paste('Could not install some packages:',
+                paste(expected[!ok], collapse=', ')))
+    quit("no", status=1, runLast=F)
 }
