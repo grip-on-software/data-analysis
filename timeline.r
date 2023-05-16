@@ -276,4 +276,6 @@ if (project_ids != '1') {
                     projects_with_data, SIMPLIFY=F)
 
     write(toJSON(links), file=paste(output_directory, "links.json", sep="/"))
+} else {
+    write("{}", file=paste(output_directory, "links.json", sep="/"))
 }
