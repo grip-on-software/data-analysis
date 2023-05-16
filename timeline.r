@@ -105,9 +105,10 @@ export_features <- function(features, exclude, output_directory) {
                                   sprint_patch=ifelse(arguments$patch, NA, F),
                                   future=F)
     data <- result$data
-    colnames <- result$colnames
     project_col <- result$join_cols[1]
     sprint_col <- result$join_cols[2]
+    colnames <- result$colnames[result$colnames != project_col &
+                                result$colnames != sprint_col]
     project_data <- lapply(as.list(projects$project_id), function(project) {
         project_id <- projects[project, 'project_id']
         if (project_id %in% data[[project_col]]) {
@@ -118,8 +119,6 @@ export_features <- function(features, exclude, output_directory) {
                                  safe_unbox(sprint_data[i, colnames])
                              })
             names(result) <- sprint_data[[sprint_col]]
-            result[[project_col]] <- NULL
-            result[[sprint_col]] <- NULL
             return(result)
         }
         return(NA)
