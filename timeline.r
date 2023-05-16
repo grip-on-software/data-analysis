@@ -147,10 +147,10 @@ export_split_data <- function(data, item, output_directory) {
                         FROM gros.${t("sprint")}
                         WHERE ${f(join_cols, "sprint", mask=1)} =',
                         project_id)
-        item <- load_query(list(query=query),
-                           c(patterns, list(join_cols=join_cols)))
-        logdebug(item$query)
-        sprints <- dbGetQuery(conn, item$query)
+        sprint_item <- load_query(list(query=query),
+                                  c(patterns, list(join_cols=join_cols)))
+        logdebug(sprint_item$query)
+        sprints <- dbGetQuery(conn, sprint_item$query)
         if (nrow(sprints) == 0) {
             return(sprints)
         }
@@ -182,16 +182,20 @@ export_data <- function(data, item, output_directory) {
         return(export_split_data(data, item, output_directory))
     }
     project_names <- as.list(projects$name)
-    project_boards <- lapply(project_names, function(project) {
-        result <- data[data$project_name == project, ]
-        if ("board_id" %in% colnames(result)) {
+    if ('board_id' %in% colnames(data)) {
+        project_boards <- lapply(project_names, function(project) {
+            result <- data[data$project_name == project, ]
             board_id <- unique(result[!is.na(result$board_id), 'board_id'])
             if (length(board_id) == 1) {
                 return(safe_unbox(board_id))
             }
-        }
-        return(safe_unbox(NA))
-    })
+            return(safe_unbox(NA))
+        })
+
+        names(project_boards) <- projects$name
+        write(toJSON(project_boards),
+              file=paste(output_directory, "boards.json", sep="/"))
+    }
     data[!is.na(project_boards[data$project_name]), 'board_id'] <- NA
     project_data <- lapply(project_names, function(project) {
         return(data[data$project_name == project, ])
@@ -199,10 +203,6 @@ export_data <- function(data, item, output_directory) {
     names(project_data) <- projects$name
     path <- paste(output_directory, paste(item$type, "json", sep="."), sep="/")
     write(toJSON(project_data), file=path)
-
-    names(project_boards) <- names(project_data)
-    write(toJSON(project_boards),
-          file=paste(output_directory, "boards.json", sep="/"))
 
     return(project_data)
 }
