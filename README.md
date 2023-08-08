@@ -32,6 +32,12 @@ configuration items within their sections to properly configure the scripts:
   - `user` (`$MONETDB_USER`): Username to use for connecting to the database.
   - `password` (`$MONETDB_PASSWORD`): Password of the user to connect to the 
     database with at least `SELECT`, `INSERT` and `DELETE` privileges.
+  - `primary_source` (`$MONETDB_PRIMARY_SOURCE`): The primary database table 
+    source for issue entities for the organization described by the database. 
+    This can be `jira` to use the `issue` table and related tables for the 
+    issues, `jira_version` to use `fixversion` in place of `sprint`, 
+    `jira_component_version` to use `fixversion` in place of `component` or 
+    `tfs` to use the `tfs_work_item` and associated tables.
 - `fields` (used in some cases by `backlog-size-interval.r`, `features.r` and 
   `sprint_results.r`): URLs and related indicators for sources and additional 
   features. Sometimes only used as a fallback if a source has no valid URL.
@@ -101,7 +107,7 @@ configuration items within their sections to properly configure the scripts:
     - `key` (`$TEAM_PROJECT_KEY`): The project key to include in the team.
     - `board` (`$TEAM_PROJECT_BOARD`): If provided, only include sprints that 
       have their primary board ID set to this board ID (if this is a scalar) or 
-      on of these board IDs (for a list of scalars) for the team.
+      one of these board IDs (for a list of scalars) for the team.
     - `replace` (`$TEAM_PROJECT_REPLACE`): Whether to replace the entire 
       project. If the project is replaced, then any data not used for the team 
       is not exported for the report under the project's former name. This can 

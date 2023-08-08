@@ -1,0 +1,37 @@
+{
+    "$id": "https://gros.liacs.nl/schema/data-analysis/trackers.json",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Data analysis source update trackers",
+    "$ref": "#/$defs/trackers",
+    "$defs": {
+        "trackers": {
+            "type": "object",
+            "patternProperties": {
+                "^(project|metric_history|metric_options|quality_time|quality|sonar|jenkins|jira|vcs|git|gitlab|github|tfs|subversion|prediction)$": {
+                    "type": "array",
+                    "description": "Trackers for a data source type.",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "file": {
+                                "type": "string",
+                                "pattern": "^[a-zA-Z0-9_.-]+$",
+                                "description": "Filename of the tracker as stored in the database."
+                            },
+                            "format": {
+                                "type": "string",
+                                "description": "Sprintf-compatible format string that indicates the contents of the tracker file, which consists only of the timestamp parseable with the format string. If both `format` and `json` are not provided, then the contents are ignored."
+                            },
+                            "json": {
+                                "type": "string",
+                                "enum": ["object"],
+                                "description": "Indication that the tracker file is stored as a JSON structure, and the means to parse the contents. This is ignored if `format` is provided.\n- `object`: The JSON structure is a shallow object with keys that indicate specific components, repositories, etc. and values are timestamps."
+                            }
+                        },
+                        "required": ["file"]
+                    }
+                }
+            }
+        }
+    }
+}

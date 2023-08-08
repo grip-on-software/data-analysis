@@ -1,0 +1,31 @@
+{
+    "$id": "https://gros.liacs.nl/schema/data-analysis/source_types.json",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Data analysis source types",
+    "$ref": "#/$defs/source_types",
+    "$defs": {
+        "source_types": {
+            "type": "object",
+            "patternProperties": {
+                "^(project|metric_history|metric_options|quality_time|quality|sonar|jenkins|jira|vcs|git|gitlab|github|tfs|subversion|prediction)$": {
+                    "type": "object",
+                    "description": "Localization for a data source type.",
+                    "patternProperties": {
+                        "^[a-zA-Z]{2,3}(-.*)?$": {
+                            "type": "string",
+                            "description": "Localization title for a data source type in a specific language. Valid languages use two-letter ISO 639-1 language codes plus optional BCP 47 subtags, so only a subset of languages is recognized."
+                        }
+                    },
+                    "properties": {
+                        "icon": {
+                            "type": "array",
+                            "minItems": 2,
+                            "items": {"type": "string"},
+                            "description": "Portions of a FontAwesome icon class that indicates the source type."
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

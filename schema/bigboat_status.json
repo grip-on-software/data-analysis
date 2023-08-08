@@ -1,0 +1,56 @@
+{
+    "$id": "https://gros.liacs.nl/schema/data-analysis/bigboat_status.json",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Data analysis BigBoat status fields",
+    "$ref": "#/$defs/bigboat_status",
+    "$defs": {
+        "bigboat_status": {
+            "type": "object",
+            "properties": {
+                "fields": {
+                    "type": "object",
+                    "patternProperties": {
+                        "^.+$": {
+                            "type": "object",
+                            "properties": {
+                                "titles": {
+                                    "description": "Localization titles for a subgraph of a BigBoat performance status field.",
+                                    "$ref": "#/$defs/locale"
+                                },
+                                "descriptions": {
+                                    "description": "Localization texts for a subgraph of a BigBoat performance status field.",
+                                    "$ref": "#/$defs/locale"
+                                },
+                                "unit": {
+                                    "type": "string",
+                                    "description": "Units used by the BigBoat performance status field values.",
+                                    "enum": ["bytes", "seconds"]
+                                }
+                            }
+                        }
+                    }
+                },
+                "match": {
+                    "type": "object",
+                    "description": "Regular expressions that match portions of BigBoat status field names and their normalized field names.",
+                    "patternProperties": {
+                        "^.+$": {
+                            "type": "string",
+                            "description": "Normalized field name for the fields that match the regular expression.",
+                            "pattern": "^.+$"
+                        }
+                    }
+                }
+            }
+        },
+        "locale": {
+            "type": "object",
+            "patternProperties": {
+                "^[a-zA-Z]{2,3}(-.*)?$": {
+                    "type": "string",
+                    "description": "Localization item for a specific language. Valid languages use two-letter ISO 639-1 language codes plus optional BCP 47 subtags, so only a subset of languages is recognized."
+                }
+            }
+        }
+    }
+}

@@ -155,13 +155,12 @@ fields:
             field: ''
 conditions:
     project_recent:
+        description: "Projects that have recent sprints"
         jira:
-            description: "Projects that have recent sprints"
             table: [sprint, tfs_sprint]
             column: [start_date]
             condition: MAX(${t("sprint")}.start_date) >= CAST('${date}' AS TIMESTAMP)
         jira_version:
-            description: "Projects that have recent sprints"
             table: fixversion
             column: [start_date]
             condition: MAX(${t("sprint")}.start_date) >= CAST('${date}' AS DATE)

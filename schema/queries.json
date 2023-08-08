@@ -1,0 +1,708 @@
+{
+    "$id": "https://gros.liacs.nl/schema/data-analysis/queries.json",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Data analysis query index",
+    "$ref": "#/$defs/queries",
+    "$defs": {
+        "queries": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "string",
+                    "description": "Directory in which the query files are stored."
+                },
+                "files": {
+                    "type": "array",
+                    "description": "Queries known to this index.",
+                    "items": {
+                        "oneOf": [
+                            {"$ref": "#/$defs/analysis_report"},
+                            {"$ref": "#/$defs/event"},
+                            {"$ref": "#/$defs/feature"}
+                        ]
+                    }
+                },
+                "categories": {
+                    "type": "object",
+                    "description": "Category names that could be used by the queries in order to group them together, with localization for the category.",
+                    "patternProperties": {
+                        "^(?!other$)[a-z]+$": {
+                            "type": "object",
+                            "properties": {
+                                "icon": {
+                                    "type": "array",
+                                    "minItems": 2,
+                                    "items": {"type": "string"},
+                                    "description": "Portions of a FontAwesome icon class that indicates the category."
+                                }
+                            },
+                            "patternProperties": {
+                                "^[a-zA-Z]{2,3}(-.*)?$": {
+                                    "type": "string",
+                                    "description": "Localization item for the category name in a specific language. Valid languages use two-letter ISO 639-1 language codes plus optional BCP 47 subtags, so only a subset of languages is recognized."
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "required": ["path", "files"]
+        },
+        "analysis_report": {
+            "type": "object",
+            "description": "Query for an analysis report.",
+            "properties": {
+                "filename": {"$ref": "#/$defs/filename"},
+                "table": {
+                    "type": "string",
+                    "description": "Name of the report."
+                },
+                "fields": {"$ref": "#/$defs/patterns_fields"}
+            },
+            "unevaluatedProperties": false,
+            "required": ["filename", "table"]
+        },
+        "event": {
+            "type": "object",
+            "description": "Query for a sprint event.",
+            "properties": {
+                "filename": {"$ref": "#/$defs/filename"},
+                "type": {
+                    "type": "string",
+                    "description": "Name of the event."
+                },
+                "display": {
+                    "type": "boolean",
+                    "description": "Whether to show the event in a timeline chart by default."
+                },
+                "split": {
+                    "type": "boolean",
+                    "description": "Whether to show the event in a separate subchart of a timeline chart."
+                },
+                "descriptions": {
+                    "$ref": "#/$defs/locales",
+                    "description": "Descriptions of the event."
+                }
+            },
+            "required": ["filename", "type"]
+        },
+        "feature": {
+            "type": "object",
+            "description": "Query for one or more features.",
+            "$comment": "Used by sprint_features.yml, project_features.yml, story_features.yml and old_performance.yml",
+            "oneOf": [
+                {"$ref": "#/$defs/feature_definition"},
+                {"$ref": "#/$defs/feature_expression"},
+                {"$ref": "#/$defs/feature_filename"},
+                {"$ref": "#/$defs/feature_metric"}
+            ],
+            "properties": {
+                "table": {
+                    "type": "string",
+                    "description": "Name that could be used as a table name if the query were to be placed in a subquery, and in general as a normalized identifier for the query.",
+                    "pattern": "^[a-z_]+$"
+                },
+                "column": {
+                    "description": "Name(s) of the feature(s) that the query provides.",
+                    "oneOf": [
+                        {"$ref": "#/$defs/column_name"},
+                        {
+                            "type": "array",
+                            "minItems": 1,
+                            "items": {"$ref": "#/$defs/column_name"}
+                        }
+                    ]
+                },
+                "carry": {
+                    "type": "boolean",
+                    "description": "Whether to use an earlier occurring sample's value(s) for the features(s) when the current sample has no result in the query."
+                },
+                "default": {
+                    "type": "number",
+                    "description": "Default value for the feature(s) of samples that had no result in the query."
+                },
+                "patterns": {"$ref": "#/$defs/patterns_conditions"},
+                "summarize": {
+                    "description": "Indication of how to summarize values of the feature when the query result provides multiple rows per sample.",
+                    "oneOf": [
+                        {"$ref": "#/$defs/summarize"},
+                        {
+                            "type": "array",
+                            "minItems": 1,
+                            "items": {"$ref": "#/$defs/summarize"}
+                        },
+                        {
+                            "type": "object",
+                            "properties": {
+                                "operation": {"$ref": "#/$defs/summarize"},
+                                "with_missing": {
+                                    "type": "boolean",
+                                    "description": "Include missing values in summarizing operation, for example with `count`."
+                                },
+                                "field": {
+                                    "oneOf": [
+                                        {"$ref": "#/$defs/column_name"},
+                                        {
+                                            "type": "array",
+                                            "minItems": 1,
+                                            "items": {"$ref": "#/$defs/column_name"}
+                                        }
+                                    ],
+                                    "description": "Field(s) from the query result to provide to the summarizing operation. Multiple fields can be provided to `sum_of_na_diff`."
+                                },
+                                "overlap": {
+                                    "type": "array",
+                                    "minItems": 1,
+                                    "items": {"$ref": "#/$defs/column_name"},
+                                    "description": "Feature(s) whose detailed values should be used to detect and remove overlapping values when using `sum` or `sum_of_na_diff` operation."
+                                },
+                                "reference": {
+                                    "$ref": "#/$defs/column_name",
+                                    "description": "Feature whose `field` from its `details`, or the value itself (when `expression` is `true`) can be used as additional parameter of the summarizing operation when using `sum_of_na_avg` (use referenced values for non-empty divisor) or `sum_of_na_diff` (use as default value for old values)."
+                                },
+                                "details": {
+                                    "type": "array",
+                                    "minItems": 1,
+                                    "items": {"$ref": "#/$defs/column_name"},
+                                    "description": "Field(s) from the query result to retain the values for each sample for, which may be used for tracking detailed information on how the feature was calculated."
+                                },
+                                "filter": {
+                                    "type": "string",
+                                    "description": "R code using an environment of the query result fields to filter which rows are retained for the `details`."
+                                },
+                                "expression": {
+                                    "type": "boolean",
+                                    "description": "When using `reference`, whether to use the referenced feature's value itself instead of the `field` from its details the summarizing operation."
+                                }
+                            },
+                            "required": ["operation"]
+                        }
+                    ]
+                },
+                "combine": {
+                    "description": "Operations to use to combine values of the feature(s), either when multiple projects are combined for a team or when concurrent sprints are combined into one.",
+                    "oneOf": [
+                        {"$ref": "#/$defs/combine"},
+                        {
+                            "type": "array",
+                            "description": "Operations to use to combine values of the features when combining multiple projects for a team. If `summarize` is an array, then the number of combine operations must match that length in order to combine for each summarizing operation.",
+                            "minItems": 1,
+                            "items": {"$ref": "#/$defs/combine"}
+                        },
+                        {
+                            "type": "object",
+                            "properties": {
+                                "project": {
+                                    "description": "Operation to use to combine values of the feature when combining multiple projects for a team.",
+                                    "$ref": "#/$defs/combine"
+                                },
+                                "sprint": {
+                                    "description": "Operation to use to combine values of the feature when combining multiple concurrent sprints.",
+                                    "$ref": "#/$defs/combine"
+                                }
+                            }
+                        }
+                    ]
+                },
+                "prediction": {
+                    "type": "array",
+                    "minItems": 1,
+                    "description": "Different methods of predicting the feature.",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "url": {
+                                "type": "string",
+                                "format": "uri-reference",
+                                "description": "URL template to retrieve prediction data values for this feature. The template may contain `${...}` for variable expansions"
+                            },
+                            "reference": {
+                                "$ref": "#/$defs/column_name",
+                                "description": "Feature that can be used as a linear regression over sprints to predict the overall change of the feature."
+                            },
+                            "monte_carlo": {
+                                "type": "object",
+                                "description": "Parameters for a Monte Carlo simulation to predict the feature.",
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "description": "Name of the simulation."
+                                    },
+                                    "factors": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "column": {
+                                                    "$ref": "#/$defs/column_name",
+                                                    "description": "Feature to use for the base factor."
+                                                },
+                                                "multiplier": {
+                                                    "$ref": "#/$defs/column_name",
+                                                    "description": "Feature to use as multiplication of the column feature."
+                                                },
+                                                "scalar": {
+                                                    "type": "number",
+                                                    "description": "Weight to apply to this factor."
+                                                },
+                                                "prob": {
+                                                    "type": "string",
+                                                    "description": "Probability density function."
+                                                },
+                                                "params": {
+                                                    "type": "array",
+                                                    "description": "Parameters for the probability density function.",
+                                                    "items": {
+                                                        "type": ["number", "string"]
+                                                    }
+                                                },
+                                                "sample": {
+                                                    "type": "boolean",
+                                                    "description": "Whether to use the probability function to select new random data. When this is missing or `false`, the actual data from the column feature is selected instead."
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "values": {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "type": "string",
+                            "enum": ["fraction", "duration", "icon"],
+                            "description": "Format type of the feature."
+                        },
+                        "denominator": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "description": "Maximum denominator to use when formatting the value of the feature as a common fraction when it has the `fraction` type."
+                        },
+                        "intervals": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "description": "Interval specification for the feature when it has the `duration` type. When formatting the value of the feature, each interval specifies the divisor value to apply until the value is small enough.",
+                                "properties": {
+                                    "unit": {
+                                        "$ref": "#/$defs/time_unit",
+                                        "description": "Interval unit."
+                                    },
+                                    "key": {
+                                        "type": "string",
+                                        "enum": ["s", "m", "h", "d", "w", "M", "y"],
+                                        "description": "Shorthand key for the interval unit."
+                                    },
+                                    "num": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "description": "Interval size."
+                                    }
+                                }
+                            }
+                        },
+                        "icons": {
+                            "type": "object",
+                            "description": "Icons to use in place of the value of the feature when it has the `icon` type.",
+                            "patternProperties": {
+                                "^\\d+$": {
+                                    "type": "array",
+                                    "minItems": 2,
+                                    "items": {"type": "string"},
+                                    "description": "FontAwesome specification for an icon that represents the value."
+                                }
+                            }
+                        }
+                    }
+                },
+                "descriptions": {
+                    "description": "Descriptions for the feature(s).",
+                    "oneOf": [
+                        {"$ref": "#/$defs/locales"},
+                        {"$ref": "#/$defs/locales_multi"}
+                    ]
+                },
+                "long_descriptions": {
+                    "description": "Longer descriptions for the feature(s).",
+                    "oneOf": [
+                        {"$ref": "#/$defs/locales"},
+                        {"$ref": "#/$defs/locales_multi"}
+                    ]
+                },
+                "units": {
+                    "description": "Sprintf-compatible format strings that indicate the feature(s) along with longer descriptions of unit(s).",
+                    "oneOf": [
+                        {"$ref": "#/$defs/locales"},
+                        {"$ref": "#/$defs/locales_multi"}
+                    ]
+                },
+                "short_units": {
+                    "description": "Sprintf-compatible format strings that indicate the feature(s) along with unit(s).",
+                    "oneOf": [
+                        {"$ref": "#/$defs/locales"},
+                        {"$ref": "#/$defs/locales_multi"}
+                    ]
+                },
+                "tags": {
+                    "description": "Shorter descriptions for the feature(s) that indicate their presence in or statefulness of the sample.",
+                    "oneOf": [
+                        {"$ref": "#/$defs/locales"},
+                        {"$ref": "#/$defs/locales_multi"}
+                    ]
+                },
+                "predictor": {
+                    "description": "Shorter descriptions for the feature(s) when used as factors of another feature's `prediction`, in order to differentiate different prediction strategies.",
+                    "oneOf": [
+                        {"$ref": "#/$defs/locales"},
+                        {"$ref": "#/$defs/locales_multi"}
+                    ]
+                },
+                "measurement": {
+                    "descriptions": "Metadata of the feature(s) regarding the type of units, relations to other features and moments when the query result is (available to be) collected.",
+                    "oneOf": [
+                        {"$ref": "#/$defs/measurement"},
+                        {
+                            "type": "array",
+                            "minItems": 1,
+                            "items": {"$ref": "#/$defs/measurement"}
+                        }
+                    ]
+                },
+                "preferred": {
+                    "type": "boolean",
+                    "description": "Whether the feature(s) should be prominently displayed in reports. If this is `false`, then the features(s) may be hidden behind expandable sections."
+                },
+                "source": {
+                    "description": "URL template(s) to human-readable websites that should roughly display the same information as the query result. The template may contain `${...}` for variable expansions.",
+                    "oneOf": [
+                        {"$ref": "#/$defs/source_url"},
+                        {
+                            "type": "object",
+                            "patternProperties": {
+                                "^(project|metric_history|metric_options|quality_time|quality|sonar|jenkins|jira|vcs|git|gitlab|github|tfs|subversion|prediction)$": {
+                                    "$ref": "#/$defs/source_url"
+                                }
+                            }
+                        }
+                    ]
+                },
+                "cache": {
+                    "type": "boolean",
+                    "description": "Whether the result of the query should be cached in a database table for reuse."
+                },
+                "category": {
+                    "type": "string",
+                    "pattern": "^[a-z]+$",
+                    "description": "Category to group the feature(s) in."
+                },
+                "normalize": {
+                    "$ref": "#/$defs/column_name",
+                    "description": "Feature to use by default as a divisor of the feature, in order to display a normalized value in a report."
+                },
+                "groups": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string",
+                        "enum": [
+                            "project", "metric_history", "metric_options",
+                            "quality_time", "quality", "sonar", "jenkins",
+                            "jira", "vcs", "git", "gitlab", "github", "tfs",
+                            "subversion", "prediction", "normalize"
+                        ],
+                        "description": "Categories to group the feature in when displaying in a card-based report. The group `normalize` makes the feature available to act as a divisor for other features."
+                    }
+                }
+            },
+            "required": ["column"]
+        },
+        "feature_definition": {
+            "properties": {
+                "definition": {
+                    "type": "string",
+                    "pattern": "^[a-z_]+$",
+                    "description": "Name of the query definition to use to calculate the feature."
+                }
+            },
+            "required": ["definition"]
+        },
+        "feature_expression": {
+            "properties": {
+                "expression": {
+                    "type": "string",
+                    "description": "R code to generate the feature, using an environment where names of at least certain requested non-expression features are available."
+                },
+                "precompute": {
+                    "type": "boolean",
+                    "description": "Whether to perform the feature generation based on the expression during the selection of non-expression features instead of during other expression features, such that it is available in the environment of other expression features and in summarizing operations."
+                },
+                "window": {
+                    "type": "object",
+                    "description": "Parameters for calculating the expression based on samples occurring before the generated sample.",
+                    "items": {
+                        "dimension": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "description": "Number of samples (including the generated samples) necessary to calculate the expression."
+                        },
+                        "group": {
+                            "type": "string",
+                            "description": "Column to use to split off samples that occur in the dataset earlier but are not related to the generated samples, so that values from a different group are not included in the calculation."
+                        }
+                    }
+                }
+            },
+            "required": ["expression"]
+        },
+        "feature_filename": {
+            "properties": {
+                "filename": {"$ref": "#/$defs/filename"}
+            },
+            "required": ["filename"]
+        },
+        "feature_metric": {
+            "properties": {
+                "metric": {
+                    "description": "Name of the metric(s) to use to calculate the feature.",
+                    "oneOf": [
+                        {"type": "string"},
+                        {
+                            "type": "array",
+                            "minItems": 1,
+                            "items": {"type": "string"}
+                        }
+                    ]
+                },
+                "aggregate": {
+                    "type": "string",
+                    "enum": ["end", "max", "min", "avg"],
+                    "description": "When the metric is measured more than once in the time span that each sample represents, perform an aggregation query to calculate a proper value for each sample.\n- `end`: Select the last measured value.\n- `max`: Select the highest value.\n- `min`: Select the lowest value.\n- `avg`: Calculate the average value."
+                },
+                "backends": {
+                    "type": "array",
+                    "description": "Source types that should not be included when providing a source for the feature."
+                }
+            },
+            "required": ["metric", "aggregate"]
+        },
+        "filename": {
+            "type": "string",
+            "description": "Name of the file stored in the `path` of the query index where the query is stored.",
+            "pattern": "^[^/]+$"
+        },
+        "locales": {
+            "type": "object",
+            "patternProperties": {
+                "^[a-zA-Z]{2,3}(-.*)?$": {
+                    "type": "string",
+                    "description": "Localization item for a specific language. Valid languages use two-letter ISO 639-1 language codes plus optional BCP 47 subtags, so only a subset of languages is recognized."
+                }
+            }
+        },
+        "locales_multi": {
+            "type": "object",
+            "patternProperties": {
+                "^[a-zA-Z]{2,3}(-.*)?$": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {"type": "string"},
+                    "description": "Localization items for the features in a specific language. Valid languages use two-letter ISO 639-1 language codes plus optional BCP 47 subtags, so only a subset of languages is recognized."
+                }
+            }
+        },
+        "patterns_fields": {
+            "type": "object",
+            "patternProperties": {
+                "^[a-z_]+$": {
+                    "type": "object",
+                    "patternProperties": {
+                        "^[a-z_]+$": {
+                            "description": "Column name(s) to use in the field in the query for the given table or primary source.",
+                            "oneOf": [
+                                {"$ref": "#/$defs/column_name"},
+                                {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string",
+                                        "pattern": "^[a-z_]+$"
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "patterns_conditions": {
+            "type": "object",
+            "patternProperties": {
+                "^[a-z_]+$": {
+                    "oneOf": [
+                        {
+                            "type": "string",
+                            "description": "SQL template to use in the field in the query."
+                        },
+                        {
+                            "type": "object",
+                            "patternProperties": {
+                                "^[a-z_]+$": {
+                                    "type": "string",
+                                    "description": "SQL template to use in the filed in the query for the given primary source. The template may contain `${...}` for nested expansions."
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        "summarize": {
+            "oneOf": [
+                {"$ref": "#/$defs/combine"},
+                {
+                    "type": "string",
+                    "enum": [
+                        "count", "count_unique", "end", "sum_of_na_avg",
+                        "sum_of_na_diff"
+                    ]
+                }
+            ],
+            "description": "Summariziation operation. Can be one of the `combine` operations or one of:\n- `count`: The value becomes the number of (non-empty) rows.\n- `count_unique`: The value becomes the number of unique (plus empty) rows.\n- `end`: The last value is used.\n- `sum_of_na_avg`: The sum of the values (or those of `reference`) is normalized by the ratio between the number of empty values and the number of non-empty values (or those of `reference`).\n- `sum_of_na_diff`: The sum of the difference between the new values (or those of `reference`) and the old values is taken, where the `field` needs keys that start with `old_` and `new_` along with the actual value."
+        },
+        "combine": {
+            "type": "string",
+            "enum": ["mean", "median", "mode", "sum", "min", "max"],
+            "description": "Combining operation.\n- `mean`: The average value is taken.\n `median`: The middle value (when sorted) is taken.\n- `mode`: The most common value is taken.\n- `sum`: All values are added up.\n- `min`: The lowest value is taken.\n- `max`: The highest value is taken."
+        },
+        "time_unit": {
+            "type": "string",
+            "enum": ["seconds", "minutes", "hours", "days", "weeks", "months", "years"]
+        },
+        "measurement": {
+            "type": "object",
+            "properties": {
+                "unit": {
+                    "description": "Unit(s) of the feature. Either a singular unit or a fractional unit, where the divisor may be a fraction itself.",
+                    "oneOf": [
+                        {"$ref": "#/$defs/unit"},
+                        {"$ref": "#/$defs/fractional_unit"}
+                    ]
+                },
+                "dividend": {
+                    "$ref": "#/$defs/column_name",
+                    "description": "Feature that corresponds to the dividend of the feature."
+                },
+                "divisor": {
+                    "description": "Feature(s) corresponding to the divisor of the feature. In the case of fractional divisor, the feature of the leading unit may be described, or the related features may be described as far as they can.",
+                    "oneOf": [
+                        {"$ref": "#/$defs/column_name"},
+                        {"$ref": "#/$defs/fractional_divisor"}
+                    ]
+                },
+                "superset": {
+                    "$ref": "#/$defs/column_name",
+                    "description": "Feature that corresponds to a larger superset of the feature."
+                },
+                "moment": {
+                    "description": "Indicator of when the feature is measured compared to the current sample. `post` indicates that the value is only complete once the time span of the sample has ended.",
+                    "oneOf": [
+                        {
+                            "type": "string",
+                            "enum": ["post"],
+                            "description": ""
+                        },
+                        {
+                            "type": "array",
+                            "minItems": 2,
+                            "maxItems": 2,
+                            "prefixItems": [
+                                {"type": "number"},
+                                {"$ref": "#/$defs/time_unit"}
+                            ],
+                            "items": {
+                                "oneOf": [
+                                    {"type": "number"},
+                                    {"$ref": "#/$defs/time_unit"}
+                                ]
+                            }
+                        }
+                    ]
+                },
+                "pre": {
+                    "$ref": "#/$defs/column_name",
+                    "description": "Feature that corresponds to the feature's value at the start of the current sample, which could be used to compare progress."
+                },
+                "post": {
+                    "$ref": "#/$defs/column_name",
+                    "description": "Feature that corresponds to the feature's value at the end of the current sample, which could be used to compare progress."
+                }
+            }
+        },
+        "unit": {
+            "type": "string",
+            "enum": [
+                "change", "commit", "issue", "item", "file", "line", "byte",
+                "metric", "person", "point", "sprint", "time", "meta"
+            ],
+            "description": "Unit of a feature.\n- `change`: Number of changes to some property.\n- `commit`: Number of commits.\n- `issue`: Number of issues measured by a quality control system.\n- `item`: Number of stories and other items tracked by an issue tracker.\n- `file`: Number of files.\n- `line`: Number of lines of code.\n- `bytes`: Number of bytes.\n- `metric`: Number of metrics from a quality control system.\n- `person`: Number of people involved in a software development project.\n- `point`: Number of story points awarded to stories.\n- `sprint`: Number of sprints.\n- `time`: Number of days.\n- `meta`: The sample itself."
+        },
+        "fractional_unit": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "prefixItems": [
+                {"$ref": "#/$defs/unit"},
+                {
+                    "oneOf": [
+                        {"$ref": "#/$defs/unit"},
+                        {"$ref": "#/$defs/fractional_unit"}
+                    ]
+                }
+            ],
+            "items": {
+                "oneOf": [
+                    {"$ref": "#/$defs/unit"},
+                    {"$ref": "#/$defs/fractional_unit"}
+                ]
+            }
+        },
+        "fractional_divisor": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 2,
+            "prefixItems": [
+                {"$ref": "#/$defs/column_name"},
+                {
+                    "oneOf": [
+                        {"$ref": "#/$defs/column_name"},
+                        {"$ref": "#/$defs/fractional_divisor"}
+                    ]
+                }
+            ],
+            "items": {
+                "oneOf": [
+                    {"$ref": "#/$defs/column_name"},
+                    {"$ref": "#/$defs/fractional_divisor"}
+                ]
+            }
+        },
+        "source_url": {
+            "oneOf": [
+                {
+                    "type": "null",
+                    "description": "Indication that there is no usable human-readable website at the source."
+                },
+                {
+                    "type": "string",
+                    "format": "uri-reference"
+                }
+            ]
+        },
+        "column_name": {
+            "type": "string",
+            "pattern": "^[a-z_]+$"
+        }
+    }
+}

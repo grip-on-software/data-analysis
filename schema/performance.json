@@ -1,0 +1,113 @@
+{
+    "$id": "https://gros.liacs.nl/schema/data-analysis/performance.json",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Data analysis performance",
+    "$ref": "#/$defs/performance",
+    "$defs": {
+        "performance": {
+            "type": "object",
+            "patternProperties": {
+                "^[a-z_]+$": {
+                    "type": "object",
+                    "properties": {
+                        "old": {"$ref": "#/$defs/performance_query"},
+                        "new": {"$ref": "#/$defs/performance_query"}
+                    }
+                }
+            }
+        },
+        "performance_query": {
+            "description": "Performance metrics for a query.",
+            "oneOf": [
+                {
+                    "type": "array",
+                    "items": {"$ref": "#/$defs/performance_result"}
+                },
+                {"$ref": "#/$defs/performance_result"}
+            ]
+        },
+        "performance_result": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": "Compiled SQL query used during the performance test."
+                },
+                "columns": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Number of columns in the query result."
+                },
+                "rows": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Number of rows in the query result."
+                },
+                "optimize_mean": {
+                    "type": "number",
+                    "minimum": 0.0,
+                    "description": "Average number of microseconds spent in the optimizer pipeline of the database."
+                },
+                "optimize_std": {
+                    "type": "number",
+                    "minimum": 0.0,
+                    "description": "Standard deviation of microseconds spent in the optimizer pipeline of the database across runs."
+                },
+                "wall_mean": {
+                    "type": "number",
+                    "minimum": 0.0,
+                    "description": "Average number of seconds between the start and the end of the query, based on wall clock time."
+                },
+                "wall_std": {
+                    "type": "number",
+                    "minimum": 0.0,
+                    "description": "Standard deviation of seconds between the start and the end of the query, based on wall clock time across runs."
+                },
+                "run_mean": {
+                    "type": "number",
+                    "minimum": 0.0,
+                    "description": "Average number of microseconds spent on the query before the result could be exported."
+                },
+                "run_std": {
+                    "type": "number",
+                    "minimum": 0.0,
+                    "description": "Standard deviation of microseconds spent on the query before the result could be exported across runs."
+                },
+                "ship_mean": {
+                    "type": "number",
+                    "minimum": 0.0,
+                    "description": "Average number of microseconds spent on exporting the result."
+                },
+                "ship_std": {
+                    "type": "number",
+                    "minimum": 0.0,
+                    "description": "Standard deviation of microseconds spent on exporting the result across runs."
+                },
+                "load_mean": {
+                    "type": "number",
+                    "minimum": 0.0,
+                    "maximum": 100.0,
+                    "description": "Average CPU load percentage during query execution."
+                },
+                "load_std": {
+                    "type": "number",
+                    "minimum": 0.0,
+                    "maximum": 100.0,
+                    "description": "Standard deviation CPU load percentage during query execution across runs."
+                },
+                "io_mean": {
+                    "type": "number",
+                    "minimum": 0.0,
+                    "maximum": 100.0,
+                    "description": "Average percentage of time waiting for I/O."
+                },
+                "io_std": {
+                    "type": "number",
+                    "minimum": 0.0,
+                    "maximum": 100.0,
+                    "description": "Standard deviation of percentage of time waiting for I/O across runs."
+                }
+            }
+        }
+    }
+}

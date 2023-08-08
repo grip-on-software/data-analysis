@@ -1,0 +1,266 @@
+{
+    "$id": "https://gros.liacs.nl/schema/data-analysis/config.json",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Data analysis configuration",
+    "$ref": "#/$defs/config",
+    "$defs": {
+        "config": {
+            "anyOf": [
+                {"$ref": "#/$defs/config-org"},
+                {
+                    "type": "object",
+                    "patternProperties": {
+                        "^[_a-z]+$": {"$ref": "#/$defs/config-org"}
+                    }
+                }
+            ]
+        },
+        "config-org": {
+            "type": "object",
+            "$comment": "Documentation on configuration sections and items in README.md of gros/data-analysis repository",
+            "properties": {
+                "db": {
+                    "type": "object",
+                    "properties": {
+                        "host": {
+                            "type": "string",
+                            "format": "hostname"
+                        },
+                        "dbname": {
+                            "type": "string"
+                        },
+                        "user": {
+                            "type": "string"
+                        },
+                        "password": {
+                            "type": "string"
+                        },
+                        "primary_source": {
+                            "type": "string",
+                            "enum": [
+                                "jira",
+                                "jira_version",
+                                "jira_component_version",
+                                "tfs"
+                            ]
+                        }
+                    }
+                },
+                "fields": {
+                    "type": "object",
+                    "properties": {
+                        "jira_url": {
+                            "type": "string",
+                            "format": "uri-reference"
+                        },
+                        "tfs_url": {
+                            "type": "string",
+                            "format": "uri-reference"
+                        },
+                        "vcs_url": {
+                            "type": "string",
+                            "format": "uri-reference"
+                        },
+                        "jenkins_url": {
+                            "type": "string",
+                            "format": "uri-reference"
+                        },
+                        "quality_time_url": {
+                            "type": "string",
+                            "format": "uri-reference"
+                        },
+                        "metric_history_file": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z0-9_.-]+$"
+                        },
+                        "metric_options_file": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z0-9_.-]+$"
+                        },
+                        "prediction_combine": {
+                            "oneOf": [
+                                {"$ref": "#/$defs/combine"},
+                                {
+                                    "type": "boolean",
+                                    "enum": [false]
+                                }
+                            ]
+                        },
+                        "prediction_data": {
+                            "type": "string",
+                            "format": "uri"
+                        },
+                        "prediction_url": {
+                            "type": "string",
+                            "format": "uri-reference"
+                        },
+                        "sprint_patch": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "weather": {
+                    "properties": {
+                        "url": {
+                            "type": "string",
+                            "format": "uri"
+                        },
+                        "api_key": {
+                            "type": "string"
+                        },
+                        "lat": {
+                            "type": "number",
+                            "minimum": -90.0,
+                            "maxinum": 90.0
+                        },
+                        "lon": {
+                            "type": "number",
+                            "minimum": -180.0,
+                            "maxinum": 180.0
+                        },
+                        "origin": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    }
+                },
+                "exclude_domain": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "teams": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "type": "string"
+                            },
+                            "display_name": {
+                                "type": "string"
+                            },
+                            "board": {"$ref": "#/$defs/board_id"},
+                            "recent": {
+                                "type": "boolean"
+                            },
+                            "invisible": {
+                                "type": "boolean"
+                            },
+                            "overlap": {
+                                "type": "integer"
+                            },
+                            "projects": {
+                                "type": "array",
+                                "items": {
+                                    "oneOf": [
+                                        {"$ref": "#/$defs/project_key"},
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "key": {"$ref": "#/$defs/project_key"},
+                                                "board": {
+                                                    "oneOf": [
+                                                        {"$ref": "#/$defs/board_id"},
+                                                        {
+                                                            "type": "array",
+                                                            "items": {"$ref": "#/$defs/board_id"}
+                                                        }
+                                                    ]
+                                                },
+                                                "replace": {
+                                                    "type": "boolean"
+                                                },
+                                                "own_board": {
+                                                    "type": "boolean"
+                                                },
+                                                "start_date": {
+                                                    "type": "string",
+                                                    "format": "date"
+                                                },
+                                                "end_date": {
+                                                    "type": "string",
+                                                    "format": "date"
+                                                },
+                                                "exclude": {
+                                                    "type": "string"
+                                                },
+                                                "include": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            },
+                            "components": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string"
+                                        },
+                                        "display_name": {
+                                            "type": "string"
+                                        },
+                                        "project": {"$ref": "#/$defs/project_key"}
+                                    },
+                                    "patternProperties": {
+                                        "^(project|metric_history|metric_options|quality_time|quality|sonar|jenkins|jira|vcs|git|gitlab|github|tfs|subversion|prediction)$": {
+                                            "include": {
+                                                "oneOf": [
+                                                    {
+                                                        "type": "string"
+                                                    },
+                                                    {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        }
+                                                    }
+                                                ]
+                                            },
+                                            "exclude": {
+                                                "oneOf": [
+                                                    {
+                                                        "type": "string"
+                                                    },
+                                                    {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "arguments": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "board_id": {
+            "type": "integer",
+            "minimum": 1
+        },
+        "project_key": {
+            "type": "string",
+            "description": "Project key from JIRA or team name from TFS."
+        },
+        "combine": {
+            "type": "string",
+            "enum": ["mean", "median", "mode", "sum", "min", "max"]
+        }
+    }
+}

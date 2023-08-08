@@ -2,49 +2,49 @@ path: sprint_events
 files:
   - filename: sprint-start.sql
     type: sprint_start
-    display: Yes
+    display: true
     descriptions:
         nl: Start van sprint
         en: Sprint start
   - filename: rank-change.sql
     type: rank_change
-    display: No
+    display: false
     descriptions:
         nl: Verandering van rang
         en: Rank change
   - filename: storypoint-change.sql
     type: storypoint_change
-    display: Yes
+    display: true
     descriptions:
         nl: Verandering van storypoints
         en: Story point change
   - filename: red-metric.sql
     type: red_metric
-    display: Yes
+    display: true
     descriptions:
         nl: Rode metriek
         en: Red metric
   - filename: impediment.sql
     type: impediment
-    display: Yes
+    display: true
     descriptions:
         nl: Impediment
         en: Impediment
   - filename: story.sql
     type: story
-    display: No
+    display: false
     descriptions:
         nl: User story
         en: User story
   - filename: sprint-end.sql
     type: sprint_end
-    display: No
+    display: false
     descriptions:
         nl: Einde van sprint
         en: Sprint end
   - filename: commits.sql
     type: commits
-    split: Yes
+    split: true
     descriptions:
         nl: Commit
         en: Commit

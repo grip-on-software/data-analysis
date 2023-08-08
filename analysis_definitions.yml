@@ -1,7 +1,7 @@
 fields:
     sprint_points_normalization:
         description: "Normalization factor for (log) sprint normalization"
-        field: 1
+        field: "1"
     category_conditions:
         description: "Additional query constraints to group by project or other categories"
         field: ""

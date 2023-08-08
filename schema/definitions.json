@@ -1,0 +1,112 @@
+{
+    "$id": "https://gros.liacs.nl/schema/data-analysis/definitions.json",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Data analysis definitions for queries",
+    "$ref": "#/$defs/definitions",
+    "$defs": {
+        "definitions": {
+            "type": "object",
+            "properties": {
+                "fields": {
+                    "type": "object",
+                    "patternProperties": {
+                        "^[a-z_]+$": {
+                            "type": "object",
+                            "properties": {
+                                "description": {
+                                    "type": "string",
+                                    "description": "Description of the definition."
+                                },
+                                "field": {"$ref": "#/$defs/field"}
+                            },
+                            "anyOf": [
+                                {"$ref": "#/$defs/references"}
+                            ],
+                            "patternProperties": {
+                                "^(jira|jira_version|jira_component_version|tfs)$": {
+                                    "type": "object",
+                                    "description": "Definition for a specific primary source.",
+                                    "properties": {
+                                        "field": {"$ref": "#/$defs/field"}
+                                    },
+                                    "anyOf": [
+                                        {"$ref": "#/$defs/references"}
+                                    ]
+                                }
+                            },
+                            "required": ["description"]
+                        }
+                    }
+                },
+                "conditions": {
+                    "type": "object",
+                    "description": "Query filter conditions that may be used in `WHERE` clauses.",
+                    "patternProperties": {
+                        "^[a-z_]+$": {
+                            "type": "object",
+                            "properties": {
+                                "description": {
+                                    "type": "string",
+                                    "description": "Description of the condition."
+                                },
+                                "condition": {"$ref": "#/$defs/condition"}
+                            },
+                            "anyOf": [
+                                {"$ref": "#/$defs/references"}
+                            ],
+                            "patternProperties": {
+                                "^(jira|jira_version|jira_component_version|tfs)$": {
+                                    "type": "object",
+                                    "description": "Condition for a specific primary source.",
+                                    "properties": {
+                                        "condition": {"$ref": "#/$defs/condition"}
+                                    },
+                                    "anyOf": [
+                                        {"$ref": "#/$defs/references"}
+                                    ]
+                                }
+                            },
+                            "required": ["description"]
+                        }
+                    }
+                }
+            },
+            "required": ["fields"]
+        },
+        "field": {
+            "type": "string",
+            "description": "SQL template of the definition, which may contain `${...}` for nested expansions."
+        },
+        "condition": {
+            "type": "string",
+            "description": "SQL template of the condition, which may contain `${...}` for nested expansions."
+        },
+        "references": {
+            "type": "object",
+            "properties": {
+                "table": {
+                    "description": "Table(s) involved in the query, which would need to be in the `FROM` clause or `JOIN` clauses for a successful query.",
+                    "oneOf": [
+                        {"$ref": "#/$defs/table_name"},
+                        {
+                            "type": "array",
+                            "items": {"$ref": "#/$defs/table_name"}
+                        }
+                    ]
+                },
+                "column": {
+                    "type": "array",
+                    "description": "Fields involved in the query, which may be used in, e.g., `SELECT` or `GROUP BY` clauses to ensure a successful query.",
+                    "items": {
+                        "type": "string",
+                        "pattern": "^[a-z_]+$"
+                    }
+                }
+            }
+        },
+        "table_name": {
+            "type": "string",
+            "pattern": "^[a-z_]+$"
+        }
+    }
+}
