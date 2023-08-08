@@ -521,12 +521,12 @@ bigboat_status <- function(item, result, output_dir, format) {
     # Write the status field descriptions
     status <- yaml.load_file("bigboat_status.yml")
     fields <- status$fields
-    fields[['_latest_date']] <- item$patterns$latest_date
+    fields[['_latest_date']] <- item$patterns$current_time
     write(toJSON(fields, auto_unbox=T),
           file=paste(path, "fields.json", sep="/"))
 
     # Define and write default durations, ordered ascending in length
-    diff <- as.POSIXct(item$patterns$latest_date) - min(result$checked_date)
+    diff <- as.POSIXct(item$patterns$current_time) - min(result$checked_date)
     durations <- list('1-week'=as.difftime(1, unit="weeks"),
                       '1-month'=as.difftime(31, unit="days"),
                       'full'=diff)
