@@ -526,7 +526,7 @@ bigboat_status <- function(item, result, output_dir, format) {
           file=paste(path, "fields.json", sep="/"))
 
     # Define and write default durations, ordered ascending in length
-    diff <- as.POSIXct(items$patterns$latest_date) - min(result$checked_date)
+    diff <- as.POSIXct(item$patterns$latest_date) - min(result$checked_date)
     durations <- list('1-week'=as.difftime(1, unit="weeks"),
                       '1-month'=as.difftime(31, unit="days"),
                       'full'=diff)
