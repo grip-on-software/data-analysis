@@ -485,7 +485,7 @@ update_combine_interval <- function(items, old_data, data, row_num, details,
                     return(do.call(combiner,
                                    c(list(column_data), list(na.rm=T))))
                 }
-                data.frame(NA)
+                return(data.frame(NA))
             }
             combined <- mapply(combine, columns, combiner)
             result$row[, columns] <- combined

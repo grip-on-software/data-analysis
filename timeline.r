@@ -242,7 +242,7 @@ for (item in items) {
         max_date[[item$type]] <- max(result$date, result$end_date, na.rm=T)
 
         type <- list(name=safe_unbox(item$type),
-                      locales=safe_unbox(item$descriptions))
+                     locales=safe_unbox(item$descriptions))
         if (!is.null(item$display)) {
             type$enabled <- safe_unbox(item$display)
         }
