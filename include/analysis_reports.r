@@ -525,6 +525,13 @@ bigboat_status <- function(item, result, output_dir, format) {
     write(toJSON(fields, auto_unbox=T),
           file=paste(path, "fields.json", sep="/"))
 
+    # Define and write default durations, ordered ascending in length
+    diff <- as.POSIXct(items$patterns$latest_date) - min(result$checked_date)
+    durations <- list('1-week'=as.difftime(1, unit="weeks"),
+                      '1-month'=as.difftime(31, unit="days"),
+                      'full'=diff)
+    write(toJSON(names(durations)), file=paste(past, "durations.json", sep="/"))
+
     matches <- unlist(status$match)
 
     projects <- get_projects(conn)
@@ -548,9 +555,14 @@ bigboat_status <- function(item, result, output_dir, format) {
             project_ids <- c(project_ids, project_id)
             project_names <- c(project_names, name)
 
-            write(toJSON(project_data[with(project_data,
-                                           order(name, checked_date)), ]),
-                file=paste(path, paste(name, "json", sep="."), sep="/"))
+            sorted_data <- project_data[with(project_data,
+                                             order(name, checked_date)), ]
+            diffs <- max(sorted_data$checked_date) - sorted_data$checked_date
+            for (duration in names(durations)) {
+                write(toJSON(sorted_data[, diffs < durations[[duration]]]),
+                      file=paste(path, paste(name, duration, "json", sep="."),
+                                 sep="/"))
+            }
         } else {
             if (item$patterns[['project_ids']] != '1') {
                 loginfo("No data for project %d", project_id)
