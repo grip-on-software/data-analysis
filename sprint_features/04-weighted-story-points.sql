@@ -1,4 +1,4 @@
-SELECT ${f(join_cols, "issue")}, SUM(${s(story_points)}) AS num_points,
+SELECT ${f(join_cols, "issue")},
     SUM(CAST(
         CAST(${s(story_points)} AS double) / 
         CAST(
@@ -8,8 +8,7 @@ SELECT ${f(join_cols, "issue")}, SUM(${s(story_points)}) AS num_points,
             ELSE 1
             END
         AS double)
-    AS DECIMAL(5,2))) AS num_weighted_points,
-    COUNT(*) AS num_done 
+    AS DECIMAL(5,2))) AS num_weighted_points
 FROM gros.${t("issue")}
 JOIN (SELECT
     issue_id, MIN(changelog_id) AS changelog_id -- first changelog ID
