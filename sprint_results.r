@@ -239,7 +239,7 @@ if (!is.null(organization)) {
 
 tag_names <- get_tags(data.frame(as.list(setNames(rep(T, length(features)),
                                                   colnames(features)))))
-feature_excludes <- c("project_id", "sprint_num", "organization", tag_names)
+feature_excludes <- c("project_id", "sprint_id", "organization", tag_names)
 feature_mask <- !(names(features) %in% feature_excludes)
 feature_names <- as.character(results$configuration$features)
 feature_attributes <- unlist(unique(do.call(c, lapply(assignments,
