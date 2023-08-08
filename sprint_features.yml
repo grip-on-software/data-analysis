@@ -1325,7 +1325,7 @@ files:
     predictor:
         nl: Enkel velocity
         en: Only velocity
-    measurements:
+    measurement:
         unit: [point, sprint]
         dividend: done_story_points
     source:
@@ -1354,7 +1354,7 @@ files:
     short_units:
         nl: "%s punten/sprint"
         en: "%s points/sprint"
-    measurements:
+    measurement:
         unit: [point, sprint]
         dividend: done_story_points
     source:
@@ -1363,7 +1363,6 @@ files:
   - expression: "num_story_points - velocity_three"
     column: over_value
     default: 0
-    combine: true
     values:
         type: fraction
         denominator: 4
@@ -1441,7 +1440,7 @@ files:
         nl: "gemiddeld %s stories die gelijktijdig in progress zijn"
         en: "average of %s stories that are concurrently in progress"
     measurement:
-        unit: [item]
+        unit: item
     source:
         jira: null
     category: tracking
@@ -1960,7 +1959,7 @@ files:
         nl: "%s verwijderde stories"
         en: "%s removed stories"
     measurement:
-        unit: issue
+        unit: item
     preferred: false
     source:
         jira: "${jira_url}/secure/RapidBoard.jspa?rapidView=${jira_board_id}&projectKey=${jira_key}&view=planning"
@@ -2114,7 +2113,7 @@ files:
         denominator: 4
     descriptions:
         nl: Aangepaste storypoints aan backlog ten opzichte van schatting
-        en: Modified story points on backlog compare to estimation
+        en: Modified story points on backlog compared to estimation
     long_descriptions:
         nl: Het verschil in storypoints dat is aangepast op de gehele backlog in de projecttracker tijdens de sprint ten opzichte van het gemiddelde storypoints
         en: The difference in story points that is modified on the whole backlog in the project tracker during the sprint compared to average story points
@@ -2391,7 +2390,7 @@ files:
     predictor:
         nl: Met afvoeren
         en: With dismissal
-    measurements:
+    measurement:
         unit: [point, sprint]
         dividend: backlog_dismiss_velocity
     preferred: false
@@ -2447,7 +2446,7 @@ files:
     predictor:
         nl: Met toevoeging
         en: With additions
-    measurements:
+    measurement:
         unit: [point, sprint]
     preferred: false
     source:
@@ -2478,7 +2477,7 @@ files:
     predictor:
         nl: Alle veranderingen
         en: All adjustments
-    measurements:
+    measurement:
         unit: [point, sprint]
     preferred: false
     source:
