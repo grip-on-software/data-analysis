@@ -527,7 +527,6 @@ bigboat_status <- function(item, result, output_dir, format) {
     loginfo("Written %s/fields.json", path)
 
     # Define and write default durations, ordered ascending in length
-    result$checked_date <- as.POSIXct(result$checked_date)
     full <- as.POSIXct(item$patterns$latest_date) - as.POSIXct("1970-1-1")
     durations <- list('1-week'=as.difftime(1, unit="weeks"),
                       '1-month'=as.difftime(31, unit="days"),
@@ -537,6 +536,11 @@ bigboat_status <- function(item, result, output_dir, format) {
 
     matches <- unlist(status$match)
     result$name <- str_replace_all(result$name, matches)
+    loginfo("Normalized status names")
+
+    result$checked_date <- as.POSIXct(result$checked_date, "",
+                                      "%Y-%m-%d %H:%M:%S")
+    loginfo("Converted check dates")
 
     projects <- get_projects(conn)
 
@@ -562,9 +566,10 @@ bigboat_status <- function(item, result, output_dir, format) {
             diffs <- max(sorted_data$checked_date) - sorted_data$checked_date
             for (duration in names(durations)) {
                 write(toJSON(sorted_data[, diffs < durations[[duration]]]),
-                      file=paste(path, paste(name, duration, "json", sep="."),
+                      file=paste(path,
+                                 paste(project_name, duration, "json", sep="."),
                                  sep="/"))
-                loginfo("Written %s/%s.%s.json", path, name, duration)
+                loginfo("Written %s/%s.%s.json", path, project_name, duration)
             }
         } else {
             loginfo("No data for %s", project_name)
