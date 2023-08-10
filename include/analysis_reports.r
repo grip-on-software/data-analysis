@@ -565,7 +565,7 @@ bigboat_status <- function(item, result, output_dir, format) {
                                              order(name, checked_date)), ]
             diffs <- max(sorted_data$checked_date) - sorted_data$checked_date
             for (duration in names(durations)) {
-                write(toJSON(sorted_data[, diffs < durations[[duration]]]),
+                write(toJSON(sorted_data[diffs < durations[[duration]], ]),
                       file=paste(path,
                                  paste(project_name, duration, "json", sep="."),
                                  sep="/"))
