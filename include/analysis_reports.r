@@ -526,6 +526,7 @@ bigboat_status <- function(item, result, output_dir, format) {
           file=paste(path, "fields.json", sep="/"))
 
     # Define and write default durations, ordered ascending in length
+    result$checked_date <- as.POSIXct(result$checked_date)
     diff <- as.POSIXct(item$patterns$latest_date) - min(result$checked_date)
     durations <- list('1-week'=as.difftime(1, unit="weeks"),
                       '1-month'=as.difftime(31, unit="days"),
@@ -533,6 +534,7 @@ bigboat_status <- function(item, result, output_dir, format) {
     write(toJSON(names(durations)), file=paste(past, "durations.json", sep="/"))
 
     matches <- unlist(status$match)
+    result$name <- str_replace_all(result$name, matches)
 
     projects <- get_projects(conn)
 
@@ -540,20 +542,18 @@ bigboat_status <- function(item, result, output_dir, format) {
     project_names <- list()
 
     for (project_id in as.list(projects$project_id)) {
-        project_name <- projects[projects$project_id == project_id, 'name']
+        if (item$patterns$project_ids != '1') {
+            project_name <- projects[projects$project_id == project_id, 'name']
+        } else {
+            project_name <- paste('Proj', project_id, sep='')
+        }
+
         columns <- c('name', 'checked_date', 'ok', 'value', 'max')
         project_data <- result[result$project_id == project_id, columns]
 
         if (nrow(project_data) > 0) {
-            project_data$name <- str_replace_all(project_data$name, matches)
-            project_data$checked_date <- as.POSIXct(project_data$checked_date)
-            if (item$patterns[['project_ids']] != '1') {
-                name <- project_name
-            } else {
-                name <- paste('Proj', project_id, sep='')
-            }
             project_ids <- c(project_ids, project_id)
-            project_names <- c(project_names, name)
+            project_names <- c(project_names, project_name)
 
             sorted_data <- project_data[with(project_data,
                                              order(name, checked_date)), ]
@@ -564,18 +564,14 @@ bigboat_status <- function(item, result, output_dir, format) {
                                  sep="/"))
             }
         } else {
-            if (item$patterns[['project_ids']] != '1') {
-                loginfo("No data for project %d", project_id)
-            } else {
-                loginfo("No data for %s", project_name)
-            }
+            loginfo("No data for %s", project_name)
         }
     }
 
     write(toJSON(project_names, auto_unbox=T),
           file=paste(path, "projects.json", sep="/"))
 
-    if (length(project_ids) > 0 && item$patterns[['project_ids']] != '1') {
+    if (length(project_ids) > 0 && item$patterns$project_ids != '1') {
         # Create list of source URLs
         urls <- dbGetQuery(conn, paste("SELECT project_id, url
                                         FROM gros.source_environment
