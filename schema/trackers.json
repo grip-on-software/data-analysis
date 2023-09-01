@@ -25,7 +25,7 @@
                             "json": {
                                 "type": "string",
                                 "enum": ["object"],
-                                "description": "Indication that the tracker file is stored as a JSON structure, and the means to parse the contents. This is ignored if `format` is provided.\n- `object`: The JSON structure is a shallow object with keys that indicate specific components, repositories, etc. and values are timestamps."
+                                "description": "Indication that the tracker file is stored as a JSON structure, and the means to parse the contents. This is ignored if `format` is provided.\n\n- `object`: The JSON structure is a shallow object with keys that indicate specific components, repositories, etc. and values are timestamps."
                             }
                         },
                         "required": ["file"]

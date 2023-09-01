@@ -2,9 +2,9 @@
     "$id": "https://gros.liacs.nl/schema/data-analysis/config.json",
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "title": "Data analysis configuration",
-    "$ref": "#/$defs/config",
+    "$ref": "#/$defs/data-analysis-config",
     "$defs": {
-        "config": {
+        "data-analysis-config": {
             "anyOf": [
                 {"$ref": "#/$defs/config-org"},
                 {
@@ -79,7 +79,7 @@
                         },
                         "prediction_combine": {
                             "oneOf": [
-                                {"$ref": "#/$defs/combine"},
+                                {"$ref": "#/$defs/prediction_combine"},
                                 {
                                     "type": "boolean",
                                     "enum": [false]
@@ -156,89 +156,11 @@
                                 "items": {
                                     "oneOf": [
                                         {"$ref": "#/$defs/project_key"},
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "key": {"$ref": "#/$defs/project_key"},
-                                                "board": {
-                                                    "oneOf": [
-                                                        {"$ref": "#/$defs/board_id"},
-                                                        {
-                                                            "type": "array",
-                                                            "items": {"$ref": "#/$defs/board_id"}
-                                                        }
-                                                    ]
-                                                },
-                                                "replace": {
-                                                    "type": "boolean"
-                                                },
-                                                "own_board": {
-                                                    "type": "boolean"
-                                                },
-                                                "start_date": {
-                                                    "type": "string",
-                                                    "format": "date"
-                                                },
-                                                "end_date": {
-                                                    "type": "string",
-                                                    "format": "date"
-                                                },
-                                                "exclude": {
-                                                    "type": "string"
-                                                },
-                                                "include": {
-                                                    "type": "string"
-                                                }
-                                            }
-                                        }
+                                        {"$ref": "#/$defs/project_board"}
                                     ]
                                 }
                             },
-                            "components": {
-                                "type": "array",
-                                "items": {
-                                    "type": "object",
-                                    "properties": {
-                                        "name": {
-                                            "type": "string"
-                                        },
-                                        "display_name": {
-                                            "type": "string"
-                                        },
-                                        "project": {"$ref": "#/$defs/project_key"}
-                                    },
-                                    "patternProperties": {
-                                        "^(project|metric_history|metric_options|quality_time|quality|sonar|jenkins|jira|vcs|git|gitlab|github|tfs|subversion|prediction)$": {
-                                            "include": {
-                                                "oneOf": [
-                                                    {
-                                                        "type": "string"
-                                                    },
-                                                    {
-                                                        "type": "array",
-                                                        "items": {
-                                                            "type": "string"
-                                                        }
-                                                    }
-                                                ]
-                                            },
-                                            "exclude": {
-                                                "oneOf": [
-                                                    {
-                                                        "type": "string"
-                                                    },
-                                                    {
-                                                        "type": "array",
-                                                        "items": {
-                                                            "type": "string"
-                                                        }
-                                                    }
-                                                ]
-                                            }
-                                        }
-                                    }
-                                }
-                            },
+                            "components": {"$ref": "#/$defs/components"},
                             "arguments": {
                                 "type": "array",
                                 "items": {
@@ -258,9 +180,93 @@
             "type": "string",
             "description": "Project key from JIRA or team name from TFS."
         },
-        "combine": {
+        "project_board": {
+            "type": "object",
+            "properties": {
+                "key": {"$ref": "#/$defs/project_key"},
+                "board": {
+                    "oneOf": [
+                        {"$ref": "#/$defs/board_id"},
+                        {
+                            "type": "array",
+                            "items": {"$ref": "#/$defs/board_id"}
+                        }
+                    ]
+                },
+                "replace": {
+                    "type": "boolean"
+                },
+                "own_board": {
+                    "type": "boolean"
+                },
+                "start_date": {
+                    "type": "string",
+                    "format": "date"
+                },
+                "end_date": {
+                    "type": "string",
+                    "format": "date"
+                },
+                "exclude": {
+                    "type": "string"
+                },
+                "include": {
+                    "type": "string"
+                }
+            }
+        },
+        "prediction_combine": {
             "type": "string",
             "enum": ["mean", "median", "mode", "sum", "min", "max"]
+        },
+        "components": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "display_name": {
+                        "type": "string"
+                    },
+                    "project": {"$ref": "#/$defs/project_key"}
+                },
+                "patternProperties": {
+                    "^(project|metric_history|metric_options|quality_time|quality|sonar|jenkins|jira|vcs|git|gitlab|github|tfs|subversion|prediction)$": {"$ref": "#/$defs/component_filter"}
+                }
+            }
+        },
+        "component_filter": {
+            "type": "object",
+            "properties": {
+                "include": {
+                    "oneOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    ]
+                },
+                "exclude": {
+                    "oneOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    ]
+                }
+            }
         }
     }
 }
