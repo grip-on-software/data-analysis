@@ -203,7 +203,7 @@
                             "type": "object",
                             "description": "Icons to use in place of the value of the feature when it has the `icon` type.",
                             "patternProperties": {
-                                "^\\d+$": {"$ref": "#/$defs/icon"}
+                                "^[0-9]+$": {"$ref": "#/$defs/icon"}
                             }
                         }
                     }
