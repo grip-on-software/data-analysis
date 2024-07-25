@@ -177,11 +177,24 @@ qqplot_monte_carlo <- function(counts, file) {
     ggsave(file)
 }
 
+# Based on https://stackoverflow.com/a/7549819
+lm_eqn <- function(y, x) {
+    m <- lm(y ~ x)
+    eq <- substitute(italic(y) == a + b %.% italic(x)*","~~italic(r)^2~"="~r2,
+                     list(a=format(unname(coef(m)[1]), digits=2),
+                          b=format(unname(coef(m)[2]), digits=2),
+                          r2=format(summary(m)$r.squared, digits=3)))
+    return(as.character(as.expression(eq)))
+}
+
 plot_scenario <- function(data, x, y, title, file, limits) {
     plot <- ggplot(data, aes(x=data[[x$column]], y=data[[y$column]])) +
         geom_point()
     if (!x$discrete) {
-        plot <- plot + geom_smooth(method="lm", se=F)
+        plot <- plot + geom_smooth(method="lm", se=F) +
+            geom_text(x=1250, y=-100, label=lm_eqn(data[[y$column]],
+                                                   data[[x$column]]),
+                      parse=TRUE)
     }
     plot <- plot + x$scale +
         scale_y_continuous("Error", limits=limits)
