@@ -247,6 +247,8 @@ feature_attributes <- unlist(unique(do.call(c, lapply(assignments,
                                                           assignment$attributes
                                                       }))))
 
+min_date <- min(sprint_cache$start_date, na.rm=T)
+max_date <- min_date
 for (idx in seq_along(results$projects)) {
     if (results$organizations[idx] != organization) {
         next
@@ -255,6 +257,7 @@ for (idx in seq_along(results$projects)) {
     project_id <- results$projects[idx]
     sprint_id <- results$sprints[idx]
     sprint <- get_sprint_by_id(project_id, sprint_id)
+    max_date <- max(max_date, sprint$start_date, sprint$close_date, na.rm=T)
     ids <- sort(results$sprints[results$organizations == organization &
                                 results$projects == project_id])
 
@@ -356,12 +359,28 @@ write_feature_metadata(unique(projects), specifications, organization_path,
                                          feature_attributes)),
                        categories=c(), metadata=c('values', 'measurement'))
 
-write(toJSON(results$configuration, auto_unbox=T),
-      file=paste(organization_path, "configuration.json", sep="/"))
+results$configuration$min_date <- as.POSIXct(min_date)
+results$configuration$max_date <- as.POSIXct(max_date)
 
 if (length(results$configuration$organizations) > 1) {
+    # Adjust temporal coverage for combined and other organizations
+    combined_file <- paste(output_directory, "configuration.json", sep="/")
+    if (file.exists(combined_file)) {
+        combined <- fromJSON(combined_file)
+        results$configuration$min_date <- min(results$configuration$min_date,
+                                              as.POSIXct(combined$min_date))
+        results$configuration$max_date <- max(results$configuration$max_date,
+                                              as.POSIXct(combined$max_date))
+    }
+    write(toJSON(results$configuration, auto_unbox=T), file=combined_file)
+    for (organization in results$configuration$organizations) {
+        write(toJSON(results$configuration, auto_unbox=T),
+              file=paste(output_directory, organization, "configuration.json",
+                         sep="/"))
+    }
+} else {
     write(toJSON(results$configuration, auto_unbox=T),
-          file=paste(output_directory, "configuration.json", sep="/"))
+          file=paste(organization_path, "configuration.json", sep="/"))
 }
 
 loginfo('Output all project predictions')
