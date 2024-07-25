@@ -204,10 +204,20 @@ for (scenario in names(ones)) {
     twos[[scenario]] <- unlist(twos[[scenario]])
     mu1 <- mean(ones[[scenario]], na.rm=T)
     sigma1 <- sd(ones[[scenario]], na.rm=T)
+    min1 <- min(ones[[scenario]], na.rm=T)
+    max1 <- max(ones[[scenario]], na.rm=T)
     mu2 <- mean(twos[[scenario]], na.rm=T)
     sigma2 <- sd(twos[[scenario]], na.rm=T)
-    print(paste(' one third =', mu1, '+/-', sigma1))
-    print(paste('two thirds =', mu2, '+/-', sigma2))
+    min2 <- min(twos[[scenario]], na.rm=T)
+    max2 <- max(twos[[scenario]], na.rm=T)
+    pct1 <- ones[[scenario]] / unlist(sort_by[[scenario]])
+    pct1 <- pct1[is.finite(pct1)]
+    pct2 <- twos[[scenario]] / unlist(sort_by[[scenario]])
+    pct2 <- pct2[is.finite(pct2)]
+    print(paste(' one third =', mu1, '+/-', sigma1, '(', min1, ',', max1, ')',
+                sprintf("%0.2f", mean(pct1) * 100), '%'))
+    print(paste('two thirds =', mu2, '+/-', sigma2, '(', min1, ',', max2, ')',
+                sprintf("%0.2f", mean(pct2) * 100), '%'))
 
     x <- list(discrete=discrete,
               column=ifelse(length(project_features) == 0,
