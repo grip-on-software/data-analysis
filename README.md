@@ -184,6 +184,15 @@ that displays usage instructions:
   station. Used by the `heatmap` repository.
 - `compile_queries.r`: Compile SQL queries with patterns to executable queries, 
   so that they can be used outside of the R scripts.
+- `performance.r`: Measure performance of queries on the datbase in different 
+  hot-start and cold-start conditions. This requires some specific setups to 
+  automatically recreate databases and import a data set using scripts from the 
+  [monetdb-import](https://github.com/grip-on-software/monetdb-import) 
+  repository as well as a virtual environment with the dependencies of those 
+  scripts shared with the [data gathering 
+  controller](https://gros.liacs.nl/data-gathering/installation.html#controller). 
+  Some tests are to run as root to have control over memory caching. More 
+  details are in the [performance README.md](old_performance/README.md) file.
 
 The following scripts do not have a `--help` argument:
 
@@ -216,3 +225,14 @@ sources. The `report.r` file additionally uses fields from
 `analysis_definitions.yml` (can be overridden using command line arguments). 
 The `bigboat_status` report uses `bigboat_status.yml` to define and 
 match/combine fields for platform status.
+
+Some other directories mostly exist for documentation, such as `schema` for 
+JSON schema specifications of the YAML files that configure the scripts 
+(schemas for output files are mostly found in the 
+[visualization-site](https://github.com/grip-on-software/visualization-site) 
+repository). The `query-experiments` directory contains some notes and query 
+files from different stages of research and is mostly included for reference.
+
+## License
+
+GROS data analysis scripts are licensed under the Apache 2.0 License. 

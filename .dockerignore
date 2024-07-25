@@ -1,6 +1,7 @@
 *~
 *.swp
 output/
+query-experiments/
 .RData
 .Rhistory
 Rplots.pdf
@@ -10,3 +11,4 @@ sprint_labels.json
 time-machine*
 config.*.yml
 profile*
+lintr_results.sarif

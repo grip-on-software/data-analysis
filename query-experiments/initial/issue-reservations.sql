@@ -1,0 +1,1 @@
+SELECT COUNT(*) FROM gros.issue LEFT JOIN gros.reservation ON issue.project_id = reservation.project_id AND ABS(EXTRACT(hour FROM (issue.updated - reservation.end_date))) < 2 WHERE reservation.reservation_id IS NOT NULL;

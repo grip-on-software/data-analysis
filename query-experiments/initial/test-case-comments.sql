@@ -1,0 +1,1 @@
+SELECT project_id, AVG(num_comments) FROM (SELECT project_id, comment.issue_id, COUNT(*) AS num_comments FROM gros.comment JOIN (SELECT project_id, issue_id, MAX(changelog_id) AS cid FROM gros.issue WHERE type IN (9,10,10301) GROUP BY project_id, issue_id) AS did ON comment.issue_id = did.issue_id GROUP BY project_id, comment.issue_id) AS eid GROUP BY project_id;

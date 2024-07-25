@@ -1,0 +1,15 @@
+==Not done==
+
+Vind de eerste changelog van issues waarbij het issue-type ‘Story’ is, een sprint ID aan het issue is gegeven, story points van het issue zijn geschat, en de status op ‘In Progress’ staat.
+
+Vind ook de eerste sprint ID van elke issue dat niet done (‘Closed’ of ‘Resolved’) is op het moment van sprint-einde (of in de laatste versie, als de sprint al voorbij is).
+
+Koppel deze resultaten van issues aan elkaar en geef de story points terug. Aggregeer deze story points, om zo te tellen hoeveel issues er zijn, voor ieder aantal story points, die voldoen aan de criteria.
+
+==Done==
+
+Vind de eerste changelog van issues waarbij het issue-type ‘Story’ is, een sprint ID aan het issue is gegeven, story points van het issue zijn geschat, en de status op ‘In Progress’ staat.
+
+Vind ook de eerste sprint ID van elke issue dat done is (‘Closed’ of ‘Resolved’).
+
+Koppel deze resultaten aan elkaar en geef de story points terug. Aggregeer deze story points, om zo te tellen hoeveel issues er zijn, voor ieder aantal story points, die voldoen aan de criteria.
