@@ -171,7 +171,7 @@ qqplot_monte_carlo <- function(counts, file) {
                      ymin=sapply(counts, min, na.rm=T),
                      ymax=sapply(counts, max, na.rm=T))
     ggplot(data=df, aes(sample=df$sample)) +
-        stat_qq_line(colour="# 3366FF") +
+        stat_qq_line(colour="#3366FF") +
         stat_qq_point() +
         labs(x="Theoretical Quantiles", y="Sample Quantiles")
     ggsave(file)
