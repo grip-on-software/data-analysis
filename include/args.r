@@ -18,6 +18,7 @@
 
 if (!exists('INC_ARGS_R')) {
     INC_ARGS_R <- T
+    VERSION <- "0.0.1"
 
     library(optparse)
 
@@ -42,7 +43,11 @@ if (!exists('INC_ARGS_R')) {
             }
             index <- index + 1
         }
-        parser <<- OptionParser(option_list=options, description=desc)
+        parser <<- OptionParser(option_list=options,
+                                description=paste(desc,
+                                                  paste("GROS data analysis",
+                                                        "version", VERSION),
+                                                  sep="\n"))
 
         if (exists('INC_LOG_R')) {
             parser <<- add_option(parser, c("-l", "--log"), default='WARNING',
