@@ -19,6 +19,10 @@ Note that you should already have a `config.yml` file, otherwise you have to
 include one via a volume and point at it when running the scripts using 
 a `--config` argument.
 
+Due to CRAN updates, it may be difficult to install packages for R 3.6.x, but 
+not all the scripts have been tested on newer versions. For local development, 
+you can use the `Dockerfile` which is tagged for R version 4.4.1.
+
 ## Configuration
 
 The R scripts receive initial configuration using a YAML file. Copy the file 
